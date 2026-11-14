@@ -1,12 +1,59 @@
 {% extends "base.html" %}
-
-{% block titulo %}Administración | Academia TM{% endblock %}
-
+{% load static %}
+{% block titulo %}Inicio | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-inicio{% endblock %}
 {% block contenido %}
-<header class="tarjeta inicio-presentacion">
-    <h1>Academia TM</h1>
-    <p>Un espacio para administrar la Academia de Tenis TM. Desde acá podés acceder a las herramientas disponibles y conocer los módulos del sistema.</p>
+<header class="inicio-cabecera">
+    <h1>Inicio</h1>
+    <p>{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
 </header>
-
-{% include "componentes/inicio_modulos.html" %}
+<div class="inicio-resumen">
+    <section class="tarjeta inicio-actividad" aria-labelledby="inicio-actividad-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="inicio-actividad-titulo">Actividad de hoy</h2></header>
+        <div class="inicio-cuerpo">
+            <p class="inicio-valor">{{ actividad.hoy }}</p>
+            <p class="inicio-descripcion">Eventos del día entre clases y reservas</p>
+            <div class="inicio-proxima-hora">
+                <h3>En la próxima hora</h3>
+                <p>{% if actividad.clases or actividad.reservas %}<strong>{{ actividad.clases }}</strong> clase{{ actividad.clases|pluralize }} <span aria-hidden="true">·</span> <strong>{{ actividad.reservas }}</strong> reserva{{ actividad.reservas|pluralize }}{% else %}Sin eventos programados{% endif %}</p>
+            </div>
+        </div>
+        <footer class="inicio-pie"><a href="{% url 'agenda:agenda' %}?fecha={{ hoy|date:'Y-m-d' }}">Ver agenda</a></footer>
+    </section>
+    <section class="tarjeta inicio-caja" aria-labelledby="inicio-caja-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="inicio-caja-titulo">Caja</h2><span class="inicio-estado{% if sesion_caja %} inicio-estado-activo{% endif %}">{% if sesion_caja %}Abierta{% else %}Cerrada{% endif %}</span></header>
+        <div class="inicio-cuerpo">
+            {% if sesion_caja %}
+                <dl class="inicio-datos"><div><dt>Responsable de apertura</dt><dd>{{ sesion_caja.responsable }}</dd></div><div><dt>Fecha y hora de apertura</dt><dd class="inicio-datos-fecha"><time datetime="{{ sesion_caja.creado_en|date:'c' }}">{{ sesion_caja.creado_en|date:"d/m/Y" }} · {{ sesion_caja.creado_en|date:"H:i" }} h</time></dd></div></dl>
+            {% elif ultimo_cierre %}
+                <dl class="inicio-datos"><div><dt>Responsable de la última apertura</dt><dd>{{ ultimo_cierre.responsable }}</dd></div><div><dt>Fecha y hora de apertura</dt><dd class="inicio-datos-fecha"><time datetime="{{ ultimo_cierre.creado_en|date:'c' }}">{{ ultimo_cierre.creado_en|date:"d/m/Y" }} · {{ ultimo_cierre.creado_en|date:"H:i" }} h</time></dd></div></dl>
+            {% else %}<p class="inicio-descripcion">Sin aperturas registradas</p>{% endif %}
+        </div>
+        <footer class="inicio-pie"><a href="{% url 'caja:caja_actual' %}">Ir a caja</a></footer>
+    </section>
+    <section class="tarjeta inicio-mes" aria-labelledby="inicio-mes-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="inicio-mes-titulo">Este mes</h2><span class="inicio-periodo">{{ mes_actual|date:"F Y"|capfirst }}</span></header>
+        <div class="inicio-cuerpo inicio-metricas">
+            <div class="inicio-metrica">
+                <p class="inicio-valor">{{ alumnos_con_plan }}</p>
+                <p class="inicio-descripcion">Alumnos con plan</p>
+                <a class="inicio-enlace" href="{% url 'membresias:contratacion_plan_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver planes</a>
+            </div>
+            <div class="inicio-metrica">
+                <p class="inicio-valor">{{ socios }}</p>
+                <p class="inicio-descripcion">Socios de la academia</p>
+                <a class="inicio-enlace" href="{% url 'membresias:contratacion_membresia_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver membresías</a>
+            </div>
+        </div>
+    </section>
+    <section class="tarjeta inicio-continuidad" aria-labelledby="inicio-continuidad-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="inicio-continuidad-titulo">Continuidad</h2><span class="inicio-estado{% if encuestas.abiertas %} inicio-estado-activo{% endif %}">{% if encuestas.abiertas %}Abierta{% else %}Cerrada{% endif %}</span></header>
+        <div class="inicio-cuerpo">
+            <p class="inicio-valor">{{ encuestas.dias }} <span>día{{ encuestas.dias|pluralize }}</span></p>
+            <p class="inicio-descripcion">Para {% if encuestas.abiertas %}el cierre{% else %}la apertura{% endif %} de las encuestas</p>
+        </div>
+        <footer class="inicio-pie"><a href="{% url 'membresias:continuidad_lista' %}">Ver continuidad</a></footer>
+    </section>
+</div>
 {% endblock %}
