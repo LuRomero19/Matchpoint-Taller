@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/acceso.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-acceso{% endblock %}
+
+{% block navegacion %}
+<header class="acceso-barra">
+    <a class="marca" href="{% url 'inicio' %}">
+        <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="48" height="48">
+        <span>Academia TM</span>
+    </a>
+</header>
+{% endblock %}
+
+{% block contenido %}
+{% block acceso_contenido %}{% endblock %}
+<footer class="acceso-pie">
+    <span>Fotografía de <a href="https://www.pexels.com/photo/tennis-court-with-a-net-6010286/" target="_blank" rel="noopener noreferrer">Tima Miroshnichenko / Pexels</a></span>
+</footer>
+{% endblock %}

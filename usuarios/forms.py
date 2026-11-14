@@ -208,7 +208,7 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
         required=False,
         disabled=True,
         widget=forms.TextInput(attrs={"class": "form-control"}),
-        help_text="El nombre de usuario se genera automáticamente a partir del nombre y apellido",
+        help_text="Se genera automáticamente con tu nombre y apellido",
     )
     contrasena = forms.CharField(
         label="Contraseña",
@@ -221,6 +221,10 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.order_fields([
+            "nombre", "apellido", "fecha_nacimiento", "email", "celular_contacto",
+            "nombre_usuario", "contrasena", "confirmar_contrasena",
+        ])
         self.fields["fecha_nacimiento"].widget.attrs.update(
             min=fecha_minima_nacimiento().isoformat(), max=timezone.localdate().isoformat()
         )
@@ -300,7 +304,7 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
         required=False,
         disabled=True,
         widget=forms.TextInput(attrs={"class": "form-control"}),
-        help_text="El nombre de usuario se genera automáticamente a partir del nombre y apellido",
+        help_text="Se genera automáticamente con el nombre y apellido",
     )
     contrasena = forms.CharField(
         label="Contraseña",
