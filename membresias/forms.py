@@ -34,6 +34,16 @@ class PlanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["version"].required = self.instance.pk is not None
+        if self.instance.pk is None:
+            for nombre, indicacion in (
+                ("modalidad", "Seleccioná una modalidad"),
+                ("frecuencia_semanal", "Seleccioná los encuentros por semana"),
+                ("cantidad_clases_por_encuentro", "Seleccioná la duración"),
+            ):
+                campo = self.fields[nombre]
+                campo.choices = [("", indicacion)] + [
+                    (valor, etiqueta) for valor, etiqueta in campo.choices if valor != ""
+                ]
         if self.instance.pk and self.instance.contrataciones.exists():
             for nombre in ("modalidad", "frecuencia_semanal", "cantidad_clases_por_encuentro"):
                 self.fields[nombre].disabled = True

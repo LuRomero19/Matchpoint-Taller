@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -42,6 +44,7 @@ def plan_lista(request):
         "pagina": Paginator(planes, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda, "estado_actual": estado, "estados": Plan.Estado.choices,
         "hay_planes": Plan.objects.exists(),
+        "parametros": urlencode({"q": busqueda, "estado": estado}),
     })
 
 
@@ -76,7 +79,10 @@ def plan_formulario(request, pk=None):
             messages.success(request, "El plan fue guardado.")
             return redirect("membresias:plan_detalle", pk=guardado.pk)
     return render(request, "membresias/catalogo_formulario.html", {
-        "formulario": formulario, "titulo": titulo, "texto_boton": "Guardar plan",
+        "formulario": formulario, "titulo": titulo,
+        "texto_boton": "Guardar plan" if pk is not None else "Crear plan",
+        "alta_catalogo": pk is None,
+        "descripcion_alta": "Los planes definen la modalidad, la frecuencia y la duración de las clases, junto con su precio mensual.",
         "url_cancelar": reverse("membresias:plan_detalle", args=[pk]) if pk is not None
             else reverse("membresias:plan_lista"),
     })
@@ -118,6 +124,7 @@ def membresia_lista(request):
         "pagina": Paginator(membresias, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda, "estado_actual": estado, "estados": Membresia.Estado.choices,
         "hay_membresias": Membresia.objects.exists(),
+        "parametros": urlencode({"q": busqueda, "estado": estado}),
     })
 
 
@@ -152,7 +159,10 @@ def membresia_formulario(request, pk=None):
             messages.success(request, "La membresía fue guardada.")
             return redirect("membresias:membresia_detalle", pk=guardado.pk)
     return render(request, "membresias/catalogo_formulario.html", {
-        "formulario": formulario, "titulo": titulo, "texto_boton": "Guardar membresía",
+        "formulario": formulario, "titulo": titulo,
+        "texto_boton": "Guardar membresía" if pk is not None else "Crear membresía",
+        "alta_catalogo": pk is None,
+        "descripcion_alta": "Las membresías definen los cupos mensuales para organizar reservas y participar como invitado, su precio y el adicional sin beneficio.",
         "url_cancelar": reverse("membresias:membresia_detalle", args=[pk]) if pk is not None
             else reverse("membresias:membresia_lista"),
     })

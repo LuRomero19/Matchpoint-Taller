@@ -1,28 +1,42 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Continuidad | Academia TM{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">
+<link rel="stylesheet" href="{% static 'css/continuidad.css' %}">
+{% endblock %}
+{% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Continuidad</h1><a class="boton boton-secundario" href="{% url 'clases:planilla_contrataciones' %}">Contrataciones de la plantilla</a></header>
-<form class="tarjeta tarjeta-busqueda filtros-compactos" method="get">
+<header class="tarjeta encabezado-pagina">
+    <div>
+        <h1>Continuidad</h1>
+        <p class="continuidad-introduccion">Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente.</p>
+    </div>
+</header>
+<form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de continuidad">
+    {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
     {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
-    <button class="boton boton-secundario" type="submit">Consultar</button>
+    <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
+    <noscript><button class="boton boton-secundario" type="submit">Consultar</button></noscript>
 </form>
 {% if mes %}
-<section class="tarjeta">
-    <h2>Intención para {{ mes_consultado|date:"F Y" }}</h2>
-    <p class="texto-secundario">Encuestas de contrataciones de {{ mes|date:"F Y" }}. Sin responder no indica una baja. Las contrataciones y los pagos se consultan por separado.</p>
-    <div class="tabla-contenedor"><table>
-        <thead><tr><th scope="col">Titular</th><th scope="col">Producto</th><th scope="col">Mes cubierto</th><th scope="col">Estado</th><th scope="col">Respuesta</th><th scope="col">Respondida</th></tr></thead>
+<section class="tarjeta tabla-contenedor continuidad-listado" aria-labelledby="continuidad-respuestas-titulo">
+    <header class="continuidad-listado-cabecera">
+        <h2 id="continuidad-respuestas-titulo">Continuidad para {{ mes_consultado|date:"F Y" }}</h2>
+        <p>Contrataciones de {{ mes|date:"F Y" }}. Sin responder no indica una baja. Las contrataciones y los pagos se consultan por separado.</p>
+    </header>
+    <table>
+        <thead><tr><th scope="col">Titular</th><th scope="col">Producto</th><th scope="col">Contratación</th><th scope="col">Respuesta</th><th scope="col">Fecha de respuesta</th></tr></thead>
         <tbody>{% for contrato in pagina %}<tr>
-            <td>{{ contrato.usuario }}</td><td><a href="{% url ruta_detalle contrato.pk %}">{{ contrato.producto.nombre }}</a></td>
-            <td>{{ contrato.mes_cubierto|date:"F Y" }}</td><td>{{ contrato.get_estado_display }}</td>
-            <td>{{ contrato.get_respuesta_continuidad_display|default:"Sin responder" }}</td><td>{{ contrato.continuidad_respondida_en|date:"d/m/Y H:i"|default:"—" }}</td>
-        </tr>{% empty %}<tr><td colspan="6" class="estado-vacio">No hay contrataciones que coincidan con la consulta.</td></tr>{% endfor %}</tbody>
-    </table></div>
+            <td><strong>{{ contrato.usuario }}</strong></td>
+            <td><a class="enlace-tabla" href="{% url ruta_detalle contrato.pk %}">{{ contrato.producto.nombre }}</a></td>
+            <td>{{ contrato.get_estado_display }}</td>
+            <td>{{ contrato.get_respuesta_continuidad_display|default:"Sin responder" }}</td>
+            <td>{{ contrato.continuidad_respondida_en|date:"d/m/Y H:i"|default:"—" }}</td>
+        </tr>{% empty %}<tr><td colspan="5" class="estado-vacio">No hay contrataciones que coincidan con la consulta.</td></tr>{% endfor %}</tbody>
+    </table>
+    {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=consulta only %}
 </section>
-{% if pagina.paginator.num_pages > 1 %}<nav class="acciones" aria-label="Páginas de continuidad">
-    {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{{ consulta }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-    <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
-    {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{{ consulta }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
-</nav>{% endif %}
 {% endif %}
+<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

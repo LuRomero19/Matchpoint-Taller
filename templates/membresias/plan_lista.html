@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}Planes | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Planes</h1>
@@ -24,29 +26,23 @@
     </form>
     <section class="tarjeta tabla-contenedor" aria-label="Catálogo de planes">
         <table>
-            <thead><tr><th scope="col">Nombre</th><th scope="col">Modalidad</th><th scope="col">Encuentros por semana</th><th scope="col">Duración</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr><th scope="col">Nombre</th><th scope="col">Modalidad</th><th scope="col">Encuentros por semana</th><th scope="col">Duración</th><th scope="col">Precio mensual (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
                 {% for plan in pagina %}
                     <tr>
-                        <td><strong>{{ plan.nombre }}</strong></td>
+                        <td><span class="catalogo-nombre-estado"><span class="catalogo-estado{% if plan.estado == 'activo' %} catalogo-estado-activo{% endif %}" role="img" aria-label="{{ plan.get_estado_display }}" title="{{ plan.get_estado_display }}"></span><strong>{{ plan.nombre }}</strong></span></td>
                         <td>{{ plan.get_modalidad_display }}</td>
                         <td>{{ plan.frecuencia_semanal }}</td>
                         <td>{{ plan.get_cantidad_clases_por_encuentro_display }}</td>
-                        <td>$ {{ plan.precio_vigente|floatformat:"2g" }}</td>
-                        <td>{% include "componentes/badge_estado.html" with estado=plan.estado texto=plan.get_estado_display only %}</td>
+                        <td class="catalogo-importe">$ {{ plan.precio_vigente|floatformat:"2g" }}</td>
                         <td><a class="boton boton-secundario boton-chico" href="{% url 'membresias:plan_detalle' plan.pk %}" aria-label="Ver detalle de {{ plan.nombre }}">Detalles</a></td>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="7">No hay planes que coincidan con los filtros.</td></tr>{% endfor %}
+                {% empty %}<tr><td class="estado-vacio" colspan="6">No hay planes que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
+        {% include "componentes/paginacion.html" with pagina=pagina entidad="planes" parametros=parametros only %}
     </section>
-    {% if pagina.paginator.num_pages > 1 %}
-        <nav class="acciones" aria-label="Páginas de planes">
-            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
-            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
-        </nav>
-    {% endif %}
+
 {% else %}<p class="tarjeta estado-vacio">Todavía no hay planes registrados.</p>{% endif %}
 <script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

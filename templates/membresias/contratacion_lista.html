@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}{{ titulo_lista }} | Academia TM{% endblock %}
+{% block estilos %}{% if not propias %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><link rel="stylesheet" href="{% static 'css/contrataciones.css' %}">{% endif %}{% endblock %}
+{% block clase_contenido %}{% if not propias %}contenido-membresias-configuracion catalogo-listado contratacion-listado{% endif %}{% endblock %}
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
-    <h1>{{ titulo_lista }}</h1>
+    {% if not propias %}<div><h1>{{ titulo_lista }}</h1><p class="contratacion-introduccion">Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.</p></div>{% else %}<h1>{{ titulo_lista }}</h1>{% endif %}
     {% if not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
 {% if propias %}
     <div class="acciones">
@@ -47,15 +49,16 @@
                         {% if not propias %}<td><strong>{{ contratacion.usuario }}</strong></td>{% endif %}
                         <td>{{ contratacion.producto.nombre }}</td>
                         <td>{{ contratacion.mes_cubierto|date:"F Y" }}</td>
-                        <td>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
-                        <td>{% include "componentes/badge_estado.html" with estado=contratacion.estado texto=contratacion.get_estado_display only %}</td>
+                        <td class="{% if not propias %}catalogo-importe{% endif %}">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
+                        <td>{% if propias %}{% include "componentes/badge_estado.html" with estado=contratacion.estado texto=contratacion.get_estado_display only %}{% else %}<span class="contratacion-estado contratacion-estado-{{ contratacion.estado }}">{{ contratacion.get_estado_display }}</span>{% endif %}</td>
                         <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></td>
                     </tr>
                 {% empty %}<tr><td class="estado-vacio" colspan="{% if propias %}5{% else %}6{% endif %}">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
+        {% if not propias %}{% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}{% endif %}
     </section>
-    {% if pagina.paginator.num_pages > 1 %}
+    {% if propias and pagina.paginator.num_pages > 1 %}
         <nav class="acciones" aria-label="Páginas de contrataciones">
             {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.previous_page_number }}{% if propias %}&amp;tipo={{ tipo }}{% endif %}">Anterior</a>{% endif %}
             <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>

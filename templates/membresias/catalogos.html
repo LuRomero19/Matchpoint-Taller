@@ -1,31 +1,45 @@
 {% extends "base.html" %}
-{% block titulo %}Membresías | Academia TM{% endblock %}
+{% load static %}
+{% block titulo %}Planes y membresías | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-inicio.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-membresias-inicio{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Membresías</h1></header>
-<section class="inicio-modulos" aria-label="Membresías">
-    <article class="tarjeta inicio-modulo">
-        <h2>Continuidad</h2><p>Respuestas de titulares de planes y membresías sobre el mes siguiente.</p>
-        <a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}">Consultar continuidad</a>
-    </article>
-    <article class="tarjeta inicio-modulo">
-        <h2>Contrataciones de planes</h2>
-        <p>Registro y consulta de planes mensuales contratados por cada usuario.</p>
-        <a class="boton boton-secundario" href="{% url 'membresias:contratacion_plan_lista' %}">Ver contrataciones</a>
-    </article>
-    <article class="tarjeta inicio-modulo">
-        <h2>Contrataciones de membresías</h2>
-        <p>Registro y consulta de membresías mensuales contratadas por cada usuario.</p>
-        <a class="boton boton-secundario" href="{% url 'membresias:contratacion_membresia_lista' %}">Ver contrataciones</a>
-    </article>
-    <article class="tarjeta inicio-modulo">
-        <h2>Planes</h2>
-        <p>Planes mensuales de clases individuales y grupales.</p>
-        <a class="boton boton-secundario" href="{% url 'membresias:plan_lista' %}">Ver planes</a>
-    </article>
-    <article class="tarjeta inicio-modulo">
-        <h2>Membresías de socios</h2>
-        <p>Cupos mensuales de organizador e invitado y adicional por participación sin beneficio.</p>
-        <a class="boton boton-secundario" href="{% url 'membresias:membresia_lista' %}">Ver membresías</a>
-    </article>
+<header class="tarjeta membresias-encabezado">
+    <h1>Planes y membresías</h1>
+    <p>Administrá las contrataciones y configurá los planes y las membresías de la academia.</p>
+</header>
+
+<div class="membresias-grupos">
+    <section class="tarjeta membresias-grupo" aria-labelledby="contrataciones-titulo">
+        <header><h2 id="contrataciones-titulo">Contrataciones</h2></header>
+        <a class="membresias-destino" href="{% url 'membresias:contratacion_plan_lista' %}" aria-label="Contrataciones de planes">
+            <span><strong>Planes</strong><small>Registro y consulta de planes contratados por usuario.</small></span>
+            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#chevron"/></svg>
+        </a>
+        <a class="membresias-destino" href="{% url 'membresias:contratacion_membresia_lista' %}" aria-label="Contrataciones de membresías">
+            <span><strong>Membresías</strong><small>Registro y consulta de membresías contratadas por usuario.</small></span>
+            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#chevron"/></svg>
+        </a>
+    </section>
+
+    <section class="tarjeta membresias-grupo" aria-labelledby="oferta-titulo">
+        <header><h2 id="oferta-titulo">Configuración de oferta</h2></header>
+        <a class="membresias-destino" href="{% url 'membresias:plan_lista' %}" aria-label="Configurar planes">
+            <span><strong>Planes</strong><small>Modalidades de clases, frecuencias y precios.</small></span>
+            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#chevron"/></svg>
+        </a>
+        <a class="membresias-destino" href="{% url 'membresias:membresia_lista' %}" aria-label="Configurar membresías">
+            <span><strong>Membresías</strong><small>Cupos para reservas, beneficios y precios.</small></span>
+            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#chevron"/></svg>
+        </a>
+    </section>
+</div>
+
+<section class="tarjeta membresias-continuidad" aria-labelledby="continuidad-titulo">
+    <div>
+        <h2 id="continuidad-titulo">Continuidad</h2>
+        <p>Respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente.</p>
+    </div>
+    <a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}">Consultar continuidad</a>
 </section>
 {% endblock %}

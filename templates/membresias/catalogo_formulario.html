@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block estilos %}{% if alta_catalogo %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">{% endif %}{% endblock %}
+{% block clase_contenido %}{% if alta_catalogo %}contenido-membresias-configuracion{% endif %}{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
-    <h1>{{ titulo }}</h1>
+    <h1 id="catalogo-formulario-titulo">{{ titulo }}</h1>
+    {% if alta_catalogo %}<p class="catalogo-introduccion">{{ descripcion_alta }}</p>{% endif %}
     {% block formulario_contexto %}{% endblock %}
-    <form method="{{ metodo_formulario|default:'post' }}" novalidate>
+    <form method="{{ metodo_formulario|default:'post' }}" novalidate aria-labelledby="catalogo-formulario-titulo">
         {% if metodo_formulario != 'get' %}{% csrf_token %}{% endif %}
         {% block formulario_seleccion %}{% endblock %}
         {% block formulario_campos_ocultos %}{% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
@@ -14,6 +18,9 @@
             {% if campo.name == 'observaciones' %}
                 {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
             {% elif campo.name == 'descripcion' %}
+                {% if alta_catalogo %}
+                    {% include "componentes/observaciones_opcionales.html" with campo=campo texto_disparador="Agregar descripción" only %}
+                {% else %}
                 <details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
                     <summary>{{ campo.label }} (opcional)</summary>
                     <div class="grupo-campo">
@@ -21,9 +28,10 @@
                         {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                     </div>
                 </details>
+                {% endif %}
             {% else %}
                 <div class="grupo-campo">
-                    <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required and not alta_catalogo and not alta_contratacion %} <span aria-hidden="true">*</span>{% endif %}</label>
                     {{ campo }}
                     {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
                     {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
@@ -32,8 +40,9 @@
         {% endfor %}
         {% block formulario_acciones %}
         <div class="acciones-formulario">
+            {% if alta_catalogo %}<button class="boton boton-primario" type="submit">{{ texto_boton }}</button>{% endif %}
             <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
+            {% if not alta_catalogo %}<button class="boton boton-primario" type="submit">{{ texto_boton }}</button>{% endif %}
         </div>
         {% endblock %}
     </form>

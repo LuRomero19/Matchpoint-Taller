@@ -67,7 +67,10 @@ def contratacion_lista(request, tipo="plan"):
     exigir_administracion_membresias(request.user)
     modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
     contrataciones = modelo.objects.select_related("usuario", tipo)
+    parametros = request.GET.copy()
+    parametros.pop("pagina", None)
     return render(request, "membresias/contratacion_lista.html", {
+        "parametros": parametros.urlencode(),
         **_contexto(tipo), **listar_contrataciones(contrataciones, request.GET, tipo=tipo),
     })
 
@@ -144,7 +147,7 @@ def contratacion_crear(request, tipo="plan"):
         "titulo": "Registrar contratación de membresía" if tipo == "membresia" else "Registrar contratación de plan",
         "formulario": seleccion,
         "texto_boton": "Continuar", "metodo_formulario": "post",
-        "borrador": borrador,
+        "borrador": borrador, "alta_contratacion": True,
         "url_cancelar": reverse(f"membresias:contratacion_{tipo}_lista"),
     }
     valor_usuario = seleccion["usuario"].value()

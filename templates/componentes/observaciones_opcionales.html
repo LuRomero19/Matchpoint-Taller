@@ -3,7 +3,7 @@
             aria-expanded="{% if campo.value or campo.errors %}true{% else %}false{% endif %}" aria-controls="{{ campo.id_for_label }}"
             data-agregar-observaciones{% if campo.value or campo.errors %} hidden{% endif %}>
         <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        Agregar observaciones
+        {{ texto_disparador|default:"Agregar observaciones" }}
     </button>
     <div class="grupo-campo" data-campo-observaciones{% if not campo.value and not campo.errors %} hidden{% endif %}>
         <label for="{{ campo.id_for_label }}">{{ campo.label }} <span class="texto-secundario clase-opcional">(opcional)</span></label>

@@ -1,6 +1,7 @@
 {% extends "membresias/catalogo_formulario.html" %}
 {% load static %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}"><link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
+{% block clase_contenido %}contenido-membresias-configuracion contratacion-alta{% endblock %}
 {% block formulario_contexto %}
     {% if contratacion_existente %}
         <p><a class="enlace-texto" href="{% url ruta_detalle contratacion_existente.pk %}">Ver contratación existente del mes</a></p>
@@ -14,12 +15,14 @@
         <section class="contratacion-resumen" aria-label="Selección de contratación">
             <p class="contratacion-resumen-etiqueta">{{ nombre_tipo|default:tipo|capfirst }} {% if tipo == 'membresia' %}seleccionada{% else %}seleccionado{% endif %}</p>
             <h2>{{ producto.nombre }}</h2>
-            <div class="contratacion-resumen-usuario">
-                <span>Usuario</span>
-                <p>{{ titular.first_name }} {{ titular.last_name }} <small>@{{ titular.username }}</small></p>
-            </div>
-            {% if tipo == 'membresia' %}<p>{{ producto.horas_organizador }} horas mensuales como organizador · {{ producto.horas_invitado }} como invitado</p>{% endif %}
-            <p class="contratacion-resumen-precio">Importe a aplicar <strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></p>
+            <dl class="contratacion-datos">
+                <div><dt>Usuario</dt><dd>{{ titular }}<small>@{{ titular.username }}</small></dd></div>
+                <div class="contratacion-importe"><dt>Importe a aplicar</dt><dd>$ {{ precio_propuesto|floatformat:"2g" }}</dd></div>
+                {% if tipo == 'membresia' %}
+                    <div><dt>Horas mensuales de organizador</dt><dd>{{ producto.horas_organizador }}</dd></div>
+                    <div><dt>Horas mensuales de invitado</dt><dd>{{ producto.horas_invitado }}</dd></div>
+                {% endif %}
+            </dl>
         </section>
     {% else %}
         <p class="texto-secundario">Elegí el usuario y {% if tipo == 'membresia' %}la membresía{% else %}el plan{% endif %} para preparar la contratación mensual.</p>
@@ -35,14 +38,14 @@
     {% if titular %}
         {{ block.super }}
     {% else %}
-        {% include "componentes/selector_usuario.html" with campo=formulario.usuario seleccionado=usuario_seleccionado url_busqueda=url_buscar_usuarios only %}
+        {% include "componentes/selector_usuario.html" with campo=formulario.usuario seleccionado=usuario_seleccionado url_busqueda=url_buscar_usuarios sin_asterisco=True only %}
     {% endif %}
 {% endblock %}
 
 {% block formulario_acciones %}
     <div class="acciones-formulario">
+        <button class="boton boton-primario" type="submit" name="paso" value="{% if titular %}confirmar{% else %}preparar{% endif %}">{{ texto_boton }}</button>
         {% if titular %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
         <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-        <button class="boton boton-primario" type="submit" name="paso" value="{% if titular %}confirmar{% else %}preparar{% endif %}">{{ texto_boton }}</button>
     </div>
 {% endblock %}
