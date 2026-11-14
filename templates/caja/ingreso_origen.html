@@ -1,6 +1,7 @@
 {% extends "base.html" %}{% load static %}
 {% block titulo %}{{ titulo|default:"Registrar ingreso" }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo|default:"Registrar ingreso" }}</h1>
@@ -49,7 +50,7 @@
                     </label>
                 {% endfor %}
             </fieldset>
-            <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a><button class="boton boton-primario">Siguiente</button></div>
+            <div class="acciones-formulario"><button class="boton boton-primario">Siguiente</button><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a></div>
         </form>
     {% endif %}
 </section>

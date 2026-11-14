@@ -1,6 +1,7 @@
 {% extends "base.html" %}{% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
-{% block estilos %}{% if clase == 'egreso' %}<script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endif %}{% endblock %}
+{% block estilos %}{% if clase == 'egreso' %}<script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endif %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario"><h1>{{ titulo }}</h1><p>{{ sesion.numero }} · Efectivo disponible: <strong>$ {{ disponible|floatformat:"2g" }}</strong></p>
 {% if clase == 'egreso' %}<p>Registrá el pago realizado. Para devolver dinero a un cliente, elegí Devoluciones.</p>{% else %}<p>Este movimiento es exclusivamente en efectivo y se identifica por separado de los cobros y gastos operativos.</p>{% endif %}
@@ -13,6 +14,6 @@
 {% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}{% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}
 </div>{% endif %}{% endfor %}
 {% if clase == "egreso" %}<noscript><button class="boton boton-secundario" name="paso" value="actualizar_categoria" formnovalidate>Actualizar opciones de categoría</button></noscript>{% endif %}
-<div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a><button class="boton boton-primario">Registrar movimiento</button></div>
+<div class="acciones-formulario"><button class="boton boton-primario">Registrar movimiento</button><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a></div>
 </form></section>
 {% endblock %}

@@ -1,5 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Anular {{ movimiento.numero }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario"><h1>Anular {{ movimiento.numero }}</h1>
 <p>{{ movimiento.get_clase_display }} · {{ movimiento.concepto }} · $ {{ movimiento.monto|floatformat:"2g" }} · {{ movimiento.get_medio_pago_display }}</p>
@@ -10,6 +13,6 @@
 {% if neto_resultante < 0 %}<p role="status">El neto negativo queda como diferencia para revisión administrativa. La corrección del ingreso se puede confirmar si cumple las validaciones de caja.</p>{% endif %}{% endif %}
 <form method="post">{% csrf_token %}{{ formulario.non_field_errors }}{{ formulario.revision }}{{ formulario.revision.errors }}
 <div class="grupo-campo"><label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>{{ formulario.motivo }}{{ formulario.motivo.errors }}</div>
-<div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:movimiento_detalle' movimiento.pk %}">Cancelar</a><button class="boton boton-confirmar-peligro">Confirmar anulación</button></div>
+<div class="acciones-formulario"><button class="boton boton-confirmar-peligro">Confirmar anulación</button><a class="boton boton-secundario" href="{% url 'caja:movimiento_detalle' movimiento.pk %}">Cancelar</a></div>
 </form></section>
 {% endblock %}

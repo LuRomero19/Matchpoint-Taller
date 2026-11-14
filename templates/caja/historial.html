@@ -1,14 +1,29 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>{{ titulo }}</h1><div class="acciones"><a class="boton boton-secundario" href="{% url 'caja:caja_actual' %}">Caja actual</a><a class="boton boton-secundario" href="{% if sesiones %}{% url 'caja:movimiento_lista' %}{% else %}{% url 'caja:historial_sesiones' %}{% endif %}">{% if sesiones %}Movimientos{% else %}Sesiones{% endif %}</a></div></header>
-<details class="tarjeta"{% if formulario.errors %} open{% endif %}><summary>Filtrar</summary><form method="get" class="tarjeta-busqueda filtros-compactos">{{ formulario.non_field_errors }}
-{% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
-<button class="boton boton-secundario">Consultar</button><a href="{{ request.path }}">Limpiar filtros</a></form></details>
-<section class="tarjeta">
-{% if sesiones %}<div class="tabla-contenedor"><table><thead><tr><th>Sesión</th><th>Responsable</th><th>Apertura</th><th>Estado</th><th>Cierre</th><th>Contado</th></tr></thead><tbody>
-{% for sesion in pagina %}<tr><td><a href="{% url 'caja:sesion_detalle' sesion.pk %}">{{ sesion.numero }}</a></td><td>{{ sesion.responsable }}</td><td>{{ sesion.creado_en|date:"d/m/Y H:i" }}</td><td>{{ sesion.get_estado_display }}</td><td>{{ sesion.cerrada_en|date:"d/m/Y H:i"|default:"—" }}</td><td>{% if sesion.estado == 'cerrada' %}$ {{ sesion.efectivo_contado|floatformat:"2g" }}{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="6">No hay sesiones que coincidan.</td></tr>{% endfor %}
-</tbody></table></div>{% include "caja/_paginacion.html" %}
+<header class="tarjeta caja-encabezado"><h1>{{ titulo }}</h1><p>{% if sesiones %}Consultá las aperturas, los cierres y el efectivo contado de cada sesión.{% else %}Consultá los ingresos, egresos, aportes y retiros registrados en caja.{% endif %}</p></header>
+{% if sesiones %}{% include "caja/navegacion.html" with seccion="sesiones" only %}{% else %}{% include "caja/navegacion.html" with seccion="movimientos" only %}{% endif %}
+<form method="get" class="tarjeta caja-filtros tarjeta-busqueda filtros-compactos{% if not sesiones %} caja-filtros-movimientos{% endif %}" data-filtros-automaticos aria-label="Filtros de caja">
+    {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
+    <div class="detalle-grid">
+        {% for campo in formulario %}<div class="grupo-campo caja-filtro-{{ campo.name }}"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
+    </div>
+    <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a></div>
+</form>
+<section class="tarjeta caja-listado" aria-label="{% if sesiones %}Sesiones de caja{% else %}Movimientos de caja{% endif %}">
+{% if sesiones %}
+    <div class="tabla-contenedor"><table>
+        <thead><tr><th scope="col">Sesión</th><th scope="col">Responsable</th><th scope="col">Apertura</th><th scope="col">Cierre</th><th scope="col" class="caja-monto">Efectivo contado</th></tr></thead>
+        <tbody>{% for sesion in pagina %}<tr>
+            <td><a class="enlace-tabla" href="{% url 'caja:sesion_detalle' sesion.pk %}">{{ sesion.numero }}</a><small><span class="caja-estado{% if sesion.estado == 'abierta' %} caja-estado-abierta{% endif %}">{{ sesion.get_estado_display }}</span></small></td>
+            <td>{{ sesion.responsable }}</td><td>{{ sesion.creado_en|date:"d/m/Y H:i" }}</td><td>{{ sesion.cerrada_en|date:"d/m/Y H:i"|default:"—" }}</td><td class="caja-monto">{% if sesion.estado == 'cerrada' %}$ {{ sesion.efectivo_contado|floatformat:"2g" }}{% else %}—{% endif %}</td>
+        </tr>{% empty %}<tr><td class="estado-vacio" colspan="5">No hay sesiones que coincidan.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% include "componentes/paginacion.html" with pagina=pagina entidad="sesiones" parametros=parametros only %}
 {% else %}{% include "caja/_movimientos.html" %}{% endif %}
 </section>
+<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

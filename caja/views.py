@@ -13,7 +13,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 
 from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
-    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, SeleccionOrigenMovimientoForm,
+    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, MovimientosSesionForm, SeleccionOrigenMovimientoForm,
 )
 from .finanzas import resumen_financiero, situacion_financiera
 from .ingresos import consultar_origen, origen_del_movimiento, ORIGENES, cobros_del_origen, filtrar_origenes, registrar_ingreso
@@ -65,12 +65,26 @@ def caja_abrir(request):
 def sesion_detalle(request, pk):
     actor = exigir_acceso_caja(request.user)
     sesion = get_object_or_404(SesionCaja.objects.select_related("responsable"), pk=pk)
-    pagina = Paginator(sesion.movimientos.all(), 25).get_page(request.GET.get("pagina"))
+    formulario = MovimientosSesionForm(request.GET)
+    movimientos = sesion.movimientos.none()
+    if formulario.is_valid():
+        datos = formulario.cleaned_data
+        movimientos = sesion.movimientos.all()
+        for campo in ("medio_pago", "clase"):
+            if datos.get(campo):
+                movimientos = movimientos.filter(**{campo: datos[campo]})
+        if datos.get("categoria"):
+            clase, categoria = datos["categoria"].split(":")
+            movimientos = movimientos.filter(**{f"categoria_{clase}": categoria})
+    parametros = request.GET.copy()
+    parametros.pop("pagina", None)
+    pagina = Paginator(movimientos, 25).get_page(request.GET.get("pagina"))
     if sesion.estado == "cerrada":
         for movimiento in pagina:
             movimiento.incluido_al_cierre = movimiento.anulado_en is None or movimiento.anulado_en > sesion.cerrada_en
     return render(request, "caja/sesion_detalle.html", {
-        "pagina_movimientos": pagina,
+        "pagina_movimientos": pagina, "formulario_filtros": formulario,
+        "parametros": parametros.urlencode(),
         **resumen_sesion(sesion),
         "sesion": sesion, "esperado": efectivo_esperado(sesion) if sesion.estado == SesionCaja.Estado.ABIERTA else sesion.efectivo_esperado,
         "puede_cerrar": sesion.estado == SesionCaja.Estado.ABIERTA and sesion.responsable_id == actor.pk,
@@ -312,7 +326,7 @@ def movimiento_lista(request):
     if formulario.is_valid():
         datos = formulario.cleaned_data
         consulta = _filtrar_fechas(MovimientoFondo.objects.all(), datos)
-        for campo in ("sesion", "clase", "medio_pago", "estado"):
+        for campo in ("clase", "medio_pago", "estado"):
             if datos.get(campo):
                 consulta = consulta.filter(**{campo: datos[campo]})
         if datos.get("categoria"):

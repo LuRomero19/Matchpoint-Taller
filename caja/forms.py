@@ -114,7 +114,6 @@ class HistorialSesionesForm(forms.Form):
 
 
 class HistorialMovimientosForm(HistorialSesionesForm):
-    sesion = forms.ModelChoiceField(label="Sesión", queryset=None, required=False, widget=forms.Select(attrs={"class": "form-control"}))
     clase = forms.ChoiceField(label="Clase", required=False, widget=forms.Select(attrs={"class": "form-control"}))
     medio_pago = forms.ChoiceField(label="Medio", required=False, widget=forms.Select(attrs={"class": "form-control"}))
     categoria = forms.ChoiceField(label="Categoría", required=False, widget=forms.Select(attrs={"class": "form-control"}))
@@ -124,11 +123,26 @@ class HistorialMovimientosForm(HistorialSesionesForm):
         self.fields["desde"].label = "Registro desde"
         self.fields["hasta"].label = "Registro hasta"
         self.fields["estado"].choices = [("", "Todos"), *MovimientoFondo.Estado.choices]
-        self.fields["sesion"].queryset = SesionCaja.objects.all()
         self.fields["clase"].choices = [("", "Todas"), *MovimientoFondo.Clase.choices]
         self.fields["medio_pago"].choices = [("", "Todos"), *MovimientoFondo.Medio.choices]
-        self.fields["categoria"].choices = [("", "Todas")] + [
-            (f"{clase}:{valor}", f"{clase.title()} · {texto}")
-            for clase, categorias in [("ingreso", MovimientoFondo.CategoriaIngreso.choices), ("egreso", MovimientoFondo.CategoriaEgreso.choices)]
-            for valor, texto in categorias
+        clase = self.data.get("clase", "")
+        categorias = {
+            "ingreso": MovimientoFondo.CategoriaIngreso.choices,
+            "egreso": MovimientoFondo.CategoriaEgreso.choices,
+        }.get(clase, [])
+        self.fields["categoria"].disabled = not categorias
+        self.fields["categoria"].choices = [("", "Todas" if categorias else "Elegí ingreso o egreso")] + [
+            (f"{clase}:{valor}", texto) for valor, texto in categorias
         ]
+        self.order_fields(["desde", "hasta", "clase", "categoria", "estado", "medio_pago"])
+        if self.is_bound and self.data.get("categoria") and not self.data["categoria"].startswith(f"{clase}:"):
+            self.data = self.data.copy()
+            self.data["categoria"] = ""
+
+
+class MovimientosSesionForm(HistorialMovimientosForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in ("desde", "hasta", "estado"):
+            self.fields.pop(campo)
+        self.order_fields(["medio_pago", "clase", "categoria"])

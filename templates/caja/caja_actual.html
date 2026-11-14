@@ -1,8 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Caja | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Caja</h1><a class="boton boton-secundario" href="{% url 'caja:historial_sesiones' %}">Historial</a></header>
-<section class="tarjeta"><p>No hay una sesión abierta.</p>
-{% if ultimo_cierre %}<p>Último cierre: <a href="{% url 'caja:sesion_detalle' ultimo_cierre.pk %}">{{ ultimo_cierre.numero }}</a> · Efectivo contado: $ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</p>{% endif %}
-<a class="boton boton-primario" href="{% url 'caja:caja_abrir' %}">Abrir caja</a></section>
+<header class="tarjeta caja-encabezado"><h1>Caja</h1><p>Consultá el efectivo y los movimientos de cada sesión.</p></header>
+{% include "caja/navegacion.html" with seccion="actual" only %}
+<section class="tarjeta caja-sin-sesion">
+    <h2>No hay una sesión abierta</h2>
+    {% if ultimo_cierre %}<p>Último cierre: <a class="enlace-tabla" href="{% url 'caja:sesion_detalle' ultimo_cierre.pk %}">{{ ultimo_cierre.numero }}</a> · {{ ultimo_cierre.cerrada_en|date:"d/m/Y H:i" }}</p><p>Efectivo contado: <strong>$ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</strong></p>{% endif %}
+    <a class="boton boton-primario" href="{% url 'caja:caja_abrir' %}">Abrir caja</a>
+</section>
 {% endblock %}

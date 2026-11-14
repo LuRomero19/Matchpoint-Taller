@@ -1,9 +1,12 @@
-<div class="tabla-contenedor"><table>
-    <thead><tr><th>Movimiento</th><th>Clase</th><th>Registro</th><th>Concepto</th><th>Medio</th><th>Monto</th><th>Estado</th>{% if sesion.estado == 'cerrada' %}<th>Al cierre</th>{% endif %}</tr></thead>
+<div class="tabla-contenedor"><table class="caja-movimientos">
+    <thead><tr><th scope="col">Movimiento</th><th scope="col">Concepto</th><th scope="col">Medio</th><th scope="col" class="caja-monto">Importe</th><th scope="col">Estado</th>{% if sesion.estado == 'cerrada' %}<th scope="col">Al cierre</th>{% endif %}</tr></thead>
     <tbody>{% for movimiento in pagina %}<tr>
-        <td><a href="{% url 'caja:movimiento_detalle' movimiento.pk %}">{{ movimiento.numero }}</a></td>
-        <td>{{ movimiento.get_clase_display }}{% if movimiento.categoria_egreso == 'devoluciones' %} · Devolución{% endif %}</td><td>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</td><td>{{ movimiento.concepto|truncatechars:100 }}</td>
-        <td>{{ movimiento.get_medio_pago_display }}</td><td>$ {{ movimiento.monto|floatformat:"2g" }}</td><td>{{ movimiento.get_estado_display }}</td>{% if sesion.estado == 'cerrada' %}<td>{{ movimiento.incluido_al_cierre|yesno:"Incluido,Excluido" }}{% if movimiento.anulado_en > sesion.cerrada_en %} · Anulado después{% endif %}</td>{% endif %}
-    </tr>{% empty %}<tr><td colspan="8">No hay movimientos registrados.</td></tr>{% endfor %}</tbody>
+        <td><a class="enlace-tabla" href="{% url 'caja:movimiento_detalle' movimiento.pk %}">{{ movimiento.numero }}</a><small>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</small></td>
+        <td><span class="caja-clase">{{ movimiento.get_clase_display }}{% if movimiento.categoria_egreso == 'devoluciones' %} · Devolución{% endif %}</span><span>{{ movimiento.concepto|truncatechars:100 }}</span></td>
+        <td>{{ movimiento.get_medio_pago_display }}</td>
+        <td class="caja-monto">$ {{ movimiento.monto|floatformat:"2g" }}</td>
+        <td><span class="caja-estado{% if movimiento.estado == 'vigente' %} caja-estado-abierta{% endif %}">{{ movimiento.get_estado_display }}</span></td>
+        {% if sesion.estado == 'cerrada' %}<td>{{ movimiento.incluido_al_cierre|yesno:"Incluido,Excluido" }}{% if movimiento.anulado_en > sesion.cerrada_en %}<small>Anulado después del cierre</small>{% endif %}</td>{% endif %}
+    </tr>{% empty %}<tr><td class="estado-vacio" colspan="{% if sesion.estado == 'cerrada' %}6{% else %}5{% endif %}">No hay movimientos para mostrar.</td></tr>{% endfor %}</tbody>
 </table></div>
-{% include "caja/_paginacion.html" %}
+{% include "componentes/paginacion.html" with pagina=pagina entidad="movimientos" parametros=parametros only %}

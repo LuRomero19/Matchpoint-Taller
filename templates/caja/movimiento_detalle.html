@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}{{ movimiento.get_clase_display }} {{ movimiento.numero }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
 <header class="tarjeta encabezado-pagina"><h1>{{ movimiento.get_clase_display }} {{ movimiento.numero }}</h1><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' movimiento.sesion_id %}">Ver sesión de caja</a></header>
 <section class="tarjeta"><dl class="perfil-lista">
