@@ -1,42 +1,52 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block titulo %}Iniciar sesión | Academia TM{% endblock %}
+{% block titulo %}Academia TM | Tenis en Salta{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/acceso.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-acceso{% endblock %}
+
+{% block navegacion %}
+<header class="acceso-barra">
+    <a class="marca" href="{% url 'inicio' %}">
+        <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="48" height="48">
+        <span>Academia TM</span>
+    </a>
+</header>
+{% endblock %}
 
 {% block contenido %}
-<section class="tarjeta tarjeta-angosta">
-    <h1>Iniciar sesión</h1>
-
-    {% if form.errors %}
-        <div class="mensaje mensaje-error">
-            {% for error in form.non_field_errors %}
-                {{ error }}
-            {% empty %}
-                El usuario o la contraseña no son correctos.
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-
-        <div class="grupo-campo">
-            <label for="{{ form.username.id_for_label }}">Usuario</label>
-            {{ form.username }}
-        </div>
-
-        <div class="grupo-campo">
-            <label for="{{ form.password.id_for_label }}">Contraseña</label>
-            {{ form.password }}
-        </div>
-
-        <button class="boton boton-primario boton-bloque" type="submit">
-            Ingresar
-        </button>
-    </form>
-    <div class="acciones-acceso">
-        <a class="enlace-volver" href="{% url 'password_reset' %}">Olvidé mi contraseña</a>
-        <a class="enlace-volver" href="{% url 'registro' %}">Crear una cuenta</a>
-    </div>
-</section>
+<div class="acceso-composicion">
+    <section class="acceso-presentacion" aria-labelledby="acceso-titulo">
+        <h1 id="acceso-titulo">Tu próximo encuentro<br>empieza acá<span class="acceso-punto">.</span></h1>
+        <p>Clases, reservas y todo lo que necesitás<br>para seguir jugando.</p>
+    </section>
+    <section class="acceso-formulario" aria-labelledby="login-titulo">
+        <h2 id="login-titulo">Iniciar sesión</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% if form.non_field_errors %}
+                <div class="mensaje mensaje-error" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+            <div class="grupo-campo">
+                <label for="{{ form.username.id_for_label }}">Usuario</label>
+                {{ form.username }}
+                {% for error in form.username.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grupo-campo">
+                <label for="{{ form.password.id_for_label }}">Contraseña</label>
+                {{ form.password }}
+                {% for error in form.password.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <a class="acceso-recuperar" href="{% url 'password_reset' %}">Olvidé mi contraseña</a>
+            <button class="boton boton-primario boton-bloque" type="submit">Ingresar</button>
+        </form>
+        <div class="acceso-registro"><a href="{% url 'registro' %}">Crear una cuenta</a></div>
+    </section>
+</div>
+<footer class="acceso-pie">
+    <span>Fotografía de <a href="https://www.pexels.com/photo/tennis-court-with-a-net-6010286/" target="_blank" rel="noopener noreferrer">Tima Miroshnichenko / Pexels</a></span>
+</footer>
 {% endblock %}

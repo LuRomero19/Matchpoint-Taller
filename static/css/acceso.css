@@ -1,0 +1,85 @@
+body:has(.contenido-acceso) {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    background: #252034;
+    background-image: url("../img/tenis.jpg");
+    background-position: center 53%;
+    background-size: cover;
+}
+
+.acceso-barra {
+    width: min(1440px, 100%);
+    margin-inline: auto;
+    padding: 20px clamp(24px, 5vw, 80px);
+}
+.acceso-barra .marca { color: white; gap: 14px; text-decoration: none; }
+.acceso-barra .marca-logo { width: 48px; height: 48px; }
+
+body > .contenido-principal.contenido-acceso {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: min(1440px, 100%);
+    padding: 0 clamp(24px, 5vw, 80px) 16px;
+}
+.contenido-acceso > .mensajes { color: var(--texto); }
+.acceso-composicion {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(32px, 6vw, 96px);
+    padding-block: 8px 24px;
+}
+.acceso-presentacion h1 { font-size: clamp(2.5rem, 4.1vw, 4.25rem); line-height: 1.09; letter-spacing: -.045em; }
+.acceso-presentacion p { margin: 24px 0 0; color: #eee6f3; font-size: 1.1875rem; line-height: 1.65; }
+
+.acceso-formulario {
+    width: 100%;
+    max-width: 420px;
+    justify-self: end;
+    padding: clamp(24px, 3vw, 40px);
+    color: var(--texto);
+    background: var(--superficie);
+    border-top: 4px solid var(--acento);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px #140a2640;
+}
+.acceso-formulario h2 { font-size: 1.75rem; }
+.acceso-formulario form { margin-top: 28px; }
+.acceso-formulario .grupo-campo { margin-bottom: 20px; }
+.acceso-formulario input { border-radius: 8px; }
+.acceso-formulario .boton { min-height: 46px; border-radius: 8px; }
+.acceso-formulario .mensaje p { margin: 0; }
+.acceso-formulario .error-campo { margin: 6px 0 0; font-size: .875rem; color: var(--peligro); }
+.acceso-recuperar { display: block; width: fit-content; margin: -4px 0 24px auto; }
+.acceso-recuperar,
+.acceso-registro a { color: var(--primario); font-size: .9rem; font-weight: 600; text-underline-offset: 3px; }
+.acceso-registro { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--borde); text-align: center; }
+.acceso-pie { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; color: #e0d6e7; font-size: .75rem; }
+.acceso-pie a { text-underline-offset: 3px; }
+.acceso-barra a:focus-visible,
+.contenido-acceso a:focus-visible { outline: 2px solid var(--acento); outline-offset: 4px; }
+.acceso-formulario a:focus-visible { outline-color: var(--primario); }
+
+@media (max-width: 700px) {
+    .acceso-barra { padding-block: 20px; }
+    .acceso-composicion { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 8px 40px; }
+    .acceso-presentacion h1 { font-size: clamp(2rem, 6vw, 2.75rem); }
+    .acceso-presentacion br { display: none; }
+    .acceso-presentacion p { margin-top: 12px; font-size: 1rem; }
+    .acceso-formulario { justify-self: center; max-width: 460px; }
+}
+
+@media (min-width: 701px) and (max-height: 760px) {
+    .acceso-composicion { align-content: start; }
+    .acceso-formulario { padding: 24px 32px; }
+    .acceso-formulario form { margin-top: 20px; }
+    .acceso-formulario .grupo-campo { margin-bottom: 16px; }
+    .acceso-recuperar { margin-bottom: 20px; }
+    .acceso-registro { margin-top: 16px; padding-top: 16px; }
+}
+
+.acceso-punto { color: var(--acento); }
