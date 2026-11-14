@@ -19,11 +19,13 @@
 }
 
 .agenda-controles {
+    border: 1px solid var(--borde);
+    border-radius: 10px;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .agenda-controles .grupo-campo {
@@ -128,7 +130,11 @@
 }
 
 .agenda-titulo-fecha {
-    margin-bottom: 12px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie);
 }
 
 .agenda-titulo-fecha h2 {
@@ -150,7 +156,7 @@
 .agenda-tabla-contenedor {
     overflow-x: auto;
     border: 1px solid var(--borde);
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--superficie);
 }
 
@@ -417,7 +423,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     top: 16px;
     padding: 18px;
     border: 1px solid var(--borde);
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--superficie);
     min-width: 0;
     overflow-wrap: anywhere;
@@ -592,11 +598,15 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 
 .agenda-leyenda {
     display: flex;
-    gap: 12px;
+    gap: 12px 20px;
     flex-wrap: wrap;
-    margin-top: 12px;
+    margin-top: 20px;
     color: var(--texto-suave);
-    font-size: .75rem;
+    font-size: .8rem;
+    padding: 12px 16px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie);
 }
 
 .agenda-leyenda span {
@@ -983,4 +993,15 @@ button.agenda-opcion:hover {
     margin: 8px 0 0;
     color: var(--advertencia);
     font-size: .85rem;
+}
+
+.agenda-encabezado {
+    margin-bottom: 20px;
+    border: 0;
+    border-top: 3px solid var(--acento);
+    border-radius: 10px;
+}
+
+.agenda-encabezado .boton {
+    border-radius: 10px;
 }

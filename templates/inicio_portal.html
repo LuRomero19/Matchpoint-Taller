@@ -1,6 +1,9 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Portal | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-inicio{% endblock %}
 
 {% block contenido %}
 <section class="tarjeta inicio-portal" aria-labelledby="inicio-portal-titulo">

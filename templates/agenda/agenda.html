@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-pagina">
+<header class="tarjeta encabezado-pagina agenda-encabezado">
     <h1>Agenda</h1>
     {% if es_administrador and agenda.columnas %}
         <div class="acciones">
@@ -136,7 +136,7 @@
                 {% else %}
                     <p class="tarjeta estado-vacio">No hay horarios de funcionamiento ni actividades para este período.</p>
                 {% endif %}
-                <div class="agenda-leyenda">
+                <div class="agenda-leyenda" role="group" aria-label="Tipos de evento">
                     <span><i aria-hidden="true"></i>{% if es_administrador %}Reserva{% else %}Mi reserva{% endif %}</span>
                     <span><i class="agenda-leyenda-clase" aria-hidden="true"></i>{% if es_administrador %}Clase{% else %}Mi clase{% endif %}</span>
                     {% if es_administrador %}<span><i class="agenda-leyenda-bloqueo" aria-hidden="true"></i>Bloqueo</span>{% else %}<span><i class="agenda-leyenda-ocupado" aria-hidden="true"></i>No disponible</span>{% endif %}
