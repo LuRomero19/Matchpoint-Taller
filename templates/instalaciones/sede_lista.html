@@ -3,6 +3,10 @@
 
 {% block titulo %}Sedes | Academia TM{% endblock %}
 
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">{% endblock %}
+
+{% block clase_contenido %}contenido-instalaciones{% endblock %}
+
 {% block contenido %}
 <div class="tarjeta encabezado-pagina">
     <h1>Sedes</h1>
@@ -28,41 +32,21 @@
     </div>
 </form>
 
-<section class="tarjeta tabla-contenedor">
-    <table>
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Dirección</th>
-                <th>Estado</th>
-                <th class="acciones-columna">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for sede in sedes %}
-                <tr>
-                    <td><strong>{{ sede.nombre }}</strong></td>
-                    <td>{{ sede.direccion|default:"-" }}</td>
-                    <td>
-                        {% include "componentes/badge_estado.html" with estado=sede.estado texto=sede.get_estado_display only %}
-                    </td>
-                    <td>
-                        <div class="acciones">
-                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
-                                Detalles
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td class="estado-vacio" colspan="4">
-                        Todavía no hay sedes registradas.
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<section class="sedes-tarjetas" aria-label="Sedes">
+    {% for sede in sedes %}
+        <article class="tarjeta sede-tarjeta">
+            {% cycle 'img/sedes-geometria.svg' 'img/geometria-equilibrio.svg' 'img/geometria-orbitas.svg' as ilustracion_sede silent %}
+            <img class="sede-tarjeta-imagen" src="{% static ilustracion_sede %}" alt="" width="600" height="300">
+            <h2 class="instalacion-nombre-estado">
+                <span class="instalacion-estado-punto{% if sede.estado == 'activa' %} instalacion-estado-punto-activa{% endif %}" role="img" aria-label="{{ sede.get_estado_display }}" title="{{ sede.get_estado_display }}"></span>
+                {{ sede.nombre }}
+            </h2>
+            <p>{{ sede.direccion|default:"Sin dirección registrada" }}</p>
+            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}" aria-label="Ver detalles de {{ sede.nombre }}">Ver detalles</a>
+        </article>
+    {% empty %}
+        <p class="tarjeta estado-vacio">No hay sedes para mostrar.</p>
+    {% endfor %}
 </section>
 <script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

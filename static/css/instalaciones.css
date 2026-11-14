@@ -1,0 +1,117 @@
+body > .contenido-principal.contenido-instalaciones {
+    width: min(1120px, calc(100% - 96px));
+    padding-top: 48px;
+    padding-bottom: 48px;
+}
+
+.contenido-instalaciones .tarjeta,
+.contenido-instalaciones .formulario-guiado-ayuda,
+.contenido-instalaciones .boton,
+.contenido-instalaciones .form-control {
+    border-radius: 10px;
+}
+
+.contenido-instalaciones > .encabezado-pagina {
+    border: 0;
+    border-top: 3px solid var(--acento);
+}
+
+.contenido-instalaciones .tarjeta-busqueda {
+    margin-block: 24px;
+    padding: 20px;
+}
+
+.contenido-instalaciones .tabla-contenedor {
+    border-bottom: 3px solid var(--acento);
+}
+
+.contenido-instalaciones .tarjeta-formulario {
+    width: 100%;
+    max-width: none;
+    background: var(--superficie);
+    border-top: 3px solid var(--acento);
+    border-bottom: 3px solid var(--acento);
+}
+
+.contenido-instalaciones .formulario-guiado-ayuda {
+    background: var(--superficie);
+}
+
+.contenido-instalaciones .tarjeta-formulario .grupo-campo {
+    margin-bottom: 20px;
+}
+
+.contenido-instalaciones .tarjeta-formulario .acciones-formulario {
+    justify-content: flex-start;
+    gap: 10px;
+    margin: 24px -20px -20px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--borde);
+    border-radius: 0 0 10px 10px;
+}
+
+.contenido-instalaciones .clase-observaciones-edicion {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.instalacion-nombre-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.instalacion-estado-punto {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--texto-suave);
+}
+
+.instalacion-estado-punto-activa { background: var(--acento); }
+
+.sedes-tarjetas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 24px;
+}
+
+.sede-tarjeta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border-bottom: 3px solid var(--acento);
+}
+
+.sede-tarjeta h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    overflow-wrap: anywhere;
+}
+
+.sede-tarjeta p {
+    margin: 12px 0 24px;
+    color: var(--texto-suave);
+    overflow-wrap: anywhere;
+}
+
+.sede-tarjeta > .boton {
+    margin-top: auto;
+}
+
+.sede-tarjeta-imagen {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.sede-formulario-introduccion {
+    margin: 0 0 24px;
+    color: var(--texto-suave);
+}

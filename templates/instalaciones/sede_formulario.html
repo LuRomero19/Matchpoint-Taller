@@ -3,11 +3,19 @@
 
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 
+{% block estilos %}{% if not sede %}<link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">{% endif %}{% endblock %}
+
+{% block clase_contenido %}{% if not sede %}contenido-instalaciones{% endif %}{% endblock %}
+
 {% block contenido %}
-<div class="formulario-guiado-distribucion">
+{% if sede %}<div class="formulario-guiado-distribucion">{% endif %}
 <section class="tarjeta tarjeta-formulario formulario-guiado">
     <form method="post" novalidate aria-labelledby="formulario-titulo">
         <h1 id="formulario-titulo">{{ titulo }}</h1>
+        {% if not sede %}
+            <p class="sede-formulario-introduccion">Las sedes organizan las canchas de la academia. Después de crear una sede, podés agregar sus canchas y definir los horarios de funcionamiento y el precio de reserva.</p>
+            <p class="nota-campo">Esta información es pública y puede verla cualquier usuario registrado</p>
+        {% endif %}
         {% csrf_token %}
 
         {% if formulario.non_field_errors %}
@@ -43,6 +51,7 @@
         </div>
     </form>
 </section>
+{% if sede %}
 <aside class="formulario-guiado-ayuda" aria-label="Ayuda para registrar una sede">
     <section aria-labelledby="sede-ayuda-titulo">
         <h2 id="sede-ayuda-titulo">{% if sede %}Datos de la sede{% else %}Qué sigue{% endif %}</h2>
@@ -66,4 +75,5 @@
     </section>
 </aside>
 </div>
+{% endif %}
 {% endblock %}
