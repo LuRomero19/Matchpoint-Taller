@@ -388,7 +388,7 @@ class UsuarioBusquedaForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Nombre, apellido, email o nombre de usuario",
+                "placeholder": "Nombre, email, nombre de usuario...",
             }
         ),
     )

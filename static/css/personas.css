@@ -65,3 +65,153 @@
 .selector-usuarios-alternar[aria-expanded="true"] svg {
     transform: rotate(45deg);
 }
+
+.tarjeta-formulario-usuario {
+    max-width: none;
+    border-top: 3px solid var(--acento);
+    border-bottom: 3px solid var(--acento);
+}
+
+body > .contenido-principal.contenido-usuarios {
+    width: min(1120px, calc(100% - 96px));
+    padding-top: 48px;
+    padding-bottom: 48px;
+}
+
+.nota-campo-ambar {
+    border-left-color: var(--advertencia);
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
+}
+
+.tarjeta-formulario-usuario,
+.tarjeta-formulario-usuario .form-control,
+.tarjeta-formulario-usuario .grupo-campo input,
+.tarjeta-formulario-usuario .boton {
+    border-radius: 10px;
+}
+
+.tarjeta-formulario-usuario .grupo-campo {
+    margin-bottom: 20px;
+}
+
+.tarjeta-formulario-usuario .acciones-formulario {
+    justify-content: flex-start;
+    gap: 10px;
+    margin: 24px -20px -20px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--borde);
+    border-radius: 0 0 10px 10px;
+}
+
+.paginacion-usuarios {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    background: #faf9fc;
+    margin: 0;
+    padding: 16px 20px;
+    border-top: 1px solid var(--borde);
+}
+
+.paginacion-usuarios-resumen,
+.paginacion-usuarios-pagina {
+    color: var(--texto-suave);
+    font-size: 0.875rem;
+}
+
+.paginacion-usuarios-resumen strong {
+    color: var(--texto);
+    font-weight: 600;
+}
+
+.paginacion-usuarios-controles {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.paginacion-usuarios .boton {
+    border-radius: 8px;
+    background: var(--superficie);
+}
+
+.paginacion-usuarios .boton:hover {
+    background: var(--primario-suave);
+}
+
+.listado-usuarios > .tarjeta {
+    border-radius: 10px;
+    border-top: 3px solid var(--acento);
+    border-bottom: 3px solid var(--acento);
+}
+
+.listado-usuarios .tarjeta-busqueda {
+    border-top: 1px solid var(--borde);
+    border-bottom: 1px solid var(--borde);
+    margin-top: 24px;
+    margin-bottom: 24px;
+    padding: 20px;
+}
+
+.listado-usuarios .boton,
+.listado-usuarios .form-control {
+    border-radius: 10px;
+}
+
+.listado-usuarios .paginacion-usuarios {
+    border-radius: 0 0 8px 8px;
+}
+
+.listado-usuarios > .encabezado-pagina {
+    border: 0;
+}
+
+.listado-usuarios > .encabezado-pagina {
+    border-top: 3px solid var(--acento);
+}
+
+.listado-usuarios > .tabla-contenedor {
+    border-top: 1px solid var(--borde);
+}
+
+.usuario-nombre-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.usuario-estado-punto {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--texto-suave);
+}
+
+.usuario-estado-punto-activo {
+    background: var(--acento);
+}
+
+.usuario-campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+}
+
+.usuario-campos > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+.usuario-campos > .usuario-campo-mitad {
+    grid-column: auto;
+}
+
+.tarjeta-formulario-usuario .clase-observaciones-edicion {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}

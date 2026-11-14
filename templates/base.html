@@ -39,7 +39,7 @@
         {% endif %}
     {% endblock %}
 
-    <main class="contenedor contenido-principal" id="contenido-principal" tabindex="-1">
+    <main class="contenedor contenido-principal {% block clase_contenido %}{% endblock %}" id="contenido-principal" tabindex="-1">
         {% if messages %}
             <section class="mensajes" aria-label="Mensajes del sistema">
                 {% for message in messages %}
