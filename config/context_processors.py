@@ -3,13 +3,31 @@ from django.urls import reverse
 from usuarios.models import Rol
 
 
+DESTINOS_NAVEGACION = {
+    "inicio": ("casa", "actividad"),
+    "agenda:agenda": ("calendario", "actividad"),
+    "clases:planilla": ("planilla", "actividad"),
+    "clases:actividad_clases": ("pelota", "actividad"),
+    "membresias:mis_contrataciones": ("cartera", "actividad"),
+    "usuarios:usuario_lista": ("usuarios", "gestion"),
+    "membresias:catalogos": ("libro", "gestion"),
+    "caja:caja_actual": ("cartera", "gestion"),
+    "instalaciones:sede_lista": ("ubicacion", "academia"),
+    "clases:feriado_lista": ("calendario", "academia"),
+    "membresias:oferta": ("libro", "academia"),
+    "comunicaciones:envios_lista": ("correo", "seguimiento"),
+    "auditoria:auditoria_lista": ("auditoria", "seguimiento"),
+}
+
+
 def navegacion(request):
     usuario = request.user
+    ruta = request.resolver_match
+    solo_marca = ruta is not None and ruta.view_name == "confirmar_verificacion"
     if not usuario.is_authenticated or not usuario.is_active or usuario.debe_cambiar_contrasena:
-        return {"navegacion_app": {}}
+        return {"navegacion_app": {"solo_marca": solo_marca}}
     roles = set(usuario.roles.values_list("rol__codigo", flat=True))
     administrador = Rol.ADMINISTRADOR in roles and usuario.esta_habilitado
-    ruta = request.resolver_match
     namespace = ruta.namespace if ruta else ""
     nombre_vista = ruta.view_name if ruta else ""
     feriados_activo = namespace == "clases" and ruta.url_name.startswith("feriado_")
@@ -25,9 +43,11 @@ def navegacion(request):
 
     def enlace(nombre, destino, activo, descripcion, kwargs=None):
         url = reverse(destino, kwargs=kwargs)
+        icono, grupo = DESTINOS_NAVEGACION[destino]
         return {
             "nombre": nombre, "url": url, "activo": activo,
             "actual": request.path == url, "descripcion": descripcion,
+            "destino": destino, "icono": icono, "grupo": grupo,
         }
 
     agenda = enlace(
@@ -38,7 +58,9 @@ def navegacion(request):
     if not usuario.esta_habilitado:
         agenda = None
     oferta = enlace(
-        "Oferta", "membresias:oferta", namespace == "membresias" and ruta.url_name.startswith("oferta"),
+        "Oferta", "membresias:oferta",
+        (namespace == "membresias" and ruta.url_name.startswith("oferta"))
+        or (namespace == "instalaciones" and ruta.url_name.startswith("publico_")),
         "Planes de clases, membresías de socios y tarifas de reservas.",
     ) if Rol.PUBLICO in roles else None
     mis_contrataciones = enlace(
@@ -48,7 +70,10 @@ def navegacion(request):
     clases = []
     if administrador:
         clases.append(enlace("Planilla semanal", "clases:planilla", clases_activo, "Programación habitual de clases."))
-    elif usuario.esta_habilitado and roles.intersection((Rol.PROFESOR, Rol.ALUMNO)):
+    elif usuario.esta_habilitado and (
+        roles.intersection((Rol.PROFESOR, Rol.ALUMNO))
+        or usuario.clases_como_participante.exists() or usuario.asistencias.exists()
+    ):
         clases.append(enlace(
             "Mis clases", "clases:actividad_clases", clases_activo,
             "Consulta de tus clases y su historial.", {"usuario_id": usuario.pk},
@@ -67,7 +92,7 @@ def navegacion(request):
     membresias = None
     if administrador:
         membresias = enlace(
-            "Membresías", "membresias:catalogos",
+            "Planes y membresías", "membresias:catalogos",
             namespace == "membresias" and not ruta.url_name.startswith("oferta") and not contrataciones_propias_activo,
             "Planes, membresías de socios y contrataciones.",
         )
@@ -85,7 +110,7 @@ def navegacion(request):
     modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}] if agenda else []
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
-        for item in administracion if item["nombre"] not in ("Feriados", "Membresías")
+        for item in administracion if item["destino"] not in ("clases:feriado_lista", "membresias:catalogos")
     )
     if clases:
         modulos_inicio.append({
@@ -112,7 +137,19 @@ def navegacion(request):
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
         administracion.append(auditoria)
+    inicio = enlace("Inicio", "inicio", nombre_vista == "inicio", "Inicio de la academia.")
+    destinos = [item for item in [inicio, agenda, *clases, mis_contrataciones, oferta, *administracion] if item]
+    grupos = []
+    for codigo, titulo in (
+        ("actividad", "Actividad" if administrador else "Mi actividad"),
+        ("gestion", "Gestión"), ("academia", "Academia"), ("seguimiento", "Seguimiento"),
+    ):
+        items = [item for item in destinos if item["grupo"] == codigo]
+        if items:
+            grupos.append({"codigo": codigo, "titulo": titulo, "items": items})
     return {"navegacion_app": {
+        "mostrar_sidebar": not solo_marca and (usuario.esta_habilitado or Rol.PUBLICO in roles),
+        "solo_marca": solo_marca, "grupos": grupos,
         "mostrar_perfil": usuario.esta_habilitado or Rol.PUBLICO in roles,
         "inicio_activo": nombre_vista == "inicio", "agenda": agenda, "oferta": oferta,
         "mis_contrataciones": mis_contrataciones,

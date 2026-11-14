@@ -12,48 +12,34 @@
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/observaciones.css' %}">
     <link rel="stylesheet" href="{% static 'css/personas.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navegacion.css' %}">
     {% block estilos %}{% endblock %}
     <script src="{% static 'js/navegacion.js' %}" defer></script>
     <script src="{% static 'js/pestanas.js' %}" defer></script>
     <script src="{% static 'js/mensajes.js' %}" defer></script>
     <script src="{% static 'js/confirmaciones.js' %}" defer></script>
 </head>
-<body>
-    <header class="barra-superior">
-        <div class="contenedor navegacion">
-            <a class="marca" href="{% url 'inicio' %}">
-                <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
-                <span>Academia TM</span>
-            </a>
-            {% block navegacion %}
-            {% if request.user.is_authenticated %}
-                <nav aria-label="Navegación principal">
-                    <div class="navegacion-destinos">
-                    <a href="{% url 'inicio' %}"{% if navegacion_app.inicio_activo %} aria-current="page"{% endif %}>Inicio</a>
-                    {% if navegacion_app.agenda %}{% include "componentes/navegacion_enlace.html" with item=navegacion_app.agenda only %}{% endif %}
-                    {% for item in navegacion_app.clases %}{% include "componentes/navegacion_enlace.html" with item=item only %}{% endfor %}
-                    {% if navegacion_app.mis_contrataciones %}{% include "componentes/navegacion_enlace.html" with item=navegacion_app.mis_contrataciones only %}{% endif %}
-                    {% if navegacion_app.oferta %}{% include "componentes/navegacion_enlace.html" with item=navegacion_app.oferta only %}{% endif %}
-                    {% if navegacion_app.administracion|length == 1 %}
-                        {% for item in navegacion_app.administracion %}{% include "componentes/navegacion_enlace.html" with item=item only %}{% endfor %}
-                    {% elif navegacion_app.administracion %}
-                        {% include "componentes/navegacion_grupo.html" with titulo="Administración" identificador="administracion" items=navegacion_app.administracion activo=navegacion_app.administracion_activo only %}
+<body{% if navegacion_app.mostrar_sidebar %} class="con-sidebar"{% endif %}>
+    <a class="saltar-contenido" href="#contenido-principal">Ir al contenido</a>
+    {% block navegacion %}
+        {% if navegacion_app.mostrar_sidebar %}
+            {% include "componentes/sidebar.html" %}
+        {% else %}
+            <header class="barra-superior">
+                <div class="contenedor cabecera-simple">
+                    <a class="marca" href="{% url 'inicio' %}">
+                        <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
+                        <span>Academia TM</span>
+                    </a>
+                    {% if request.user.is_authenticated and not navegacion_app.solo_marca %}
+                        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="cabecera-salir" type="submit">Cerrar sesión</button></form>
                     {% endif %}
-                    </div>
-                    <details class="navegacion-grupo navegacion-cuenta" data-navegacion-grupo>
-                        <summary class="enlace-boton{% if navegacion_app.perfil_activo %} navegacion-activa{% endif %}" id="navegacion-cuenta" role="button" aria-expanded="false" aria-haspopup="true" aria-controls="navegacion-cuenta-items"><span class="navegacion-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>{{ request.user.first_name|default:request.user.username }} <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary>
-                        <ul role="menu" id="navegacion-cuenta-items" aria-labelledby="navegacion-cuenta">
-                            {% if navegacion_app.mostrar_perfil %}<li><a role="menuitem" href="{% url 'usuarios:usuario_detalle' request.user.pk %}"{% if navegacion_app.perfil_activo %} class="navegacion-activa" aria-current="page"{% endif %}>Mi perfil</a></li>{% endif %}
-                            <li class="navegacion-salir"><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button role="menuitem" type="submit">Cerrar sesión</button></form></li>
-                        </ul>
-                    </details>
-                </nav>
-            {% endif %}
-            {% endblock %}
-        </div>
-    </header>
+                </div>
+            </header>
+        {% endif %}
+    {% endblock %}
 
-    <main class="contenedor contenido-principal">
+    <main class="contenedor contenido-principal" id="contenido-principal" tabindex="-1">
         {% if messages %}
             <section class="mensajes" aria-label="Mensajes del sistema">
                 {% for message in messages %}
