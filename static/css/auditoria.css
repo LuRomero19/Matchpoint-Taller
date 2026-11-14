@@ -77,3 +77,71 @@
     margin: 0;
     white-space: pre-wrap;
 }
+
+body > .contenido-principal.contenido-auditoria {
+    width: min(1120px, calc(100% - 96px));
+    padding-block: 48px;
+}
+.contenido-auditoria .tarjeta,
+.contenido-auditoria .boton { border-radius: 10px; }
+.contenido-auditoria > .auditoria-encabezado {
+    display: block;
+    border: 0;
+    border-top: 3px solid var(--acento);
+}
+.auditoria-encabezado p { margin: 12px 0 0; }
+.auditoria-navegacion {
+    display: flex;
+    gap: 24px;
+    margin-block: 24px;
+    border-bottom: 1px solid var(--borde);
+}
+.auditoria-pestana {
+    padding: 12px 0;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    color: var(--texto-suave);
+}
+.auditoria-pestana[aria-current] { border-bottom-color: var(--primario); color: var(--primario); font-weight: 700; }
+.auditoria-pestana:hover { color: var(--primario); }
+.auditoria-lista { border-bottom: 3px solid var(--acento); }
+.auditoria-tabla { min-width: 0; width: 100%; table-layout: fixed; }
+.auditoria-tabla > thead th:first-child { width: 16%; }
+.auditoria-tabla > thead th:nth-child(2) { width: 17%; }
+.auditoria-tabla > thead th:nth-child(3) { width: 16%; }
+.auditoria-tabla > thead th:nth-child(4) { width: 15%; }
+.auditoria-tabla > thead th:nth-child(5) { width: 22%; }
+.auditoria-tabla > thead th:last-child { width: 14%; }
+.auditoria-registro > td { vertical-align: top; overflow-wrap: anywhere; }
+.auditoria-registro time { white-space: normal; font-size: .85rem; }
+.auditoria-desplegar { min-width: 0; white-space: normal; }
+.auditoria-fila-detalle[hidden] { display: none; }
+.auditoria-fila-detalle > td { padding: 20px; }
+.auditoria-valores pre { max-height: 320px; overflow: auto; padding: 16px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; font-size: .8rem; }
+
+
+.auditoria-metadatos {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.auditoria-metadatos table { table-layout: fixed; }
+.auditoria-metadatos table th:nth-child(n) {
+    width: 25%;
+    color: var(--texto-suave);
+    font-size: .85rem;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    vertical-align: top;
+}
+.auditoria-metadatos td { overflow-wrap: anywhere; }
+
+.auditoria-tabla-cambios > thead th:nth-child(1) { width: 20%; }
+.auditoria-tabla-cambios > thead th:nth-child(2) { width: 23%; }
+.auditoria-tabla-cambios > thead th:nth-child(3) { width: 41%; }
+.auditoria-tabla-cambios > thead th:nth-child(4) { width: 16%; }
+.auditoria-operacion-registro { margin-top: 5px; color: var(--texto-suave); }
+.auditoria-operacion-registro .auditoria-referencia { display: inline; }

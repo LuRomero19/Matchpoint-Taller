@@ -6,8 +6,13 @@
 <link rel="stylesheet" href="{% static 'css/auditoria.css' %}">
 {% endblock %}
 
+{% block clase_contenido %}contenido-auditoria{% endblock %}
+
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Auditoría</h1></header>
+<header class="tarjeta encabezado-pagina auditoria-encabezado">
+    <h1>Auditoría</h1>
+    <p class="texto-secundario">Consultá los cambios realizados en el sistema, quién los hizo y los intentos de acceso rechazados.</p>
+</header>
 {% include "auditoria/navegacion.html" %}
 
 <section class="tarjeta tabla-contenedor auditoria-lista" aria-label="Intentos rechazados">
@@ -50,13 +55,7 @@
             {% endfor %}
         </tbody>
     </table>
+{% include "componentes/paginacion.html" with pagina=pagina entidad="intentos" only %}
 </section>
-{% if pagina.paginator.num_pages > 1 %}
-<nav class="tarjeta acciones" aria-label="Páginas de intentos rechazados">
-    {% if pagina.has_previous %}<a class="boton boton-secundario" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-    <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
-    {% if pagina.has_next %}<a class="boton boton-secundario" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
-</nav>
-{% endif %}
 <script src="{% static 'js/auditoria.js' %}" defer></script>
 {% endblock %}
