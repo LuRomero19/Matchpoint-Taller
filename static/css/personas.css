@@ -104,44 +104,6 @@ body > .contenido-principal.contenido-usuarios {
     border-radius: 0 0 10px 10px;
 }
 
-.paginacion-usuarios {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-    background: #faf9fc;
-    margin: 0;
-    padding: 16px 20px;
-    border-top: 1px solid var(--borde);
-}
-
-.paginacion-usuarios-resumen,
-.paginacion-usuarios-pagina {
-    color: var(--texto-suave);
-    font-size: 0.875rem;
-}
-
-.paginacion-usuarios-resumen strong {
-    color: var(--texto);
-    font-weight: 600;
-}
-
-.paginacion-usuarios-controles {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.paginacion-usuarios .boton {
-    border-radius: 8px;
-    background: var(--superficie);
-}
-
-.paginacion-usuarios .boton:hover {
-    background: var(--primario-suave);
-}
-
 .listado-usuarios > .tarjeta {
     border-radius: 10px;
     border-top: 3px solid var(--acento);
@@ -159,10 +121,6 @@ body > .contenido-principal.contenido-usuarios {
 .listado-usuarios .boton,
 .listado-usuarios .form-control {
     border-radius: 10px;
-}
-
-.listado-usuarios .paginacion-usuarios {
-    border-radius: 0 0 8px 8px;
 }
 
 .listado-usuarios > .encabezado-pagina {

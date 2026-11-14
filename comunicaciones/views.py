@@ -39,5 +39,5 @@ def envios_lista(request):
         "pagina": Paginator(registros, 25).get_page(request.GET.get("pagina")),
         "estados": EnvioEmail.Estado.choices, "tipos": EnvioEmail.Tipo.choices,
         "estado_actual": estado, "tipo_actual": tipo, "busqueda": busqueda,
-        "filtros": filtros.urlencode(), "mostrar_filtros": request.GET.get("filtrar") == "1",
+        "filtros": filtros.urlencode(),
     })

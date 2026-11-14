@@ -88,5 +88,3 @@ body > .contenido-principal.contenido-feriados {
     border-bottom: 3px solid var(--acento);
     overflow: hidden;
 }
-
-.feriados-lista .paginacion-usuarios { border-radius: 0 0 8px 8px; }

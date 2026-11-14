@@ -75,16 +75,7 @@
             {% endfor %}
         </tbody>
     </table>
-{% if pagina.has_other_pages %}
-<nav class="paginacion-usuarios" aria-label="Páginas de usuarios">
-    <span class="paginacion-usuarios-resumen"><strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong> de {{ pagina.paginator.count }} usuarios</span>
-    <div class="paginacion-usuarios-controles">
-        {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-        <span class="paginacion-usuarios-pagina">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
-        {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
-    </div>
-</nav>
-{% endif %}
+{% include "componentes/paginacion.html" with pagina=pagina entidad="usuarios" parametros=parametros only %}
 </section>
 <script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

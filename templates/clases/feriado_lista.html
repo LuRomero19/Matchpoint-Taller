@@ -19,14 +19,7 @@
                 {% endfor %}</tbody>
             </table>
         </div>
-        <nav class="paginacion-usuarios" aria-label="Páginas de feriados">
-            <span class="paginacion-usuarios-resumen"><strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong> de {{ pagina.paginator.count }} feriados</span>
-            <div class="paginacion-usuarios-controles">
-                {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-                <span class="paginacion-usuarios-pagina">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
-                {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
-            </div>
-        </nav>
+        {% include "componentes/paginacion.html" with pagina=pagina entidad="feriados" only %}
     {% else %}<p class="estado-vacio">No hay feriados registrados.</p>{% endif %}
 </section>
 {% endblock %}

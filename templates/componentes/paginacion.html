@@ -1,0 +1,10 @@
+{% if pagina.paginator.count %}
+<nav class="paginacion" aria-label="Páginas de {{ entidad }}">
+    <span class="paginacion-resumen"><strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong> de {{ pagina.paginator.count }} {{ entidad }}</span>
+    <div class="paginacion-controles">
+        {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+        <span class="paginacion-pagina">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+        {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+    </div>
+</nav>
+{% endif %}

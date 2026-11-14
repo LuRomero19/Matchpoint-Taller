@@ -1,25 +1,35 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Envíos de email | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/envios.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-envios{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Envíos de email</h1><p class="texto-secundario">Estado de entrega de los mensajes de la academia.</p></header>
-{% if mostrar_filtros %}<section class="tarjeta" aria-label="Filtros de envíos">
-<form method="get" class="formulario">
-    <label for="envios-estado">Estado</label><select id="envios-estado" name="estado" class="form-control"><option value="">Todos</option>{% for valor, texto in estados %}<option value="{{ valor }}"{% if valor == estado_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select>
-    <label for="envios-tipo">Tipo</label><select id="envios-tipo" name="tipo" class="form-control"><option value="">Todos</option>{% for valor, texto in tipos %}<option value="{{ valor }}"{% if valor == tipo_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select>
-    <label for="envios-destinatario">Destinatario</label><input id="envios-destinatario" name="q" type="search" maxlength="150" value="{{ busqueda }}" class="form-control">
-    <div class="acciones-formulario"><button class="boton boton-secundario" type="submit">Aplicar filtros</button><a href="{% url 'comunicaciones:envios_lista' %}">Limpiar</a></div>
-</form></section>{% else %}<p><a class="boton boton-secundario boton-chico" href="?{{ filtros }}&amp;filtrar=1">Filtrar envíos</a></p>{% endif %}
+<header class="tarjeta encabezado-pagina envios-encabezado">
+    <h1>Envíos de email</h1>
+    <p class="texto-secundario">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
+</header>
+<form method="get" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de envíos">
+    <div class="detalle-grid">
+        <div class="grupo-campo"><label for="envios-estado">Estado</label><select id="envios-estado" name="estado" class="form-control"><option value="">Todos</option>{% for valor, texto in estados %}<option value="{{ valor }}"{% if valor == estado_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
+        <div class="grupo-campo"><label for="envios-tipo">Tipo</label><select id="envios-tipo" name="tipo" class="form-control"><option value="">Todos</option>{% for valor, texto in tipos %}<option value="{{ valor }}"{% if valor == tipo_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
+        <div class="grupo-campo"><label for="envios-destinatario">Destinatario</label><input id="envios-destinatario" name="q" type="search" maxlength="150" placeholder="Correo electrónico..." value="{{ busqueda }}" class="form-control"></div>
+    </div>
+    <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'comunicaciones:envios_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
+</form>
 <section class="tarjeta tabla-contenedor" aria-label="Seguimiento de envíos">
 <table><thead><tr><th scope="col">Creado</th><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Estado</th><th scope="col">Detalle</th></tr></thead>
 <tbody>{% for envio in pagina %}<tr>
 <td>{{ envio.creado_en|date:"d/m/Y H:i" }}</td><td>{{ envio.get_tipo_display }}</td><td>{{ envio.destinatario }}</td><td>{{ envio.get_estado_display }}</td>
-<td><details><summary>Ver entrega</summary><dl>
-<dt>Intentos</dt><dd>{{ envio.intentos }}</dd>
-{% if envio.ultimo_intento_en %}<dt>Último intento</dt><dd>{{ envio.ultimo_intento_en|date:"d/m/Y H:i" }}</dd>{% endif %}
-{% if envio.estado == 'pendiente' %}<dt>Próximo intento</dt><dd>{{ envio.proximo_intento_en|date:"d/m/Y H:i" }}</dd>{% endif %}
-{% if envio.aceptado_en %}<dt>Aceptado por el servicio de correo</dt><dd>{{ envio.aceptado_en|date:"d/m/Y H:i" }}</dd>{% endif %}
-{% if envio.error_resumido %}<dt>Resultado del intento</dt><dd>{{ envio.error_resumido }}</dd>{% endif %}
-</dl></details></td></tr>{% empty %}<tr><td colspan="5">No hay envíos para esta consulta.</td></tr>{% endfor %}</tbody></table>
-{% if pagina.has_other_pages %}<nav aria-label="Páginas de envíos">{% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{{ filtros }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %} <span>{{ pagina.number }} de {{ pagina.paginator.num_pages }}</span> {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{{ filtros }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}</nav>{% endif %}
+<td><button type="button" class="boton boton-secundario boton-chico" data-entrega aria-expanded="false" aria-controls="entrega-{{ envio.pk }}">Ver entrega</button></td></tr>
+<tr id="entrega-{{ envio.pk }}" class="envio-entrega" hidden><td colspan="5"><dl>
+<div><dt>Intentos</dt><dd>{{ envio.intentos }}</dd></div>
+{% if envio.ultimo_intento_en %}<div><dt>Último intento</dt><dd>{{ envio.ultimo_intento_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
+{% if envio.estado == 'pendiente' %}<div><dt>Próximo intento</dt><dd>{{ envio.proximo_intento_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
+{% if envio.aceptado_en %}<div><dt>Aceptado por el servicio de correo</dt><dd>{{ envio.aceptado_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
+{% if envio.error_resumido %}<div><dt>Resultado del intento</dt><dd>{{ envio.error_resumido }}</dd></div>{% endif %}
+</dl></td></tr>{% empty %}<tr><td colspan="5">No hay envíos para esta consulta.</td></tr>{% endfor %}</tbody></table>
+{% include "componentes/paginacion.html" with pagina=pagina entidad="envíos" parametros=filtros only %}
 </section>
+<script src="{% static 'js/filtros.js' %}" defer></script>
+<script src="{% static 'js/envios.js' %}" defer></script>
 {% endblock %}
