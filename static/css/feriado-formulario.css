@@ -40,3 +40,53 @@
 .feriado-revision-clases .feriado-conservacion {
     margin-top: 16px;
 }
+
+body > .contenido-principal.contenido-feriados {
+    width: min(1120px, calc(100% - 96px));
+    padding-top: 48px;
+    padding-bottom: 48px;
+}
+
+.contenido-feriados .tarjeta,
+.contenido-feriados .boton,
+.contenido-feriados .form-control {
+    border-radius: 10px;
+}
+
+.contenido-feriados .formulario-guiado {
+    width: 100%;
+    max-width: none;
+    background: var(--superficie);
+    border-top: 3px solid var(--acento);
+    border-bottom: 3px solid var(--acento);
+}
+
+.feriado-introduccion {
+    margin: 0 0 24px;
+    color: var(--texto-suave);
+}
+
+.contenido-feriados .grupo-campo { margin-bottom: 20px; }
+
+.contenido-feriados .acciones-formulario {
+    justify-content: flex-start;
+    gap: 10px;
+    margin: 24px -20px -20px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--borde);
+    border-radius: 0 0 10px 10px;
+}
+
+.listado-feriados > .encabezado-pagina {
+    border: 0;
+    border-top: 3px solid var(--acento);
+    margin-bottom: 24px;
+}
+
+.feriados-lista {
+    padding: 0;
+    border-bottom: 3px solid var(--acento);
+    overflow: hidden;
+}
+
+.feriados-lista .paginacion-usuarios { border-radius: 0 0 8px 8px; }

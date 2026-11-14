@@ -6,11 +6,15 @@
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
 <link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
 {% endblock %}
+{% block clase_contenido %}contenido-feriados{% endblock %}
 {% block contenido %}
-<div class="feriado-formulario{% if not revision %} formulario-guiado-distribucion{% endif %}">
+<div class="feriado-formulario">
 <section class="tarjeta formulario-guiado{% if revision %} feriado-revision{% else %} tarjeta-formulario{% endif %}">
     <form method="post" novalidate aria-labelledby="feriado-titulo">
         <h1 id="feriado-titulo">{% if revision %}Revisar feriado{% else %}Registrar feriado{% endif %}</h1>
+        {% if not revision %}
+            <p class="feriado-introduccion">Los feriados se aplican a todas las sedes y se omiten al generar clases desde la planilla. Antes de registrar una fecha futura, podés revisar las clases programadas que se anularán. Las reservas y los bloqueos se conservan.</p>
+        {% endif %}
         {% csrf_token %}
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
         {% if revision %}
@@ -64,13 +68,6 @@
         {% endif %}
     </form>
 </section>
-{% if not revision %}
-<aside class="formulario-guiado-ayuda" aria-labelledby="feriado-ayuda-titulo">
-    <h2 id="feriado-ayuda-titulo">Cómo se aplica</h2>
-    <img class="formulario-guiado-ilustracion" src="{% static 'img/geometria-ritmo.svg' %}" alt="" width="600" height="300">
-    <p class="feriado-ayuda-detalle">Los feriados afectan a todas las sedes y previenen la creación de clases a través de la planilla.</p>
-    <p class="feriado-ayuda-detalle">Es posible anular clases programadas generadas a través de la planilla en un feriado.</p>
-</aside>
-{% endif %}
+
 </div>
 {% endblock %}

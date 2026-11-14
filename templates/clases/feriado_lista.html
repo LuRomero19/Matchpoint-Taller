@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}Feriados | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}"><link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-feriados listado-feriados{% endblock %}
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Feriados</h1>
     <a class="boton boton-primario" href="{% url 'clases:feriado_registrar' %}">Registrar feriado</a>
 </header>
-<section class="tarjeta">
+<section class="tarjeta feriados-lista">
     {% if pagina %}
         <div class="tabla-contenedor">
             <table>
@@ -18,10 +19,13 @@
                 {% endfor %}</tbody>
             </table>
         </div>
-        <nav class="acciones actividad-paginacion" aria-label="Páginas de feriados">
-            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
-            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+        <nav class="paginacion-usuarios" aria-label="Páginas de feriados">
+            <span class="paginacion-usuarios-resumen"><strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong> de {{ pagina.paginator.count }} feriados</span>
+            <div class="paginacion-usuarios-controles">
+                {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+                <span class="paginacion-usuarios-pagina">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+                {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+            </div>
         </nav>
     {% else %}<p class="estado-vacio">No hay feriados registrados.</p>{% endif %}
 </section>
