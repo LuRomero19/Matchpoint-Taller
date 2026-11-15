@@ -7,3 +7,5 @@ __pycache__
 *.sqlite3
 .env
 .pytest_cache
+output/analitica/
+output/semilla/

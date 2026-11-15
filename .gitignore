@@ -6,3 +6,5 @@ celerybeat-schedule*
 AGENTS.md
 /docs
 /temp
+/output/analitica/
+/output/semilla/
