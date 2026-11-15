@@ -6,14 +6,70 @@ document.addEventListener("DOMContentLoaded", function () {
     var editor = document.querySelector("[data-asistencia-editor]");
     var observaciones = editor.querySelector("textarea");
     var filaActual = null;
+    var confirmacion = document.querySelector("[data-asistencia-confirmacion]");
+    var cambioPendiente = null;
+    var guardando = false;
+    var estadoGuardado = formulario.querySelector("[data-estado-guardado]");
     var buscador = formulario.querySelector("[data-asistencia-buscador]");
     var entrada = buscador.querySelector("[data-busqueda]");
     var resultados = buscador.querySelector("[data-resultados]");
     var estadoBusqueda = buscador.querySelector("[data-estado-busqueda]");
     var solicitud = null;
     var demora = null;
-    var etiquetas = {presente: "Presente", ausente: "Ausente", sin_registrar: "Sin registrar"};
 
+    formulario.addEventListener("submit", function (evento) { evento.preventDefault(); });
+    [editor, confirmacion].forEach(function (modal) {
+        modal.addEventListener("cancel", function (evento) { if (guardando) evento.preventDefault(); });
+    });
+    async function guardarFila(fila, estado, nota) {
+        if (guardando) return false;
+        guardando = true;
+        var controles = Array.from(formulario.querySelectorAll("button"))
+            .concat(Array.from(editor.querySelectorAll("button")), Array.from(confirmacion.querySelectorAll("button")));
+        controles.forEach(function (control) { control.disabled = true; });
+        estadoGuardado.hidden = false;
+        estadoGuardado.classList.remove("error-campo");
+        estadoGuardado.textContent = "Guardando asistencia…";
+        formulario.setAttribute("aria-busy", "true");
+        var datos = new FormData();
+        datos.set("csrfmiddlewaretoken", formulario.elements.csrfmiddlewaretoken.value);
+        datos.set("version", formulario.elements.version.value);
+        datos.set("usuario", fila.dataset.usuario);
+        datos.set("estado", estado);
+        datos.set("observaciones", nota);
+        try {
+            var respuesta = await fetch(formulario.dataset.urlGuardar, {
+                method: "POST", body: datos, credentials: "same-origin", cache: "no-store",
+                headers: {"Accept": "application/json"},
+            });
+            if (respuesta.redirected || !(respuesta.headers.get("Content-Type") || "").includes("application/json")) {
+                throw new Error("No se pudo confirmar el guardado. Revisá tu sesión y recargá la asistencia.");
+            }
+            var resultado = await respuesta.json();
+            if (!respuesta.ok) throw new Error(resultado.error || "No se pudo guardar la asistencia.");
+            formulario.elements.version.value = resultado.version;
+            campo(fila, "estado").value = resultado.estado;
+            campo(fila, "observaciones").value = resultado.observaciones;
+            fila.dataset.quitable = "false";
+            pintarFila(fila);
+            if (resultado.clase_finalizada) {
+                var aviso = document.querySelector("[data-aviso-finalizacion]");
+                if (aviso) aviso.hidden = true;
+            }
+            estadoGuardado.textContent = "Asistencia de " + fila.dataset.nombre + " guardada";
+            return true;
+        } catch (error) {
+            estadoGuardado.classList.add("error-campo");
+            estadoGuardado.textContent = error instanceof TypeError || error instanceof SyntaxError
+                ? "No se pudo confirmar el guardado. Recargá para consultar el estado actual."
+                : error.message || "No se pudo guardar la asistencia.";
+            return false;
+        } finally {
+            guardando = false;
+            formulario.removeAttribute("aria-busy");
+            controles.forEach(function (control) { control.disabled = false; });
+        }
+    }
     function campo(fila, nombre) { return fila.querySelector('[name$="-' + nombre + '"]'); }
     function actualizarFilas() {
         Array.from(filas.children).forEach(function (fila, indice) {
@@ -27,44 +83,75 @@ document.addEventListener("DOMContentLoaded", function () {
         formulario.querySelector("[data-total-personas]").textContent = cantidad;
         formulario.querySelector("[data-asistencia-vacio]").hidden = cantidad > 0;
         formulario.querySelector("[data-asistencia-tabla]").hidden = cantidad === 0;
-        formulario.querySelector("[data-guardar-asistencia]").hidden = cantidad === 0;
     }
     function pintarFila(fila) {
         var estado = campo(fila, "estado").value;
-        var badge = fila.querySelector("[data-badge]");
-        badge.className = "badge-estado badge-estado-" + (estado === "presente" ? "activo" : "inactivo");
-        badge.textContent = etiquetas[estado] || "Sin registrar";
+        fila.querySelectorAll("[data-asistencia-estado]").forEach(function (indicador) {
+            indicador.hidden = indicador.dataset.asistenciaEstado !== estado;
+        });
+        fila.querySelectorAll("[data-marcar-asistencia]").forEach(function (boton) {
+            boton.setAttribute("aria-pressed", String(boton.dataset.marcarAsistencia === estado));
+        });
         var nota = fila.querySelector("[data-observacion]");
         nota.textContent = campo(fila, "observaciones").value;
         nota.hidden = !nota.textContent.trim();
     }
     function abrirEditor(fila) {
+        if (guardando) return;
+        editor.querySelector("[data-error-observaciones]").hidden = true;
         filaActual = fila;
         editor.querySelector("[data-editor-nombre]").textContent = fila.dataset.nombre;
-        editor.querySelectorAll('input[name="editor-estado"]').forEach(function (opcion) {
-            opcion.checked = opcion.value === campo(fila, "estado").value;
-        });
         observaciones.value = campo(fila, "observaciones").value;
         editor.querySelector("[data-quitar-de-carga]").hidden = fila.dataset.quitable !== "true";
         editor.showModal();
         editor.querySelector("[data-observaciones]").dispatchEvent(new Event("observaciones:actualizar"));
-        var elegido = editor.querySelector('input[name="editor-estado"]:checked');
-        if (elegido) elegido.focus();
+        editor.querySelector("[data-quitar-marca]").hidden = campo(fila, "estado").value === "sin_registrar";
     }
     filas.addEventListener("click", function (evento) {
         var boton = evento.target.closest("[data-editar-asistencia]");
         if (boton) abrirEditor(boton.closest("[data-asistencia-fila]"));
     });
-    editor.addEventListener("change", function (evento) {
-        if (filaActual && evento.target.name === "editor-estado") {
-            campo(filaActual, "estado").value = evento.target.value;
-            pintarFila(filaActual);
-        }
+    function solicitarCambio(fila, estado, origen) {
+        if (guardando) return;
+        cambioPendiente = {fila: fila, estado: estado, origen: origen};
+        confirmacion.querySelector("[data-confirmacion-titulo]").textContent = estado === "sin_registrar"
+            ? "Quitar marca de asistencia" : "Marcar " + (estado === "presente" ? "presente" : "ausente");
+        confirmacion.querySelector("[data-confirmacion-mensaje]").textContent = estado === "sin_registrar"
+            ? "¿Dejar sin registrar la asistencia de " + fila.dataset.nombre + "?"
+            : "¿Marcar a " + fila.dataset.nombre + " como " + estado + "?";
+        confirmacion.returnValue = "cancelar";
+        confirmacion.showModal();
+    }
+    filas.addEventListener("click", function (evento) {
+        var boton = evento.target.closest("[data-marcar-asistencia]");
+        if (boton) solicitarCambio(boton.closest("[data-asistencia-fila]"), boton.dataset.marcarAsistencia, boton);
     });
-    observaciones.addEventListener("input", function () {
-        if (!filaActual) return;
-        campo(filaActual, "observaciones").value = observaciones.value;
-        pintarFila(filaActual);
+    confirmacion.addEventListener("close", async function () {
+        var cambio = cambioPendiente;
+        cambioPendiente = null;
+        if (!cambio || !cambio.fila.isConnected) return;
+        if (confirmacion.returnValue === "confirmar") {
+            await guardarFila(cambio.fila, cambio.estado, campo(cambio.fila, "observaciones").value);
+        }
+        cambio.origen.focus();
+    });
+    editor.querySelector("[data-quitar-marca]").addEventListener("click", function () {
+        var fila = filaActual;
+        editor.close();
+        solicitarCambio(fila, "sin_registrar", fila.querySelector("[data-editar-asistencia]"));
+    });
+    editor.querySelector("form").addEventListener("submit", async function (evento) {
+        if (!evento.submitter || evento.submitter.value !== "guardar") return;
+        evento.preventDefault();
+        if (!filaActual || guardando) return;
+        var error = editor.querySelector("[data-error-observaciones]");
+        error.hidden = true;
+        if (await guardarFila(filaActual, campo(filaActual, "estado").value, observaciones.value)) {
+            editor.close();
+        } else {
+            error.textContent = estadoGuardado.textContent;
+            error.hidden = false;
+        }
     });
     editor.querySelector("[data-quitar-de-carga]").addEventListener("click", function () {
         if (filaActual && filaActual.dataset.quitable === "true") {
@@ -93,6 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
         estadoBusqueda.textContent = "";
     }
     function agregar(persona) {
+        if (guardando) return;
         if (Array.from(filas.children).some(function (fila) { return fila.dataset.usuario === String(persona.id); })) return;
         var indice = filas.children.length;
         var contenedor = document.createElement("tbody");
@@ -101,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fila.dataset.usuario = persona.id;
         fila.dataset.nombre = persona.nombre;
         fila.querySelector("[data-nombre]").textContent = persona.nombre;
-        fila.querySelector("[data-editar-asistencia]").setAttribute("aria-label", "Editar asistencia de " + persona.nombre);
+        fila.querySelector("[data-editar-asistencia]").setAttribute("aria-label", "Observaciones de " + persona.nombre);
         campo(fila, "usuario").value = persona.id;
         campo(fila, "estado").value = "sin_registrar";
         filas.append(fila);
@@ -109,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
         pintarFila(fila);
         entrada.value = "";
         cerrarBusqueda();
-        abrirEditor(fila);
+        fila.querySelector("[data-marcar-asistencia]").focus();
     }
     async function buscar() {
         var texto = entrada.value.trim();

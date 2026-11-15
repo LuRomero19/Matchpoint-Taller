@@ -716,3 +716,16 @@ def registrar_asistencia(usuario, clase_id, registros, finalizar=False, *, versi
         if hubo_cambios:
             clase.evento.save(update_fields=["actualizado_en"])
     return clase
+
+
+@transaction.atomic
+def registrar_asistencia_individual(usuario, clase_id, registro, *, version):
+    clase = registrar_asistencia(usuario, clase_id, [registro], finalizar=True, version=version)
+    carga = preparar_carga_asistencia(usuario, clase_id)
+    asistencia = clase.asistencias.get(usuario_id=registro["usuario_id"])
+    return {
+        "estado": asistencia.estado,
+        "observaciones": asistencia.observaciones or "",
+        "version": carga["version"],
+        "clase_finalizada": carga["clase"].evento.estado == Evento.Estado.FINALIZADO,
+    }

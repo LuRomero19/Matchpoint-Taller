@@ -1,38 +1,40 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}Asistencia de clase {{ clase.pk }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}"><link rel="stylesheet" href="{% static 'css/asistencia.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-asistencia{% endblock %}
 {% block contenido %}
-<header class="clase-encabezado">
-    <div><p class="texto-secundario">Clase {{ clase.pk }}</p><h1>Asistencia</h1></div>
-    <a class="boton boton-secundario boton-chico" href="{{ url_detalle }}">Volver al detalle</a>
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-reticula">
+    <h1>Asistencia</h1>
+    <a class="boton boton-secundario" href="{{ url_detalle }}">Volver al detalle</a>
 </header>
-<div class="clase-distribucion">
-    <aside class="tarjeta clase-turno" aria-labelledby="asistencia-turno-titulo">
-        <h2 id="asistencia-turno-titulo">Turno de la clase</h2>
-        <p class="clase-turno-fecha">{{ turno.fecha|date:"d/m/Y" }}</p>
-        <p class="clase-turno-hora">{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</p>
-        <p>{{ turno.cancha.sede.nombre }}<br><strong>{{ turno.cancha.nombre }}</strong></p>
-        {% if finalizar %}<p class="nota-campo">Al guardar se finalizará la clase junto con la asistencia.</p>{% endif %}
-    </aside>
+<p class="tarjeta descripcion-seccion">Registrá la asistencia de la clase {{ clase.pk }}. Sin registrar no equivale a Ausente; cada cambio se guarda al confirmar.</p>
+<section class="tarjeta asistencia-contexto" aria-label="Turno de la clase">
+    <dl>
+        <div><dt>Fecha</dt><dd>{{ turno.fecha|date:"d/m/Y" }}</dd></div>
+        <div><dt>Horario</dt><dd>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</dd></div>
+        <div><dt>Sede</dt><dd>{{ turno.cancha.sede.nombre }}</dd></div>
+        <div><dt>Cancha</dt><dd>{{ turno.cancha.nombre }}</dd></div>
+    </dl>
+    {% if finalizar %}<p class="asistencia-aviso-finalizacion" data-aviso-finalizacion>La clase ya terminó. El primer registro de asistencia también la finalizará.</p>{% endif %}
+</section>
     <section class="tarjeta clase-contenido" aria-labelledby="asistencia-personas-titulo">
-        <form method="post" novalidate data-asistencia-formulario>
+        <form method="post" novalidate data-asistencia-formulario data-url-guardar="{% url 'clases:guardar_asistencia_persona' clase.pk %}">
             {% csrf_token %}{{ formularios.management_form }}
             <input type="hidden" name="version" value="{{ version }}">
+            <p class="asistencia-estado-guardado" data-estado-guardado role="status" aria-live="polite" hidden></p>
             <h2 id="asistencia-personas-titulo">Personas <span class="texto-secundario">(<span data-total-personas>{{ filas|length }}</span>)</span></h2>
-            <p class="texto-secundario">Sin registrar no equivale a Ausente. Los cambios se aplican al guardar.</p>
-            {% if error_guardado %}<div class="mensaje mensaje-error" role="alert">{{ error_guardado }}</div>{% endif %}
-            {% if formularios.non_form_errors %}<div class="mensaje mensaje-error" role="alert">{{ formularios.non_form_errors }}</div>{% endif %}
             <noscript><p class="mensaje mensaje-info">Para editar estados y buscar personas necesitás habilitar JavaScript.</p></noscript>
             <p class="texto-secundario" data-asistencia-vacio{% if filas %} hidden{% endif %}>No hay participantes ni asistencia registrada. Agregá una persona para comenzar.</p>
             <div class="tabla-contenedor" data-asistencia-tabla{% if not filas %} hidden{% endif %}>
                 <table>
-                    <thead><tr><th scope="col">Nombre</th><th scope="col">Asistencia</th><th scope="col">Acción</th></tr></thead>
+                    <thead><tr><th scope="col">Nombre</th><th scope="col">Asistencia</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
                     <tbody data-asistencia-filas>{% for fila in filas %}{% include "clases/_asistencia_fila.html" with fila=fila only %}{% endfor %}</tbody>
                 </table>
             </div>
             <div class="asistencia-agregar">
                 <button class="boton boton-secundario boton-chico" type="button" data-abrir-busqueda aria-expanded="false" aria-controls="asistencia-busqueda">Agregar persona</button>
+                <p class="asistencia-ayuda-recuperacion">Podés registrar la asistencia de alumnos que no estaban asignados originalmente a esta clase, por ejemplo, si vienen a recuperar. Elegí Presente o Ausente para registrar su asistencia.</p>
                 <div class="clase-buscador" id="asistencia-busqueda" data-asistencia-buscador data-url="{% url 'clases:buscar_personas_asistencia' clase.pk %}" hidden>
                     <label class="clase-etiqueta-oculta" for="asistencia-buscar">Buscar una persona</label>
                     <div class="clase-campo-busqueda">
@@ -44,31 +46,32 @@
                     <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado-busqueda></p>
                 </div>
             </div>
-            <div class="acciones-formulario">
-                <a class="boton boton-secundario" href="{{ url_detalle }}">Cancelar</a>
-                <button class="boton boton-primario" name="paso" value="guardar" type="submit" data-guardar-asistencia{% if not filas %} hidden{% endif %}>{% if finalizar %}Finalizar y guardar asistencia{% else %}Guardar asistencia{% endif %}</button>
-            </div>
         </form>
     </section>
-</div>
 <template data-asistencia-fila-nueva>
     {% include "clases/_asistencia_fila.html" with fila=fila_vacia only %}
 </template>
 <dialog class="modal-confirmacion" data-asistencia-editor aria-labelledby="asistencia-editor-titulo">
     <form method="dialog" class="modal-confirmacion-formulario">
-        <header class="modal-confirmacion-cabecera"><h2 id="asistencia-editor-titulo">Editar asistencia</h2></header>
+        <header class="modal-confirmacion-cabecera"><h2 id="asistencia-editor-titulo">Observaciones de asistencia</h2></header>
         <div class="modal-confirmacion-contenido">
             <p data-editor-nombre></p>
-            <fieldset class="clase-opciones">
-                <legend>Asistencia</legend>
-                <div class="clase-opciones-lista">{% for opcion in editor.estado %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}</div>
-            </fieldset>
+            <p class="error-campo" role="alert" data-error-observaciones hidden></p>
             {% include "componentes/observaciones_opcionales.html" with campo=editor.observaciones only %}
         </div>
         <footer class="modal-confirmacion-acciones">
+            <button class="boton boton-secundario" type="button" data-quitar-marca>Quitar marca de asistencia</button>
             <button class="boton boton-peligro" type="button" data-quitar-de-carga hidden>Quitar de esta carga</button>
-            <button class="boton boton-secundario" type="submit" value="listo">Listo</button>
+            <button class="boton boton-secundario" type="submit" value="cancelar">Cancelar</button>
+            <button class="boton boton-primario" type="submit" value="guardar">Guardar observaciones</button>
         </footer>
+    </form>
+</dialog>
+<dialog class="modal-confirmacion" data-asistencia-confirmacion aria-labelledby="asistencia-confirmacion-titulo">
+    <form method="dialog" class="modal-confirmacion-formulario">
+        <header class="modal-confirmacion-cabecera"><h2 id="asistencia-confirmacion-titulo" data-confirmacion-titulo></h2></header>
+        <div class="modal-confirmacion-contenido"><p data-confirmacion-mensaje></p><p class="texto-secundario">El cambio se guarda al confirmar. Si la clase ya terminó y sigue Programada, también se finalizará.</p></div>
+        <footer class="modal-confirmacion-acciones"><button class="boton boton-secundario" type="submit" value="cancelar" autofocus>Cancelar</button><button class="boton boton-primario" type="submit" value="confirmar">Confirmar</button></footer>
     </form>
 </dialog>
 <script src="{% static 'js/clase-asistencia.js' %}" defer></script>

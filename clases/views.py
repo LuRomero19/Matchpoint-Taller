@@ -21,14 +21,14 @@ from usuarios.models import Rol, Usuario
 
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
 from .consultas import consultar_actividad_clases, consultar_clase, consultar_profesores, consultar_participantes
-from .forms import ActividadClasesForm, AsistenciaEditorForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
+from .forms import ActividadClasesForm, AsistenciaEditorForm, AsistenciaFilaForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
 from .models import Asistencia, Clase
 from .permisos import exigir_acceso_clases, exigir_administracion_clases
 from .servicios import (
     cambiar_cancha_clase, consultar_edicion_clase, editar_clase,
     preparar_cambio_cancha, preparar_edicion_clase,
     consultar_clase_para_asistencia, finalizar_clase, preparar_carga_asistencia,
-    preparar_registro_clase, registrar_asistencia, registrar_clase, validar_ubicacion_clase,
+    preparar_registro_clase, registrar_asistencia_individual, registrar_clase, validar_ubicacion_clase,
 )
 
 
@@ -384,7 +384,29 @@ def buscar_personas_asistencia(request, pk):
 
 @login_required
 @never_cache
-@require_http_methods(["GET", "POST"])
+@require_POST
+def guardar_asistencia_persona(request, pk):
+    exigir_acceso_clases(request.user)
+    formulario = AsistenciaFilaForm(request.POST)
+    if not formulario.is_valid():
+        errores = [str(error) for lista in formulario.errors.values() for error in lista]
+        return JsonResponse({"error": " ".join(errores)}, status=400)
+    try:
+        datos = registrar_asistencia_individual(request.user, pk, {
+            "usuario_id": formulario.cleaned_data["usuario"],
+            "estado": formulario.cleaned_data["estado"],
+            "observaciones": formulario.cleaned_data["observaciones"],
+        }, version=request.POST.get("version", ""))
+    except (Clase.DoesNotExist, Evento.DoesNotExist):
+        raise Http404("La clase no existe.") from None
+    except ValidationError as error:
+        return JsonResponse({"error": " ".join(error.messages)}, status=409)
+    return JsonResponse(datos)
+
+
+@login_required
+@never_cache
+@require_GET
 def clase_asistencia(request, pk):
     url_detalle = reverse("clases:clase_detalle", args=[pk])
     try:
@@ -396,26 +418,7 @@ def clase_asistencia(request, pk):
             messages.error(request, mensaje)
         return redirect(url_detalle)
     clase = datos["clase"]
-    version = request.POST.get("version", "") if request.method == "POST" else datos["version"]
-    formularios = AsistenciaFormSet(
-        request.POST if request.method == "POST" else None, initial=datos["registros"], prefix="asistencias",
-    )
-    error_guardado = None
-    if request.method == "POST" and formularios.is_valid():
-        registros = [
-            {"usuario_id": fila.cleaned_data["usuario"], "estado": fila.cleaned_data["estado"], "observaciones": fila.cleaned_data["observaciones"]}
-            for fila in formularios if fila.cleaned_data
-        ]
-        try:
-            if request.POST.get("paso") != "guardar":
-                raise ValidationError("La acción solicitada no es válida.")
-            registrar_asistencia(request.user, pk, registros, finalizar=True, version=version)
-            messages.success(request, "La asistencia fue guardada.")
-            return redirect(url_detalle)
-        except ValidationError as error:
-            error_guardado = " ".join(error.messages)
-        except (Clase.DoesNotExist, Evento.DoesNotExist):
-            raise Http404("La clase no existe.") from None
+    formularios = AsistenciaFormSet(initial=datos["registros"], prefix="asistencias")
     filas = []
     ids = [int(fila["usuario"].value()) for fila in formularios if str(fila["usuario"].value()).isdecimal() and len(str(fila["usuario"].value())) < 19]
     personas = Usuario.objects.in_bulk(ids)
@@ -434,7 +437,7 @@ def clase_asistencia(request, pk):
         "clase": clase, "turno": clase.evento.turno, "formularios": formularios,
         "filas": filas, "editor": AsistenciaEditorForm(prefix="editor"),
         "fila_vacia": {"formulario": formularios.empty_form, "quitable": True, "badge": "inactivo", "estado_texto": "Sin registrar"},
-        "version": version, "error_guardado": error_guardado,
+        "version": datos["version"],
         "finalizar": clase.evento.estado == Evento.Estado.PROGRAMADO,
         "url_detalle": url_detalle,
     })

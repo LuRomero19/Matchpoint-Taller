@@ -19,6 +19,7 @@ urlpatterns = [
     path("actividad/<int:usuario_id>/", views.actividad_clases, name="actividad_clases"),
     path("<int:pk>/responder/", views.clase_responder, name="clase_responder"),
     path("<int:pk>/asistencia/", views.clase_asistencia, name="clase_asistencia"),
+    path("<int:pk>/asistencia/guardar-persona/", views.guardar_asistencia_persona, name="guardar_asistencia_persona"),
     path("<int:pk>/asistencia/personas/", views.buscar_personas_asistencia, name="buscar_personas_asistencia"),
     path("<int:pk>/finalizar/", views.clase_finalizar, name="clase_finalizar"),
     path("<int:pk>/anular/", views.clase_anular, name="clase_anular"),

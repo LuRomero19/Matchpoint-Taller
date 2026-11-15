@@ -1335,39 +1335,44 @@ flowchart TD
 
 - **Objetivo:** guardar la participación efectiva de usuarios en una clase ya dictada.
 - **Actores:** administrador; usuario activo con rol Profesor y asignación activa para dictar la clase.
-- **Precondiciones:** clase en estado **Finalizada** (ver **FL-38**), accesible mediante **FL-33** o desde el propio **FL-38**.
+- **Precondiciones:** turno terminado y clase Finalizada, o Programada con finalización incluida en el primer guardado.
 - **Entradas:** usuario, estado presente, ausente o sin registrar y observaciones opcionales.
 
 Recorrido:
 
-1. El sistema muestra los alumnos asignados y sus estados actuales.
-2. El administrador o profesor marca cada alumno como presente, ausente o sin registrar.
-3. Puede buscar y registrar asistencia de un usuario sin asignación previa, sin exigir rol Alumno ni contratación.
-4. Al confirmar, bloquea y revalida el acceso, la clase Finalizada y todas las filas antes de guardar en una transacción estados, responsable, momento y observaciones. Presente y ausente requieren responsable y momento; Sin registrar no se interpreta como ausencia. La corrección actualiza la marca de modificación y conserva los cambios en auditoría.
+1. El sistema muestra las personas asignadas y las asistencias guardadas con su versión de carga.
+2. El actor elige Presente o Ausente en una fila y confirma en un modal. Cancelar no modifica el registro.
+3. El servidor bloquea personas, instalaciones, turno y evento según el orden común, valida autorización, versión y fin del turno. Si la clase sigue Programada, la finaliza; si ya está Finalizada, conserva ese estado. Guarda únicamente la persona elegida y devuelve su estado, observaciones y la nueva versión dentro de la misma transacción.
+4. La pantalla actualiza la fila al recibir la confirmación del servidor, sin recargar ni requerir un guardado general. Las demás filas permanecen intactas.
+5. Para cambiar observaciones abre su modal y solicita Guardar observaciones; cancelar no cambia el texto guardado. Quitar la marca vuelve a Sin registrar mediante confirmación y guardado individual, conservando el registro.
+6. Puede buscar una persona no asignada y agregarla a la pantalla para registrar su asistencia. Agregarla por sí solo no escribe asistencia ni modifica asignaciones.
 
 Alternativas:
 
-- Un profesor sólo registra asistencia en sus clases.
-- La asistencia solo puede registrarse una vez que la clase quedó **Finalizada**; mientras está **Programada** no admite estados presente ni ausente.
-- Agregar asistencia no incorpora al alumno a futuros turnos.
-- El sistema no clasifica la asistencia como recuperación.
-- Los cambios posteriores de asistencia se realizan repitiendo este flujo sobre la misma clase.
-- Si alguna fila contiene un valor inválido, no se guarda ninguna de las filas.
-- Puede finalizar y registrar asistencia en una sola transacción: se validan las condiciones de ambas operaciones y cualquier error revierte todo. La finalización automática no marca presentes ni ausentes.
+- Un profesor sólo registra asistencia en las clases que está asignado a dictar y para las que conserva el rol requerido.
+- Antes del fin del turno, una clase Anulada o sin autorización impide registrar asistencia.
+- La clase no conserva estados presente o ausente mientras permanece Programada: finalización y primera escritura forman una transacción indivisible.
+- Presente y Ausente conservan responsable y momento. Sin registrar no se interpreta como ausencia. Las correcciones conservan auditoría y actualizan la fecha de modificación.
+- Si cambian la clase, sus asignaciones o la asistencia, o vence la carga, se rechaza la nueva escritura y se solicita consultar el estado actual. La pantalla no renueva automáticamente una versión rechazada.
+- Una finalización automática simultánea no invalida la operación si las asignaciones y asistencias conservan la versión revisada. La tarea automática no marca presentes ni ausentes.
+- Un error revierte la operación individual completa, incluida su finalización si correspondía; los guardados anteriores son independientes y se conservan.
+- La pérdida de conexión no se presenta como éxito ni provoca un reintento automático de escritura; se ofrece recargar para conocer el estado efectivo.
+- Agregar asistencia no incorpora al alumno a futuros turnos ni exige Alumno o contratación. El sistema no clasifica la asistencia como recuperación.
+- Sólo las personas agregadas a la pantalla y todavía no guardadas se pueden quitar de la carga local. Una asistencia guardada se corrige sin borrarse.
 
-- **Resultado:** asistencia de la clase actualizada.
+- **Resultado:** asistencia individual guardada y clase Finalizada cuando corresponda.
 - **Datos:** clases, eventos, profesores asignados, usuarios y asistencias.
 
 ```mermaid
 flowchart TD
-    A[Abrir asistencia] --> B{Evento de clase Finalizado y actor autorizado}
-    B -->|No| C[Impedir registro]
-    B -->|Sí| D[Marcar estados]
-    D --> E{Agregar alumno no asignado}
-    E -->|Sí| F[Buscar alumno]
-    E -->|No| G[Confirmar]
-    F --> G
-    G --> H[Guardar asistencia]
+    A[Abrir asistencia] --> B[Elegir persona y estado]
+    B --> C{Confirmar cambio}
+    C -->|No| D[Conservar datos]
+    C -->|Sí| E[Validar permisos, fin del turno y versión bajo bloqueo]
+    E --> F{Datos válidos}
+    F -->|No| G[Informar error sin actualizar la fila]
+    F -->|Sí| H[Finalizar si corresponde y guardar persona en una transacción]
+    H --> I[Devolver nueva versión y actualizar la fila]
 ```
 
 ### 3.10 Reservas

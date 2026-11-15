@@ -1,10 +1,24 @@
+{% load estados %}
 <tr data-asistencia-fila data-usuario="{{ fila.formulario.usuario.value|default:'' }}" data-nombre="{{ fila.persona|default:'Usuario no disponible' }}" data-quitable="{{ fila.quitable|yesno:'true,false' }}">
     <td>
-        <span data-nombre>{{ fila.persona|default:"Usuario no disponible" }}</span>
+        <strong data-nombre>{{ fila.persona|default:"Usuario no disponible" }}</strong>
         {{ fila.formulario.usuario }}{{ fila.formulario.estado }}{{ fila.formulario.observaciones }}
         <p class="texto-secundario asistencia-observacion" data-observacion{% if not fila.formulario.observaciones.value %} hidden{% endif %}>{{ fila.formulario.observaciones.value|default:'' }}</p>
         {% for campo in fila.formulario %}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
     </td>
-    <td><span class="badge-estado badge-estado-{{ fila.badge }}" data-badge>{{ fila.estado_texto }}</span></td>
-    <td><button class="boton boton-secundario boton-chico" type="button" data-editar-asistencia aria-label="Editar asistencia de {{ fila.persona }}">Editar</button></td>
+    <td>
+        <span data-asistencia-estado="presente"{% if fila.formulario.estado.value != 'presente' %} hidden{% endif %}>{% indicador_estado "asistencia" "presente" %}</span>
+        <span data-asistencia-estado="ausente"{% if fila.formulario.estado.value != 'ausente' %} hidden{% endif %}>{% indicador_estado "asistencia" "ausente" %}</span>
+        <span data-asistencia-estado="sin_registrar"{% if fila.formulario.estado.value == 'presente' or fila.formulario.estado.value == 'ausente' %} hidden{% endif %}>{% indicador_estado "asistencia" "sin_registrar" %}</span>
+    </td>
+    <td class="acciones-columna"><div class="asistencia-fila-acciones">
+        <button class="asistencia-marcar asistencia-marcar-presente" type="button" data-marcar-asistencia="presente" data-estado-tooltip="Marcar presente" aria-label="Marcar presente" aria-pressed="{% if fila.formulario.estado.value == 'presente' %}true{% else %}false{% endif %}">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+        </button>
+        <button class="asistencia-marcar asistencia-marcar-ausente" type="button" data-marcar-asistencia="ausente" data-estado-tooltip="Marcar ausente" aria-label="Marcar ausente" aria-pressed="{% if fila.formulario.estado.value == 'ausente' %}true{% else %}false{% endif %}">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>
+        </button>
+        <button class="asistencia-marcar asistencia-observaciones-boton" type="button" data-editar-asistencia data-estado-tooltip="Observaciones" aria-label="Observaciones de {{ fila.persona }}">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        </button></div></td>
 </tr>
