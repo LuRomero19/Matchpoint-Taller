@@ -11,6 +11,8 @@ from membresias.models import MembresiaUsuario, PlanUsuario
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
+from .inicio_portal import contexto_inicio_portal
+
 
 @login_required
 @never_cache
@@ -57,4 +59,6 @@ def inicio(request):
             "encuestas": {"dias": dias_encuestas, "abiertas": encuestas_abiertas},
             "usuarios": usuarios,
         })
+    else:
+        contexto.update(contexto_inicio_portal(request.user))
     return render(request, "inicio_administracion.html" if administrador else "inicio_portal.html", contexto)

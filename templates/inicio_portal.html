@@ -1,17 +1,60 @@
 {% extends "base.html" %}
 {% load static %}
-
-{% block titulo %}Portal | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-inicio{% endblock %}
-
+{% block titulo %}Inicio | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-portal.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-inicio contenido-inicio-portal{% endblock %}
 {% block contenido %}
-<section class="tarjeta inicio-portal" aria-labelledby="inicio-portal-titulo">
-    <p class="inicio-portal-etiqueta">Portal de usuarios</p>
-    <h1 id="inicio-portal-titulo">Hola, {{ request.user.first_name|default:request.user.username }}</h1>
-    <p class="inicio-portal-descripcion">Bienvenido a la Academia de Tenis TM. Accedé a tu información y a las opciones disponibles para tu cuenta.</p>
-</section>
-
-{% if not request.user.correo_verificado_en %}<section class="tarjeta"><p>Podés consultar tu perfil y la oferta de la academia. Verificá tu correo para habilitar operaciones.</p><a href="{% url 'estado_verificacion' %}" class="boton boton-secundario">Verificar mi correo</a></section>{% endif %}
-{% include "componentes/inicio_modulos.html" %}
+<header class="tarjeta inicio-cabecera encabezado-geometrico encabezado-geometrico-orbitas">
+    <h1>Hola, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p>{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
+</header>
+{% if not request.user.correo_verificado_en %}
+<section class="tarjeta portal-verificacion"><p>Verificá tu correo para acceder a tus actividades y reservas</p><a class="boton boton-primario" href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>
+{% else %}
+<div class="portal-inicio-grid">
+    <section class="tarjeta portal-proxima{% if proxima_clase %} portal-proxima-destacada{% endif %}" aria-labelledby="portal-proxima-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="portal-proxima-titulo">Próxima clase</h2></header>
+        <div class="inicio-cuerpo">
+            {% if proxima_clase %}
+            {% with turno=proxima_clase.evento.turno %}
+            <p class="portal-hora">{{ turno.hora_inicio|time:"H:i" }}–{{ turno.hora_fin|time:"H:i" }}</p>
+            <p class="portal-fecha">{{ turno.fecha|date:"l j \d\e F"|capfirst }}</p>
+            <dl class="portal-ubicacion"><div><dt>Sede</dt><dd>{{ turno.cancha.sede.nombre }}</dd></div><div><dt>Cancha</dt><dd>{{ turno.cancha.nombre }}</dd></div></dl>
+            {% endwith %}
+            {% else %}<p class="portal-sin-datos">No tenés clases próximas</p>{% endif %}
+        </div>
+        <footer class="inicio-pie">{% if proxima_clase %}<a href="{% url 'clases:clase_detalle' proxima_clase.pk %}">Ver clase</a>{% else %}<a href="{% url 'agenda:agenda' %}">Ver agenda</a>{% endif %}</footer>
+    </section>
+    {% if puede_reservar %}
+    <section class="tarjeta portal-lista portal-reservas-destacada" aria-labelledby="portal-reservas-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="portal-reservas-titulo">Reservas próximas</h2></header>
+        <div class="inicio-cuerpo">
+            {% for reserva in reservas_proximas %}{% include "componentes/inicio_actividad.html" with actividad=reserva ruta="reservas:reserva_detalle" only %}{% empty %}<p class="portal-sin-datos">No tenés reservas próximas</p>{% endfor %}
+        </div>
+        <footer class="inicio-pie"><a href="{% url 'reservas:mis_reservas' %}">Mis reservas</a><a href="{% url 'agenda:agenda' %}">Reservar cancha</a></footer>
+    </section>
+    {% endif %}
+    <section class="tarjeta portal-contrataciones" aria-labelledby="portal-contrataciones-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="portal-contrataciones-titulo">Este mes</h2><span class="inicio-periodo">{{ hoy|date:"F \d\e Y"|capfirst }}</span></header>
+        <div class="inicio-cuerpo portal-contratos">
+            {% for contrato in contrataciones_mes %}<a class="portal-contrato" href="{{ contrato.url }}"><small>{{ contrato.tipo }}</small><strong>{{ contrato.nombre }}</strong></a>
+            {% empty %}<p class="portal-sin-datos">No tenés planes ni membresías vigentes para este mes</p>{% endfor %}
+        </div>
+        <footer class="inicio-pie"><a href="{% url 'membresias:mis_contrataciones' %}">Ver contrataciones</a></footer>
+    </section>
+    {% if clases_proximas %}
+    <section class="tarjeta portal-lista portal-otras-clases" aria-labelledby="portal-clases-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="portal-clases-titulo">Otras clases próximas</h2></header>
+        <div class="inicio-cuerpo">{% for clase in clases_proximas %}{% include "componentes/inicio_actividad.html" with actividad=clase ruta="clases:clase_detalle" only %}{% endfor %}</div>
+        <footer class="inicio-pie"><a href="{% url 'clases:actividad_clases' request.user.pk %}">Mis clases</a></footer>
+    </section>
+    {% endif %}
+    {% if pendientes %}
+    <section class="tarjeta portal-pendientes" aria-labelledby="portal-pendientes-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="portal-pendientes-titulo">Pendientes</h2></header>
+        <div class="inicio-cuerpo">{% for pendiente in pendientes %}<div class="portal-pendiente"><p>{{ pendiente.texto }}</p><a class="portal-enlace" href="{{ pendiente.url }}">{{ pendiente.accion }}</a></div>{% endfor %}</div>
+    </section>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

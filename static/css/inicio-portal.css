@@ -1,0 +1,58 @@
+.portal-inicio-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: stretch; }
+.contenido-inicio-portal .tarjeta, .contenido-inicio-portal .boton { border-radius: 10px; }
+.portal-inicio-grid > .tarjeta { display: flex; flex-direction: column; min-width: 0; padding: 0; }
+.portal-inicio-grid h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+.portal-inicio-grid .inicio-cuerpo { min-width: 0; }
+.portal-inicio-grid .inicio-pie { gap: 20px; flex-wrap: wrap; }
+.portal-inicio-grid a { text-decoration: none; }
+.portal-inicio-grid .inicio-pie a:hover { text-decoration: none; }
+.portal-inicio-grid > .portal-proxima-destacada { background: var(--primario); color: white; border-color: var(--primario); }
+.portal-proxima-destacada .inicio-pie { border-color: #ffffff26; background: #00000012; }
+.portal-proxima-destacada .inicio-pie a { color: white; }
+.portal-proxima-destacada .inicio-pie a:hover { color: var(--acento); }
+.portal-proxima-destacada .inicio-pie a:focus-visible { outline-color: var(--acento); }
+.portal-hora { margin: 0 0 8px; color: var(--acento); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 700; line-height: 1.15; }
+.portal-fecha { margin: 0; font-size: 1.05rem; }
+.portal-ubicacion { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 24px 0 0; }
+.portal-ubicacion dt { color: #e6daf0; font-size: .8rem; }
+.portal-ubicacion dd { margin: 4px 0 0; font-weight: 600; }
+.portal-enlace { color: var(--primario); font-size: .9rem; font-weight: 600; }
+.portal-enlace:hover { color: var(--primario-hover); }
+.portal-sin-datos { margin: 0; color: var(--texto-suave); font-size: 1rem; line-height: 1.5; }
+.portal-contratos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.portal-contrato { display: grid; align-content: start; gap: 6px; color: inherit; }
+.portal-contrato + .portal-contrato { border-left: 1px solid var(--borde); padding-left: 24px; }
+.portal-contrato small { color: var(--texto-suave); font-size: .875rem; }
+.portal-contrato strong { font-size: 1.1rem; }
+.portal-contrato:hover strong { color: var(--primario); }
+.portal-actividad { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 16px; padding: 16px 0; color: inherit; }
+.portal-actividad:first-child { padding-top: 0; }
+.portal-actividad:last-child { padding-bottom: 0; }
+.portal-actividad + .portal-actividad { border-top: 1px solid var(--borde); }
+.portal-actividad strong, .portal-actividad span, .portal-actividad small { display: block; }
+.portal-actividad strong { color: var(--primario); font-size: 1.2rem; }
+.portal-actividad div > span, .portal-actividad small { margin-top: 4px; color: var(--texto-suave); font-size: .875rem; }
+.portal-actividad:hover { background: var(--primario-suave); }
+.portal-pendientes, .portal-contrataciones, .portal-otras-clases { grid-column: 1 / -1; }
+.portal-pendiente { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.portal-pendiente + .portal-pendiente { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--borde); }
+.portal-pendiente p { margin: 0; }
+.portal-verificacion { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.portal-verificacion p { margin: 0; }
+@media (max-width: 900px) { .portal-inicio-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+    .portal-contratos { grid-template-columns: minmax(0, 1fr); }
+    .portal-contrato + .portal-contrato { border-left: 0; border-top: 1px solid var(--borde); padding: 16px 0 0; }
+}
+
+.portal-inicio-grid > .portal-reservas-destacada { background: var(--primario); color: white; border-color: var(--primario); }
+.portal-reservas-destacada .portal-sin-datos,
+.portal-reservas-destacada .portal-actividad div > span,
+.portal-reservas-destacada .portal-actividad small { color: #e6daf0; }
+.portal-reservas-destacada .portal-actividad strong { color: var(--acento); }
+.portal-reservas-destacada .portal-actividad + .portal-actividad { border-color: #ffffff26; }
+.portal-reservas-destacada .portal-actividad:hover { background: #ffffff0a; }
+.portal-reservas-destacada .inicio-pie { border-color: #ffffff26; background: #00000012; }
+.portal-reservas-destacada .inicio-pie a { color: white; }
+.portal-reservas-destacada .inicio-pie a:hover { color: var(--acento); }
+.portal-reservas-destacada .inicio-pie a:focus-visible { outline-color: var(--acento); }
