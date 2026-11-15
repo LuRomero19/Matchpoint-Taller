@@ -1,6 +1,6 @@
 {% load estados %}
 <section class="perfil-seccion">
-<h2>Situación financiera</h2>
+{% if not sin_titulo_financiero %}<h2>Situación financiera</h2>{% endif %}
 {% include "caja/_resumen_financiero.html" %}
 {% if pagina_finanzas %}
 <details {% if historial_financiero_abierto %}open{% endif %}>

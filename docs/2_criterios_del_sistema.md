@@ -392,6 +392,9 @@ Las campañas de encuesta se revisan a las 09:00: el 25 corresponde a apertura; 
 
 ### 2.7 Portal de usuarios
 
+Mis reservas e invitaciones separa número, fecha y horario, sede y cancha, función del titular, respuesta de invitación y estado del evento. Permite filtrar por participación y estado, y conserva los filtros al paginar. El detalle presenta primero organizador, ubicación, turno e importe en una tabla de campo y valor, con el estado visible en la cabecera. Un menú contextual de Acciones en la cabecera ofrece sólo las operaciones aplicables y los accesos a Agenda y comprobante. Los invitados se muestran en filas compactas; pagos y movimientos, modalidad y uso, y datos del registro se despliegan bajo demanda. La anulación conserva su motivo visible y abre su formulario en un modal sólo por solicitud o ante errores de validación. El invitado consulta únicamente los datos autorizados de su invitación y abre el formulario de respuesta cuando lo solicita. Los detalles usan el mismo estilo del perfil de usuario, con borde superior lima y sin borde inferior.
+
+
 El sistema tendrá un único portal de acceso externo, para cualquier persona que se registre como usuario, separado de la interfaz de gestión interna (ver intro de la sección 2).
 
 El catálogo de planes, membresías y tarifas vigentes sólo puede consultarse estando registrado y autenticado con el rol Público: es el equivalente, dentro del sistema, a tener que preguntar en la sede antes de conocer los precios.

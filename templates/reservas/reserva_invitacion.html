@@ -1,10 +1,15 @@
 {% extends "base.html" %}
-{% block titulo %}Mi invitación · {{ reserva.numero }} | Academia TM{% endblock %}
+{% load static %}
+{% block titulo %}Mi invitación | {{ reserva.numero }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-reservas reserva-perfil{% endblock %}
 {% block contenido %}
-<article class="tarjeta tarjeta-formulario">
-    <h1>Mi invitación · {{ reserva.numero }}</h1>
-    <p>{{ reserva.evento.get_estado_display }} · {{ reserva.organizador }}<br>{{ reserva.evento.turno.fecha|date:"d/m/Y" }} {{ reserva.evento.turno.hora_inicio|time:"H:i" }} · {{ reserva.evento.turno.cancha }}</p>
-    {% include "reservas/_respuesta_invitacion.html" %}
-    <a class="enlace-texto" href="{% url 'reservas:mis_reservas' %}">Volver a mis reservas e invitaciones</a>
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-ondas"><div><p class="perfil-contexto">Mi invitación</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div><a class="boton boton-secundario" href="{% url 'reservas:mis_reservas' %}">Mis reservas</a></header>
+    <div class="reserva-contenido">
+        <section class="perfil-seccion"><h2>Datos de la reserva</h2>{% include "reservas/_datos_reserva.html" with reserva=reserva only %}</section>
+        {% if reserva.evento.estado == 'anulado' %}<section class="perfil-seccion"><h2>Motivo de anulación</h2><p>{{ reserva.evento.motivo_anulacion|linebreaksbr }}</p></section>{% endif %}
+        <section class="perfil-seccion reserva-invitacion-respuesta"><h2>Tu participación</h2>{% include "reservas/_respuesta_invitacion.html" %}</section>
+    </div>
 </article>
 {% endblock %}

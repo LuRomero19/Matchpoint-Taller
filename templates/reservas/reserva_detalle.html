@@ -1,70 +1,32 @@
 {% extends "base.html" %}
-{% load estados %}
-{% load static %}
-
+{% load estados static %}
 {% block titulo %}Reserva {{ reserva.numero }} | Academia TM{% endblock %}
-
-{% block estilos %}
-<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
-{% endblock %}
-
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-reservas reserva-perfil{% endblock %}
 {% block contenido %}
-{% if formulario_anulacion.non_field_errors %}
-    <div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>
-{% endif %}
-{% if not puede_anular %}
-    {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-{% endif %}
-
+{% if not puede_anular and formulario_anulacion.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>{% endif %}
+{% if not puede_anular %}{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endif %}
 <article class="tarjeta perfil">
-    <header class="perfil-cabecera">
-        <div>
-            <p class="perfil-contexto">Detalle de reserva</p>
-            <div class="perfil-identidad">
-                <h1>{{ reserva.numero }}</h1>
-                {% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}
-            </div>
-        </div>
-        <div class="perfil-total">
-            <span>Total (ARS)</span>
-            <strong>$ {{ total|floatformat:"2g" }}</strong>
-        </div>
+    <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
+        <div><p class="perfil-contexto">Reserva</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div>
+        <details class="reserva-menu" data-reserva-menu>
+    <summary class="boton boton-secundario" aria-expanded="false" aria-controls="reserva-menu-opciones">Acciones <span aria-hidden="true">⋮</span></summary>
+    <div class="reserva-menu-opciones" id="reserva-menu-opciones">
+        <a href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
+        <a href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
+        {% if puede_gestionar %}<a href="{% url 'reservas:reserva_invitados' reserva.pk %}">Gestionar invitados</a>{% if reserva.es_con_membresia %}<a href="{% url 'reservas:reserva_socios' reserva.pk %}">Actualizar socios</a>{% endif %}{% endif %}
+        {% if es_administrador and reserva.es_con_membresia and reserva.evento.estado == 'finalizado' and not reserva.resultado_corregido_en %}<a href="{% url 'reservas:reserva_resultado' reserva.pk %}">{% if reserva.resultado_uso == 'sin_registrar' %}Registrar resultado{% else %}Corregir resultado{% endif %}</a>{% endif %}
+        {% if puede_finalizar %}<form method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}" data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservará su turno y su ocupación histórica." data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">{% csrf_token %}<button type="submit">Finalizar reserva</button></form>{% endif %}
+        {% if puede_anular %}<button class="reserva-menu-peligro" type="button" data-abrir-anulacion>Anular reserva</button>{% elif not es_administrador and reserva.evento.estado == 'programado' %}<p class="reserva-menu-impedimento">{{ impedimento_anulacion }}</p>{% endif %}
+    </div>
+</details>
     </header>
-
-    <div class="perfil-cuerpo">
-
-        <div class="perfil-datos">
-            {% include "caja/_situacion_financiera.html" %}
-            <section class="perfil-seccion"><h2>Modalidad y uso</h2><p>{% if reserva.es_con_membresia %}Con membresía · {{ reserva.membresia_usuario.membresia.nombre }} · {% if reserva.computa_hora_membresia %}Computa una hora del mes{% else %}No computa una hora{% endif %}<br>Adicional unitario aplicado: $ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}<br>Resultado: {{ reserva.get_resultado_uso_display }}{% if reserva.resultado_original %}<br>Resultado original: {{ reserva.resultado_original_texto }}{% if es_administrador %}<br>Corrección: {{ reserva.motivo_correccion_resultado }} · {{ reserva.resultado_corregido_en|date:"d/m/Y H:i" }}{% endif %}{% endif %}{% else %}Reserva normal{% endif %}</p></section>
-            {% if es_administrador and reserva.resultado_registrado_en %}<details class="perfil-seccion"><summary>Historia del resultado</summary><p>Registro: {{ reserva.resultado_registrado_por }} · {{ reserva.resultado_registrado_en|date:"d/m/Y H:i" }}{% if reserva.resultado_original %}<br>Resultado original: {{ reserva.resultado_original_texto }}<br>Corrección: {{ reserva.resultado_corregido_por }} · {{ reserva.resultado_corregido_en|date:"d/m/Y H:i" }}<br>{{ reserva.motivo_correccion_resultado }}{% endif %}</p></details>{% endif %}
-            <section class="perfil-seccion"><h2>Invitados</h2><p>Participantes confirmados, incluido el organizador: {{ reserva.cantidad_participantes }}</p>{% if invitados %}<table><thead><tr><th>Persona</th><th>Respuesta</th><th>Condición aplicada</th></tr></thead><tbody>{% for fila in invitados %}<tr><td>{{ fila.invitado.usuario }}</td><td>{% indicador_estado "respuesta" fila.invitado.respuesta texto=fila.respuesta_texto %}</td><td>{{ fila.invitado.get_condicion_aplicada_display }}</td></tr>{% endfor %}</tbody></table>{% else %}<p>Sin invitados</p>{% endif %}{% if puede_gestionar %}<a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_invitados' reserva.pk %}">Gestionar invitados</a>{% if reserva.es_con_membresia %} <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_socios' reserva.pk %}">Actualizar socios</a>{% endif %}{% endif %}</section>
-
-            {% if es_administrador and reserva.es_con_membresia and reserva.evento.estado == 'finalizado' and not reserva.resultado_corregido_en %}<p><a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_resultado' reserva.pk %}">{% if reserva.resultado_uso == 'sin_registrar' %}Registrar resultado{% else %}Corregir resultado{% endif %}</a></p>{% endif %}
+    <div class="reserva-contenido">
             <section class="perfil-seccion" aria-labelledby="reserva-datos-titulo">
                 <h2 id="reserva-datos-titulo">Datos de la reserva</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila">
-                        <dt>Organizador</dt>
-                        <dd>{{ reserva.organizador }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Sede</dt>
-                        <dd>{{ turno.cancha.sede.nombre }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Cancha</dt>
-                        <dd>{{ turno.cancha.nombre }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Fecha de uso</dt>
-                        <dd>{{ turno.fecha|date:"d/m/Y" }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Horario</dt>
-                        <dd>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</dd>
-                    </div>
-                </dl>
+                {% include "reservas/_datos_reserva.html" with reserva=reserva total=total mostrar_total=True only %}
             </section>
+
 
             {% if reserva.evento.observaciones %}
                 <section class="perfil-seccion" aria-labelledby="reserva-observaciones-titulo">
@@ -79,60 +41,78 @@
                     <p class="perfil-observaciones">{{ reserva.evento.motivo_anulacion|linebreaksbr }}</p>
                 </section>
             {% endif %}
-        </div>
 
-        <aside class="perfil-lateral" aria-label="Registro y acciones de la reserva">
+        <section class="perfil-seccion" aria-labelledby="reserva-invitados-titulo">
+            <div class="reserva-seccion-cabecera"><h2 id="reserva-invitados-titulo">Invitados</h2><span class="texto-secundario">Participantes confirmados: {{ reserva.cantidad_participantes }}</span></div>
+            {% if invitados %}<div class="tabla-contenedor"><table><thead><tr><th scope="col">Persona</th><th scope="col">Respuesta</th><th scope="col">Condición aplicada</th></tr></thead><tbody>{% for fila in invitados %}<tr><td><strong>{{ fila.invitado.usuario }}</strong></td><td>{% indicador_estado "respuesta" fila.invitado.respuesta texto=fila.respuesta_texto %}</td><td>{{ fila.invitado.get_condicion_aplicada_display }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="texto-secundario">Sin invitados</p>{% endif %}
+
+        </section>
+        <details class="reserva-desplegable"{% if historial_financiero_abierto %} open{% endif %}><summary>Pagos y movimientos</summary><div class="reserva-desplegable-cuerpo">{% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True finanzas_en_tabla=True %}</div></details>
+        <details class="reserva-desplegable"><summary>Modalidad y uso</summary><div class="reserva-desplegable-cuerpo">
+            <div class="tabla-contenedor reserva-datos-tabla"><table><tbody>
+                <tr><th scope="row">Modalidad</th><td>{% if reserva.es_con_membresia %}Con membresía{% else %}Reserva normal{% endif %}</td></tr>
+                {% if reserva.es_con_membresia %}
+                <tr><th scope="row">Membresía aplicada</th><td>{{ reserva.membresia_usuario.membresia.nombre }}</td></tr>
+                <tr><th scope="row">Consumo del mes</th><td>{% if reserva.computa_hora_membresia %}Computa una hora{% else %}No computa una hora{% endif %}</td></tr>
+                <tr><th scope="row">Adicional por invitado</th><td>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</td></tr>
+                <tr><th scope="row">Resultado</th><td>{{ reserva.get_resultado_uso_display }}</td></tr>
+                {% if reserva.resultado_original %}<tr><th scope="row">Resultado original</th><td>{{ reserva.resultado_original_texto }}</td></tr>{% endif %}
+                {% endif %}
+            </tbody></table></div>
+            {% if es_administrador and reserva.resultado_registrado_en %}
+            <details class="reserva-desplegable"><summary>Historia del resultado</summary><div class="tabla-contenedor reserva-datos-tabla"><table><tbody>
+                <tr><th scope="row">Registrado por</th><td>{{ reserva.resultado_registrado_por }}</td></tr>
+                <tr><th scope="row">Fecha de registro</th><td>{{ reserva.resultado_registrado_en|date:"d/m/Y H:i" }}</td></tr>
+                {% if reserva.resultado_original %}
+                <tr><th scope="row">Resultado original</th><td>{{ reserva.resultado_original_texto }}</td></tr>
+                <tr><th scope="row">Corregido por</th><td>{{ reserva.resultado_corregido_por }}</td></tr>
+                <tr><th scope="row">Fecha de corrección</th><td>{{ reserva.resultado_corregido_en|date:"d/m/Y H:i" }}</td></tr>
+                <tr><th scope="row">Motivo de corrección</th><td>{{ reserva.motivo_correccion_resultado|linebreaksbr }}</td></tr>
+                {% endif %}
+            </tbody></table></div></details>
+            {% endif %}
+        </div></details>
+        <details class="reserva-desplegable"><summary id="reserva-registro-titulo">Datos del registro</summary><div class="reserva-desplegable-cuerpo">
             <section class="perfil-seccion" aria-labelledby="reserva-registro-titulo">
-                <h2 id="reserva-registro-titulo">Registro</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila">
-                        <dt>Fecha de registro</dt>
-                        <dd>{{ reserva.evento.creado_en|date:"d/m/Y H:i" }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Registrada por</dt>
-                        <dd>{{ reserva.evento.registrado_por }}</dd>
-                    </div>
+                <div class="tabla-contenedor reserva-datos-tabla"><table><tbody>
+                    <tr>
+                        <th scope="row">Fecha de registro</th>
+                        <td>{{ reserva.evento.creado_en|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Registrada por</th>
+                        <td>{{ reserva.evento.registrado_por }}</td>
+                    </tr>
                     {% if reserva.evento.estado == "anulado" %}
-                        <div class="perfil-fila">
-                            <dt>Fecha de anulación</dt>
-                            <dd>{{ reserva.evento.anulado_en|date:"d/m/Y H:i" }}</dd>
-                        </div>
-                        <div class="perfil-fila">
-                            <dt>Anulada por</dt>
-                            <dd>{{ reserva.evento.anulado_por }}</dd>
-                        </div>
+                        <tr>
+                            <th scope="row">Fecha de anulación</th>
+                            <td>{{ reserva.evento.anulado_en|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Anulada por</th>
+                            <td>{{ reserva.evento.anulado_por }}</td>
+                        </tr>
                     {% elif reserva.evento.estado == "finalizado" %}
-                        <div class="perfil-fila">
-                            <dt>Fecha de finalización</dt>
-                            <dd>{{ reserva.evento.finalizado_en|date:"d/m/Y H:i" }}</dd>
-                        </div>
+                        <tr>
+                            <th scope="row">Fecha de finalización</th>
+                            <td>{{ reserva.evento.finalizado_en|date:"d/m/Y H:i" }}</td>
+                        </tr>
                     {% endif %}
-                </dl>
+                </tbody></table></div>
             </section>
 
-            <section class="perfil-seccion" aria-labelledby="reserva-acciones-titulo">
-                <h2 id="reserva-acciones-titulo">Acciones</h2>
-                {% if mi_invitacion %}{% include "reservas/_respuesta_invitacion.html" with invitacion=mi_invitacion %}{% endif %}
-                <div class="perfil-acciones perfil-acciones-botones">
-                    <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
-                    <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
-                    {% if puede_finalizar %}
-                        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
-                              data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservará su turno y su ocupación histórica."
-                              data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
-                            {% csrf_token %}
-                            <button class="boton boton-secundario boton-chico" type="submit">Finalizar reserva</button>
-                        </form>
-                    {% endif %}
-                </div>
 
-                {% if puede_anular %}
-                    <details class="perfil-desplegable" id="anulacion"{% if formulario_anulacion.is_bound %} open{% endif %}>
-                        <summary class="boton boton-peligro boton-chico">Anular reserva</summary>
-                        <form class="perfil-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
-                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? {% if reserva.es_con_membresia %}{% if es_administrador %}Se liberan las horas del organizador y de los invitados.{% else %}Más de dos horas libera la hora del organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %}{% endif %} No se devuelve dinero automáticamente."
-                              data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
+        </div></details>
+        {% if mi_invitacion %}<section class="perfil-seccion"><h2>Tu participación</h2>{% include "reservas/_respuesta_invitacion.html" with invitacion=mi_invitacion %}</section>{% endif %}
+
+    </div>
+</article>
+{% if puede_anular %}<dialog class="modal-confirmacion reserva-modal-anulacion" data-modal-anulacion{% if formulario_anulacion.is_bound %} data-abrir-inicialmente{% endif %} aria-labelledby="anular-reserva-titulo">
+<form class="modal-confirmacion-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}">
+<header class="modal-confirmacion-cabecera"><h2 id="anular-reserva-titulo">Anular reserva {{ reserva.numero }}</h2></header>
+<div class="modal-confirmacion-contenido">
+    {% if formulario_anulacion.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>{% endif %}
+    <p>Se anulará la reserva y se liberará el turno. No se devuelve dinero automáticamente.{% if es_administrador and reserva.es_con_membresia %} Se liberan las horas del organizador y de los invitados.{% endif %}</p>
                             {% csrf_token %}
                             {% if not es_administrador %}
                                 <p class="perfil-descripcion">Podés cancelar antes del inicio.{% if reserva.es_con_membresia %} Más de dos horas libera tu hora de organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %} La devolución de dinero se decide por separado.</p>
@@ -143,14 +123,9 @@
                                 <small class="nota-campo" id="{{ formulario_anulacion.motivo.auto_id }}_helptext">{{ formulario_anulacion.motivo.help_text }}</small>
                                 {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                             </div>
-                            <button class="boton boton-peligro boton-chico" type="submit">Anular reserva</button>
-                        </form>
-                    </details>
-                {% elif not es_administrador and reserva.evento.estado == "programado" %}
-                    <p class="perfil-descripcion perfil-impedimento">{{ impedimento_anulacion }}</p>
-                {% endif %}
-            </section>
-        </aside>
-    </div>
-</article>
+
+                        </div><footer class="modal-confirmacion-acciones"><button class="boton boton-secundario" type="button" data-cerrar-anulacion>Cancelar</button><button class="boton boton-peligro" type="submit">Anular reserva</button></footer>
+</form>
+</dialog>{% endif %}
+<script src="{% static 'js/reserva-detalle.js' %}" defer></script>
 {% endblock %}

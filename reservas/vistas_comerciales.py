@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from calendar import monthrange
 from datetime import date, datetime, time
 
@@ -5,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -253,8 +255,28 @@ def reserva_resultado(request, pk):
 @require_GET
 def mis_reservas(request):
     exigir_acceso_reservas(request.user)
-    consulta = Reserva.objects.filter(Q(organizador=request.user) | Q(invitados__usuario=request.user)).distinct().select_related("evento__turno__cancha__sede").order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
-    return render(request, "reservas/mis_reservas.html", {"pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina"))})
+    consulta = Reserva.objects.filter(
+        Q(organizador=request.user) | Q(invitados__usuario=request.user),
+    ).distinct().select_related("evento__turno__cancha__sede").prefetch_related(
+        Prefetch("invitados", queryset=ReservaInvitado.objects.filter(usuario=request.user), to_attr="invitaciones_propias"),
+    ).order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
+    participacion = request.GET.get("participacion", "")
+    estado = request.GET.get("estado", "")
+    if participacion == "organizador":
+        consulta = consulta.filter(organizador=request.user)
+    elif participacion == "invitado":
+        consulta = consulta.exclude(organizador=request.user)
+    else:
+        participacion = ""
+    if estado in Evento.Estado.values:
+        consulta = consulta.filter(evento__estado=estado)
+    else:
+        estado = ""
+    return render(request, "reservas/mis_reservas.html", {
+        "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
+        "participacion": participacion, "estado": estado, "estados": Evento.Estado.choices,
+        "parametros": urlencode({"participacion": participacion, "estado": estado}),
+    })
 
 
 @login_required
