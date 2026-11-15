@@ -205,6 +205,7 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
             "es_generada": clase.es_generada,
             "asignacion_profesor": profesor is not None,
             "asignacion_participante": participante is not None,
+            "respuesta": participante.respuesta if participante else None,
             "respuesta_texto": participante.get_respuesta_display() if participante else None,
             "asistencia": estado_asistencia,
             "asistencia_cargada": clase.asistencia_cargada,

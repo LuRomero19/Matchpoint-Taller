@@ -6,11 +6,10 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 
-from caja.models import SesionCaja
 from membresias.continuidad import ventana_continuidad
 from membresias.models import MembresiaUsuario, PlanUsuario
 from reservas.models import Evento
-from usuarios.models import Rol
+from usuarios.models import Rol, Usuario
 
 
 @login_required
@@ -44,7 +43,9 @@ def inicio(request):
                 encuestas_abiertas = True
                 fecha_limite = cierre_anterior
         dias_encuestas = (fecha_limite.date() - ahora.date()).days
-        sesion = SesionCaja.objects.select_related("responsable").filter(estado=SesionCaja.Estado.ABIERTA).first()
+        usuarios = Usuario.objects.aggregate(
+            total=Count("pk"), nuevos_hoy=Count("pk", filter=Q(date_joined__date=ahora.date())),
+        )
         contexto.update({
             "hoy": ahora.date(), "actividad": actividad, "mes_actual": mes_actual,
             "alumnos_con_plan": PlanUsuario.objects.filter(
@@ -54,9 +55,6 @@ def inicio(request):
                 mes_cubierto=mes_actual, estado=MembresiaUsuario.Estado.ACTIVO,
             ).values("usuario_id").distinct().count(),
             "encuestas": {"dias": dias_encuestas, "abiertas": encuestas_abiertas},
-            "sesion_caja": sesion,
-            "ultimo_cierre": None if sesion else SesionCaja.objects.select_related("responsable").filter(
-                estado=SesionCaja.Estado.CERRADA,
-            ).order_by("-cerrada_en", "-pk").first(),
+            "usuarios": usuarios,
         })
     return render(request, "inicio_administracion.html" if administrador else "inicio_portal.html", contexto)

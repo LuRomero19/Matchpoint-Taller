@@ -1,0 +1,28 @@
+.encabezado-geometrico {
+    background-image: var(--encabezado-geometria, url("../img/encabezado-geometria.svg"));
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 80% 100%;
+}
+.encabezado-geometrico-orbitas { --encabezado-geometria: url("../img/encabezado-geometria-orbitas.svg"); }
+.encabezado-geometrico-reticula { --encabezado-geometria: url("../img/encabezado-geometria-reticula.svg"); }
+.encabezado-geometrico-ondas { --encabezado-geometria: url("../img/encabezado-geometria-ondas.svg"); }
+
+.encabezado-geometrico.encabezado-separado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+body > .contenido-principal > .tarjeta.descripcion-seccion {
+    margin: 0 0 20px;
+    padding: 10px 20px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    color: var(--texto-suave);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+body > .contenido-principal > .descripcion-seccion + * { margin-top: 20px; }

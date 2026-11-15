@@ -138,7 +138,7 @@ body > .contenido-principal.contenido-usuarios {
 .usuario-nombre-estado {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .usuario-estado-punto {

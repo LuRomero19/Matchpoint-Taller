@@ -3,13 +3,19 @@ body > .contenido-principal.contenido-inicio {
     padding-block: 40px;
 }
 
-.inicio-cabecera { margin-bottom: 28px; padding-left: 16px; border-left: 4px solid var(--acento); }
+.inicio-cabecera {
+    margin-bottom: 24px;
+    border: 0;
+    border-top: 3px solid var(--acento);
+    border-radius: 10px;
+    background-color: var(--superficie);
+}
 .inicio-cabecera p { margin: 8px 0 0; color: var(--texto-suave); }
 
 .inicio-resumen {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    grid-template-areas: "actividad caja" "mes continuidad";
+    grid-template-areas: "actividad usuarios" "mes continuidad";
     gap: 24px;
 }
 
@@ -23,7 +29,7 @@ body > .contenido-principal.contenido-inicio {
 }
 
 .inicio-actividad { grid-area: actividad; }
-.inicio-caja { grid-area: caja; }
+.inicio-usuarios { grid-area: usuarios; }
 .inicio-mes { grid-area: mes; }
 .inicio-continuidad { grid-area: continuidad; }
 
@@ -99,22 +105,17 @@ body > .contenido-principal.contenido-inicio {
 .inicio-actividad .inicio-pie a:hover { color: var(--acento); }
 .inicio-actividad .inicio-pie a:focus-visible { outline-color: var(--acento); }
 
-.inicio-resumen > .inicio-mes { background: var(--primario-suave); border-color: #e4d7ec; }
 .inicio-mes .inicio-periodo { color: var(--primario); }
-.inicio-metrica + .inicio-metrica { border-color: #ddcee7; }
 
-.inicio-resumen > .inicio-continuidad { background: var(--acento-suave); border-color: #e0e8ba; }
 .inicio-continuidad .inicio-valor { color: var(--acento-texto); }
-.inicio-continuidad .inicio-pie { border-color: #dce5b0; }
 
 .inicio-estado { padding: 4px 10px; border-radius: 20px; background: var(--estado-inactivo-fondo); }
 .inicio-estado-activo { background: var(--acento-suave); }
 .inicio-continuidad .inicio-estado-activo { background: #e4edbf; }
-.inicio-caja .inicio-datos > div { padding: 16px; border-left: 3px solid var(--acento); background: #f8f9f4; border-radius: 0 8px 8px 0; }
 
 
 @media (max-width: 900px) {
-    .inicio-resumen { grid-template-columns: minmax(0, 1fr); grid-template-areas: "actividad" "caja" "continuidad" "mes"; }
+    .inicio-resumen { grid-template-columns: minmax(0, 1fr); grid-template-areas: "actividad" "usuarios" "continuidad" "mes"; }
 }
 
 @media (max-width: 480px) {
@@ -127,3 +128,6 @@ body > .contenido-principal.contenido-inicio {
 }
 
 .inicio-datos > div + div { margin-top: 16px; }
+
+.inicio-nuevos { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--borde); color: var(--texto-suave); }
+.inicio-nuevos strong { color: var(--primario); font-size: 1.25rem; }

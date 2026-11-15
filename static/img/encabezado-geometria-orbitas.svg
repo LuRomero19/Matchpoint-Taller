@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200" viewBox="0 0 1000 200" fill="none">
+  <defs><pattern id="trama" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><path d="M0 0v10" stroke="#4B176D" stroke-opacity=".08" stroke-width="2"/></pattern></defs>
+  <g stroke="#4B176D" stroke-opacity=".12" stroke-width="1.5">
+    <circle cx="176" cy="18" r="108"/><circle cx="176" cy="18" r="84"/><circle cx="176" cy="18" r="60"/>
+    <path d="m300 66 54 54-54 54-54-54Zm0 24 30 30-30 30-30-30Z"/>
+    <ellipse cx="502" cy="136" rx="126" ry="48" transform="rotate(-24 502 136)"/>
+    <ellipse cx="502" cy="136" rx="126" ry="70" transform="rotate(-24 502 136)"/>
+    <circle cx="502" cy="136" r="36"/>
+    <path d="M660-30v98a38 38 0 0 0 38 38h110M678-30v98a20 20 0 0 0 20 20h110M642-30v98a56 56 0 0 0 56 56h110"/>
+    <circle cx="932" cy="180" r="106"/><circle cx="932" cy="180" r="82"/><circle cx="932" cy="180" r="58"/>
+    <path d="M376 26h34m-17-17v34M778 162h40m-20-20v40"/>
+  </g>
+  <circle cx="176" cy="18" r="60" fill="#4B176D" fill-opacity=".035"/>
+  <path d="m300 66 54 54-54 54-54-54Z" fill="url(#trama)"/>
+  <circle cx="502" cy="136" r="36" fill="#4B176D" fill-opacity=".05"/>
+  <circle cx="932" cy="180" r="58" fill="url(#trama)"/>
+  <path d="M740 24h58v22h-58Z" fill="#4B176D" fill-opacity=".045"/>
+</svg>

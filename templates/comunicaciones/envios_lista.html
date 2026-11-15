@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% load estados %}
 {% load static %}
 {% block titulo %}Envíos de email | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/envios.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-envios{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina envios-encabezado">
+<header class="tarjeta encabezado-pagina envios-encabezado encabezado-separado encabezado-geometrico">
     <h1>Envíos de email</h1>
-    <p class="texto-secundario">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
 </header>
+<p class="tarjeta descripcion-seccion">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
 <form method="get" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de envíos">
     <div class="detalle-grid">
         <div class="grupo-campo"><label for="envios-estado">Estado</label><select id="envios-estado" name="estado" class="form-control"><option value="">Todos</option>{% for valor, texto in estados %}<option value="{{ valor }}"{% if valor == estado_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
@@ -17,9 +18,10 @@
     <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'comunicaciones:envios_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
 </form>
 <section class="tarjeta tabla-contenedor" aria-label="Seguimiento de envíos">
-<table><thead><tr><th scope="col">Creado</th><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Estado</th><th scope="col">Detalle</th></tr></thead>
+<table><thead><tr><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Creado</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
 <tbody>{% for envio in pagina %}<tr>
-<td>{{ envio.creado_en|date:"d/m/Y H:i" }}</td><td>{{ envio.get_tipo_display }}</td><td>{{ envio.destinatario }}</td><td>{{ envio.get_estado_display }}</td>
+<td><strong>{{ envio.get_tipo_display }}</strong></td><td>{{ envio.destinatario }}</td><td>{{ envio.creado_en|date:"d/m/Y H:i" }}</td>
+<td>{% indicador_estado "envio" envio.estado %}</td>
 <td><button type="button" class="boton boton-secundario boton-chico" data-entrega aria-expanded="false" aria-controls="entrega-{{ envio.pk }}">Ver entrega</button></td></tr>
 <tr id="entrega-{{ envio.pk }}" class="envio-entrega" hidden><td colspan="5"><dl>
 <div><dt>Intentos</dt><dd>{{ envio.intentos }}</dd></div>

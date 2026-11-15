@@ -1,3 +1,4 @@
+{% load estados %}
 <header class="agenda-detalle-cabecera agenda-resumen-tarjeta agenda-resumen-compacto">
     <div class="agenda-resumen-seleccion">
         <h2 class="agenda-resumen-estado" data-agenda-titulo>Eventos anulados</h2>
@@ -12,6 +13,7 @@
     {% for evento in agenda.detalle.anulados %}
         <li>
             <a class="agenda-turno agenda-turno-{{ evento.tipo }} agenda-turno-anulado" href="{% if evento.tipo == 'reserva' %}{% url 'reservas:reserva_detalle' evento.reserva.pk %}{% elif evento.tipo == 'clase' %}{% url 'clases:clase_detalle' evento.clase.pk %}{% else %}{% url 'agenda:bloqueo_detalle' evento.bloqueo.pk %}{% endif %}" aria-label="Ver detalle de {{ evento.get_tipo_display|lower }} {% if evento.tipo == 'reserva' %}{{ evento.reserva.numero }}{% elif evento.tipo == 'clase' %}{{ evento.clase.pk }}{% else %}{{ evento.bloqueo.numero }}{% endif %}">
+                {% indicador_estado "evento" evento.estado integrado=True %}
                 {% include "agenda/_contenido_evento.html" with evento=evento profesores=evento.profesores_resumen only %}
                 <span class="agenda-anulado-flecha" aria-hidden="true">›</span>
             </a>

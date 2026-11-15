@@ -30,7 +30,7 @@ body > .contenido-principal.contenido-membresias-configuracion {
 .catalogo-nombre-estado {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .catalogo-estado {

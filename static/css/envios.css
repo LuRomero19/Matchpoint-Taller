@@ -9,7 +9,7 @@ body > .contenido-principal.contenido-envios {
 .contenido-envios .tarjeta-busqueda { margin-block: 24px; padding: 20px; }
 .contenido-envios .tabla-contenedor { border-bottom: 3px solid var(--acento); }
 .contenido-envios td { vertical-align: top; }
-.contenido-envios td:nth-child(3) { overflow-wrap: anywhere; }
+.contenido-envios td:nth-child(2) { overflow-wrap: anywhere; }
 .envio-entrega[hidden] { display: none; }
 .envio-entrega td { background: #faf9fc; }
 .envio-entrega dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; margin: 0; }

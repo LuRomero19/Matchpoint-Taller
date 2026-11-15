@@ -9,7 +9,8 @@
 .sidebar-plegar, .sidebar-cerrar, .sidebar-cabecera-tablet { display: none; }
 .sidebar-inicializada .sidebar-plegar { display: inline-flex; }
 .sidebar-icono { flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.sidebar-contenido { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+.sidebar-contenido { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.sidebar-contenido::-webkit-scrollbar { display: none; }
 .sidebar-perfil { display: flex; align-items: center; gap: 10px; padding: 16px 12px; border-radius: 12px; background: var(--primario); color: white; text-decoration: none; }
 .sidebar-perfil:hover, .sidebar-perfil-activo { background: var(--primario-hover); }
 .sidebar-avatar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--acento); color: var(--primario); font-weight: 700; }

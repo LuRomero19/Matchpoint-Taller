@@ -4,10 +4,11 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}"><link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-feriados listado-feriados{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina">
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-reticula">
     <h1>Feriados</h1>
     <a class="boton boton-primario" href="{% url 'clases:feriado_registrar' %}">Registrar feriado</a>
 </header>
+<p class="tarjeta descripcion-seccion">Administrá los feriados que se tienen en cuenta al generar las clases.</p>
 <section class="tarjeta feriados-lista">
     {% if pagina %}
         <div class="tabla-contenedor">
@@ -15,7 +16,7 @@
                 <caption class="clase-etiqueta-oculta">Feriados de todas las sedes</caption>
                 <thead><tr><th scope="col">Fecha</th><th scope="col">Descripción</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
                 <tbody>{% for feriado in pagina %}
-                    <tr><td>{{ feriado.fecha|date:"d/m/Y" }}</td><td>{{ feriado.descripcion }}</td><td><div class="acciones"><a class="boton boton-secundario boton-chico" href="{% url 'clases:feriado_detalle' feriado.id %}" aria-label="Ver feriado del {{ feriado.fecha|date:'d/m/Y' }}">Detalles</a></div></td></tr>
+                    <tr><td><strong>{{ feriado.fecha|date:"d/m/Y" }}</strong></td><td>{{ feriado.descripcion }}</td><td><div class="acciones"><a class="boton boton-secundario boton-chico" href="{% url 'clases:feriado_detalle' feriado.id %}" aria-label="Ver feriado del {{ feriado.fecha|date:'d/m/Y' }}">Detalles</a></div></td></tr>
                 {% endfor %}</tbody>
             </table>
         </div>

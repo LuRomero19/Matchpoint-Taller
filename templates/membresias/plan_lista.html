@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load estados %}
 {% load static %}
 {% block titulo %}Planes | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">{% endblock %}
@@ -30,7 +31,7 @@
             <tbody>
                 {% for plan in pagina %}
                     <tr>
-                        <td><span class="catalogo-nombre-estado"><span class="catalogo-estado{% if plan.estado == 'activo' %} catalogo-estado-activo{% endif %}" role="img" aria-label="{{ plan.get_estado_display }}" title="{{ plan.get_estado_display }}"></span><strong>{{ plan.nombre }}</strong></span></td>
+                        <td><span class="catalogo-nombre-estado">{% indicador_estado "habilitacion" plan.estado %}<strong>{{ plan.nombre }}</strong></span></td>
                         <td>{{ plan.get_modalidad_display }}</td>
                         <td>{{ plan.frecuencia_semanal }}</td>
                         <td>{{ plan.get_cantidad_clases_por_encuentro_display }}</td>

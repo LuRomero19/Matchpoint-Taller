@@ -1,3 +1,4 @@
+{% load estados %}
 <section class="perfil-seccion">
 <h2>Situación financiera</h2>
 {% include "caja/_resumen_financiero.html" %}
@@ -8,7 +9,7 @@
 {% for movimiento in pagina_finanzas %}<tr>
 <td>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</td>
 <td>{% if movimiento.clase == 'ingreso' %}Ingreso{% else %}Devolución{% endif %}</td>
-<td>{{ movimiento.get_estado_display }}</td><td>$ {{ movimiento.monto|floatformat:"2g" }}</td>
+<td>{% indicador_estado "movimiento" movimiento.estado %}</td><td>$ {{ movimiento.monto|floatformat:"2g" }}</td>
 <td><details><summary>{{ movimiento.numero }}</summary>
 <p>{{ movimiento.concepto|linebreaksbr }}</p><p>{{ movimiento.get_medio_pago_display }}{% if movimiento.referencia %} · {{ movimiento.referencia }}{% endif %}</p>
 {% if movimiento.estado == 'anulado' %}<p>Anulado el {{ movimiento.anulado_en|date:"d/m/Y H:i" }}. Motivo: {{ movimiento.motivo_anulacion|linebreaksbr }}</p>{% endif %}

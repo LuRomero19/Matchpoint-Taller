@@ -4,13 +4,17 @@
 
 Este documento resume los criterios generales del sistema a desarrollar para la Academia de Tenis TM, tomando como base el funcionamiento actual de la organización (ver `1_organizacion.md`).
 
-El objetivo es definir qué hace el sistema y cómo resuelve cada operación: alcance, permisos, validaciones, interacción, auditoría y procesos automáticos. La representación de esos criterios mediante tablas, atributos, claves y restricciones se describe en `3_modelo_relacional.md`. Los puntos abiertos de definición se reúnen en [Pendientes de definición documental](pendientes_documentacion.md).
+El objetivo es definir qué hace el sistema y cómo resuelve cada operación: alcance, permisos, validaciones, interacción, auditoría y procesos automáticos. La representación de esos criterios mediante tablas, atributos, claves y restricciones se describe en `3_modelo_relacional.md`.
 
 ---
 
 ## 2. Alcance del sistema
 
 El sistema será una única aplicación, con un solo backend y un único modelo de usuarios y roles, expuesta mediante dos interfaces separadas: la gestión interna para el personal (Administrador) y el portal público de autoservicio (Profesores,Público, Alumno, Reservas; ver 2.7). No son sistemas independientes: se separan por audiencia e interfaz, no por datos ni reglas de negocio.
+
+El inicio administrativo muestra el total de cuentas de usuario registradas y las cuentas creadas en el día local actual. Ambos indicadores incluyen cuentas activas e inactivas y no dependen de su verificación de correo ni de sus roles. La fecha de registro de la cuenta determina las altas del día. La tarjeta permite acceder al listado de usuarios.
+
+Los listados representan los estados mediante iconos lineales con tooltip personalizado y nombre accesible. Un diccionario por dominio determina figura, etiqueta y color: verde para habilitación o resultado positivo, gris para inactividad o cierre normal, ámbar para espera o vencimiento, violeta para programación o procesamiento y rojo para errores o anulaciones. Los filtros conservan las etiquetas completas. Las respuestas de continuidad permanecen como texto. El estado del evento, la respuesta y la asistencia son indicadores independientes; Sin registrar no equivale a Ausente y Enviado indica aceptación del servicio de correo, no recepción o lectura. Los tooltips admiten cursor, teclado, toque y cierre con Escape sin quedar recortados por las tablas. Los encabezados de detalle y comprobantes conservan el texto de estado; la impresión de listados también muestra su etiqueta. Las entidades sin estado propio no incorporan un indicador artificial.
 
 La ocupación se organiza mediante turnos de una hora, con inicio en punto entre 00:00 y 22:00 inclusive y fin dentro de la misma fecha. Cada turno identifica una cancha, fecha y hora; esas coordenadas no se editan. Una reserva, clase o bloqueo ocupa un único turno y conserva estado, observaciones y auditoría de su actividad.
 

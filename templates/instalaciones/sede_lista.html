@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load estados %}
 {% load static %}
 
 {% block titulo %}Sedes | Academia TM{% endblock %}
@@ -8,7 +9,7 @@
 {% block clase_contenido %}contenido-instalaciones{% endblock %}
 
 {% block contenido %}
-<div class="tarjeta encabezado-pagina">
+<div class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
     <h1>Sedes</h1>
     {% if perms.instalaciones.add_sede %}
         <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
@@ -16,6 +17,7 @@
         </a>
     {% endif %}
 </div>
+<p class="tarjeta descripcion-seccion">Consultá y administrá las sedes de la academia y sus canchas.</p>
 
 <form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
     <div class="grupo-campo">
@@ -35,10 +37,13 @@
 <section class="sedes-tarjetas" aria-label="Sedes">
     {% for sede in sedes %}
         <article class="tarjeta sede-tarjeta">
-            {% cycle 'img/sedes-geometria.svg' 'img/geometria-equilibrio.svg' 'img/geometria-orbitas.svg' as ilustracion_sede silent %}
-            <img class="sede-tarjeta-imagen" src="{% static ilustracion_sede %}" alt="" width="600" height="300">
+            {% with nombre=sede.nombre|lower %}
+            <div class="sede-tarjeta-imagen-marco{% if 'sirio' in nombre or 'española' in nombre or 'espanola' in nombre %} sede-tarjeta-imagen-zoom{% endif %}{% if 'española' in nombre or 'espanola' in nombre %} sede-tarjeta-imagen-espanola{% endif %}">
+            <img class="sede-tarjeta-imagen" src="{% if 'sirio' in nombre %}{% static 'img/sede-sirio-libanesa-fachada.png' %}{% elif 'española' in nombre or 'espanola' in nombre %}{% static 'img/sede-sociedad-espanola-fachada.png' %}{% else %}{% static 'img/sedes-geometria.svg' %}{% endif %}" alt="" width="600" height="300">
+            </div>
+            {% endwith %}
             <h2 class="instalacion-nombre-estado">
-                <span class="instalacion-estado-punto{% if sede.estado == 'activa' %} instalacion-estado-punto-activa{% endif %}" role="img" aria-label="{{ sede.get_estado_display }}" title="{{ sede.get_estado_display }}"></span>
+                {% indicador_estado "habilitacion" sede.estado %}
                 {{ sede.nombre }}
             </h2>
             <p>{{ sede.direccion|default:"Sin dirección registrada" }}</p>

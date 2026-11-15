@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200" viewBox="0 0 1000 200" fill="none">
+  <defs>
+    <pattern id="rayas" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <path d="M0 0v12" stroke="#4B176D" stroke-opacity=".08" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <g stroke="#4B176D" stroke-opacity=".12" stroke-width="1.5">
+    <circle cx="154" cy="196" r="100"/>
+    <circle cx="154" cy="196" r="76"/>
+    <circle cx="154" cy="196" r="52"/>
+    <path d="M222-30v96a34 34 0 0 0 34 34h96M240-30v96a16 16 0 0 0 16 16h96M204-30v96a52 52 0 0 0 52 52h96"/>
+    <circle cx="472" cy="32" r="104"/>
+    <circle cx="472" cy="32" r="80"/>
+    <circle cx="472" cy="32" r="56"/>
+    <path d="m576 118 58-58 58 58-58 58Zm20 0 38-38 38 38-38 38Z"/>
+    <path d="M714 224v-94a44 44 0 0 1 44-44h106M732 224v-94a26 26 0 0 1 26-26h106M696 224v-94a62 62 0 0 1 62-62h106"/>
+    <circle cx="966" cy="22" r="106"/>
+    <circle cx="966" cy="22" r="82"/>
+    <circle cx="966" cy="22" r="58"/>
+    <circle cx="350" cy="164" r="21"/>
+    <path d="M308 164h84m-42-42v84M790 14h42m-21-21v42"/>
+  </g>
+  <path d="M76 196a78 78 0 0 1 156 0h-26a52 52 0 0 0-104 0Z" fill="#4B176D" fill-opacity=".045"/>
+  <circle cx="472" cy="32" r="56" fill="#4B176D" fill-opacity=".035"/>
+  <path d="m576 118 58-58 58 58-58 58Z" fill="url(#rayas)"/>
+  <path d="M758 180h106v36H758Z" fill="#4B176D" fill-opacity=".055"/>
+  <circle cx="966" cy="22" r="58" fill="#4B176D" fill-opacity=".045"/>
+  <circle cx="850" cy="162" r="28" fill="url(#rayas)"/>
+</svg>

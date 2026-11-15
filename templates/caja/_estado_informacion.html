@@ -1,0 +1,15 @@
+<span class="ayuda-contextual caja-estado-informacion">
+    <button type="button" class="ayuda-contextual-boton" aria-label="Información de {% if sesion.estado == 'abierta' %}apertura{% else %}cierre{% endif %}" aria-describedby="caja-estado-informacion">
+        {% include "componentes/iconoir/informacion.html" %}
+    </button>
+    <span class="ayuda-contextual-texto" id="caja-estado-informacion" role="tooltip">
+        <dl>
+            <div><dt>Abierta por</dt><dd>{{ sesion.responsable }}</dd></div>
+            <div><dt>Fecha de apertura</dt><dd>{{ sesion.creado_en|date:"d/m/Y H:i" }}</dd></div>
+            {% if sesion.estado == 'cerrada' %}
+            <div><dt>Cerrada por</dt><dd>{{ sesion.responsable }}</dd></div>
+            <div><dt>Fecha de cierre</dt><dd>{{ sesion.cerrada_en|date:"d/m/Y H:i" }}</dd></div>
+            {% endif %}
+        </dl>
+    </span>
+</span>

@@ -28,6 +28,8 @@ body > .contenido-principal.contenido-caja {
 .caja-sesion-datos dt { color: var(--texto-suave); font-size: .85rem; }
 .caja-sesion-datos dd { margin: 4px 0 0; font-size: .95rem; }
 .caja-importes { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 24px; margin: 0; }
+.caja-sesion > .caja-importes { margin-top: 24px; }
+.caja-sesion > .caja-nota { margin: 20px 0 0; }
 .caja-importes dt { font-size: .85rem; color: var(--texto-suave); }
 .caja-importes dd { margin: 6px 0 0; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .caja-importe-principal dd { color: var(--primario); font-size: 1.8rem; }
@@ -137,3 +139,9 @@ body > .contenido-principal.contenido-caja {
     padding: 20px;
     border-bottom: 1px solid var(--borde);
 }
+
+.caja-estado-informacion { margin-left: -8px; color: var(--texto-suave); font-size: .85rem; }
+
+.contenido-caja .caja-filtros-sesiones { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+.caja-filtros-sesiones .detalle-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.caja-filtros-sesiones > .mensaje { grid-column: 1 / -1; }

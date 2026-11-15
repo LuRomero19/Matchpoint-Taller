@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load estados %}
 {% load static %}
 
 {% block titulo %}Usuarios | Academia TM{% endblock %}
@@ -6,7 +7,7 @@
 {% block clase_contenido %}contenido-usuarios listado-usuarios{% endblock %}
 
 {% block contenido %}
-<div class="tarjeta encabezado-pagina">
+<div class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas">
     <h1>Usuarios</h1>
     {% if perms.usuarios.add_usuario %}
     <a class="boton boton-primario" href="{% url 'usuarios:usuario_crear' %}">
@@ -14,6 +15,7 @@
     </a>
     {% endif %}
 </div>
+<p class="tarjeta descripcion-seccion">Consultá y administrá las cuentas de usuario, sus roles y su acceso al sistema.</p>
 
 <form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
     <div class="detalle-grid">
@@ -40,6 +42,7 @@
         <thead>
             <tr>
                 <th>Nombre</th>
+                <th>Nombre de usuario</th>
                 <th>Email</th>
                 <th class="acciones-columna">Acciones</th>
             </tr>
@@ -49,13 +52,14 @@
             <tr>
                 <td>
                     <span class="usuario-nombre-estado">
-                        <span class="usuario-estado-punto{% if usuario_obj.is_active %} usuario-estado-punto-activo{% endif %}" role="img" aria-label="{{ usuario_obj.is_active|yesno:'Activo,Inactivo' }}" title="{{ usuario_obj.is_active|yesno:'Activo,Inactivo' }}"></span>
+                        {% indicador_estado "habilitacion" usuario_obj.is_active %}
                         <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
                     </span>
                     {% if usuario_obj.es_administrador_listado %}
                         <span role="img" aria-label="Administrador" title="Administrador">⭐</span>
                     {% endif %}
                 </td>
+                <td>{{ usuario_obj.username }}</td>
                 <td>{{ usuario_obj.email }}</td>
                 <td>
                     <div class="acciones">
@@ -68,7 +72,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td class="estado-vacio" colspan="3">
+                <td class="estado-vacio" colspan="4">
                     No se encontraron usuarios.
                 </td>
             </tr>

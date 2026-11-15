@@ -59,7 +59,7 @@ body > .contenido-principal.contenido-instalaciones {
 .instalacion-nombre-estado {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .instalacion-estado-punto {
@@ -101,17 +101,25 @@ body > .contenido-principal.contenido-instalaciones {
     margin-top: auto;
 }
 
-.sede-tarjeta-imagen {
-    display: block;
-    width: 100%;
-    height: auto;
+.sede-tarjeta-imagen-marco {
     aspect-ratio: 2 / 1;
-    object-fit: cover;
+    overflow: hidden;
     border-radius: 8px;
     margin-bottom: 20px;
 }
+.sede-tarjeta-imagen {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+.sede-tarjeta-imagen-zoom .sede-tarjeta-imagen { transform: scale(1.1); }
+
 
 .sede-formulario-introduccion {
     margin: 0 0 24px;
     color: var(--texto-suave);
 }
+
+.sede-tarjeta-imagen-espanola .sede-tarjeta-imagen { transform: scale(1.02); object-position: center 35%; }

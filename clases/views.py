@@ -53,7 +53,7 @@ def clase_detalle(request, pk):
     for participante in clase["participantes"]:
         asistencia = asistencias.get(participante["usuario_id"], {"estado": Asistencia.Estado.SIN_REGISTRAR})
         participante["asistencia_texto"] = Asistencia.Estado(asistencia["estado"]).label
-        participante["badge_asistencia"] = "activo" if asistencia["estado"] == Asistencia.Estado.PRESENTE else "inactivo"
+        participante["asistencia_estado"] = asistencia["estado"]
         participante["observaciones_asistencia"] = asistencia.get("observaciones")
 
     for seccion in ("profesores", "participantes"):
@@ -521,7 +521,6 @@ def actividad_clases(request, usuario_id):
             fila["asistencia_texto"] = None
             if es_alumno and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
                 fila["asistencia_texto"] = Asistencia.Estado(fila["asistencia"]).label
-                fila["badge_asistencia"] = "activo" if fila["asistencia"] == Asistencia.Estado.PRESENTE else "inactivo"
         enlaces["vista"] = filtros["vista"]
         if pagina.has_previous():
             url_anterior = request.path + "?" + urlencode({**enlaces, "pagina": pagina.previous_page_number()})

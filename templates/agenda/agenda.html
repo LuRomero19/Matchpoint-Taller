@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-pagina agenda-encabezado">
+<header class="tarjeta encabezado-pagina agenda-encabezado encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
     <h1>Agenda</h1>
     {% if es_administrador and agenda.columnas %}
         <div class="acciones">
@@ -21,6 +21,7 @@
         </div>
     {% endif %}
 </header>
+<p class="tarjeta descripcion-seccion">Consultá las clases, reservas y bloqueos de cada sede y cancha.</p>
 
 {% if hay_sedes %}
     <form class="tarjeta tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>

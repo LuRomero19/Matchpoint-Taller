@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load estados %}
 {% load static %}
 
 {% block titulo %}{{ sede.nombre }} | Academia TM{% endblock %}
@@ -111,7 +112,7 @@
                                 <td>{{ cancha.nombre }}</td>
                                 <td>{{ cancha.get_superficie_display }}</td>
                                 <td>
-                                    {% include "componentes/badge_estado.html" with estado=cancha.estado texto=cancha.get_estado_display only %}
+                                    {% indicador_estado "habilitacion" cancha.estado %}
                                 </td>
                                 <td>
                                     <div class="acciones">

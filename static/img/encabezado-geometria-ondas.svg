@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200" viewBox="0 0 1000 200" fill="none">
+  <defs><pattern id="trama" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><path d="M0 0v12" stroke="#4B176D" stroke-opacity=".08" stroke-width="2"/></pattern></defs>
+  <g stroke="#4B176D" stroke-opacity=".12" stroke-width="1.5">
+    <path d="M40 140h108a52 52 0 0 0 52-52V-20M40 158h108a70 70 0 0 0 70-70V-20M40 176h108a88 88 0 0 0 88-88V-20"/>
+    <circle cx="340" cy="42" r="82"/><circle cx="340" cy="42" r="58"/><circle cx="340" cy="42" r="34"/>
+    <path d="m478 130 48-48 48 48-48 48Zm0-88 48-48 48 48-48 48Z"/>
+    <path d="M620 220v-94a54 54 0 0 1 108 0v94M638 220v-94a36 36 0 0 1 72 0v94M656 220v-94a18 18 0 0 1 36 0v94"/>
+    <circle cx="864" cy="20" r="122"/><circle cx="864" cy="20" r="98"/><circle cx="864" cy="20" r="74"/>
+    <path d="M810 164h36m-18-18v36M418 158h30m-15-15v30"/>
+    <circle cx="972" cy="176" r="28"/>
+  </g>
+  <circle cx="340" cy="42" r="34" fill="url(#trama)"/>
+  <path d="m478 130 48-48 48 48-48 48Z" fill="#4B176D" fill-opacity=".045"/>
+  <path d="M656 220v-94a18 18 0 0 1 36 0v94Z" fill="#4B176D" fill-opacity=".04"/>
+  <circle cx="864" cy="20" r="74" fill="#4B176D" fill-opacity=".035"/>
+  <circle cx="972" cy="176" r="28" fill="url(#trama)"/>
+</svg>

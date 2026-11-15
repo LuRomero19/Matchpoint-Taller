@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200" viewBox="0 0 1000 200" fill="none">
+  <defs><pattern id="trama" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 0v12" stroke="#4B176D" stroke-opacity=".08" stroke-width="2"/></pattern></defs>
+  <g stroke="#4B176D" stroke-opacity=".12" stroke-width="1.5">
+    <path d="M64 168h88V80a88 88 0 0 1 176 0v88h88M176 168V80a64 64 0 0 1 128 0v88M200 168V80a40 40 0 0 1 80 0v88"/>
+    <path d="m398-24 130 130-130 130-130-130Zm0 34 96 96-96 96-96-96Z"/>
+    <rect x="556" y="30" width="114" height="114" rx="4"/><path d="M594 30v114m38-114v114M556 68h114m-114 38h114"/>
+    <circle cx="756" cy="180" r="92"/><circle cx="756" cy="180" r="68"/><circle cx="756" cy="180" r="44"/>
+    <path d="M868-16v76a40 40 0 0 0 40 40h110M886-16v76a22 22 0 0 0 22 22h110M850-16v76a58 58 0 0 0 58 58h110"/>
+    <circle cx="934" cy="160" r="24"/>
+  </g>
+  <path d="M200 168V80a40 40 0 0 1 80 0v88Z" fill="#4B176D" fill-opacity=".035"/>
+  <path d="m398 10 96 96-96 96-96-96Z" fill="url(#trama)"/>
+  <path d="M594 68h38v38h-38Z" fill="#4B176D" fill-opacity=".06"/>
+  <circle cx="756" cy="180" r="44" fill="#4B176D" fill-opacity=".045"/>
+  <circle cx="934" cy="160" r="24" fill="url(#trama)"/>
+</svg>

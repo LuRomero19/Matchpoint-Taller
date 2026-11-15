@@ -4,7 +4,7 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-inicio{% endblock %}
 {% block contenido %}
-<header class="inicio-cabecera">
+<header class="tarjeta inicio-cabecera encabezado-geometrico">
     <h1>Inicio</h1>
     <p>{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
 </header>
@@ -21,16 +21,14 @@
         </div>
         <footer class="inicio-pie"><a href="{% url 'agenda:agenda' %}?fecha={{ hoy|date:'Y-m-d' }}">Ver agenda</a></footer>
     </section>
-    <section class="tarjeta inicio-caja" aria-labelledby="inicio-caja-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="inicio-caja-titulo">Caja</h2><span class="inicio-estado{% if sesion_caja %} inicio-estado-activo{% endif %}">{% if sesion_caja %}Abierta{% else %}Cerrada{% endif %}</span></header>
+    <section class="tarjeta inicio-usuarios" aria-labelledby="inicio-usuarios-titulo">
+        <header class="inicio-seccion-cabecera"><h2 id="inicio-usuarios-titulo">Usuarios</h2></header>
         <div class="inicio-cuerpo">
-            {% if sesion_caja %}
-                <dl class="inicio-datos"><div><dt>Responsable de apertura</dt><dd>{{ sesion_caja.responsable }}</dd></div><div><dt>Fecha y hora de apertura</dt><dd class="inicio-datos-fecha"><time datetime="{{ sesion_caja.creado_en|date:'c' }}">{{ sesion_caja.creado_en|date:"d/m/Y" }} · {{ sesion_caja.creado_en|date:"H:i" }} h</time></dd></div></dl>
-            {% elif ultimo_cierre %}
-                <dl class="inicio-datos"><div><dt>Responsable de la última apertura</dt><dd>{{ ultimo_cierre.responsable }}</dd></div><div><dt>Fecha y hora de apertura</dt><dd class="inicio-datos-fecha"><time datetime="{{ ultimo_cierre.creado_en|date:'c' }}">{{ ultimo_cierre.creado_en|date:"d/m/Y" }} · {{ ultimo_cierre.creado_en|date:"H:i" }} h</time></dd></div></dl>
-            {% else %}<p class="inicio-descripcion">Sin aperturas registradas</p>{% endif %}
+            <p class="inicio-valor">{{ usuarios.total }}</p>
+            <p class="inicio-descripcion">Usuarios registrados</p>
+            <div class="inicio-nuevos"><strong>{{ usuarios.nuevos_hoy }}</strong> nuevo{{ usuarios.nuevos_hoy|pluralize }} hoy</div>
         </div>
-        <footer class="inicio-pie"><a href="{% url 'caja:caja_actual' %}">Ir a caja</a></footer>
+        <footer class="inicio-pie"><a href="{% url 'usuarios:usuario_lista' %}">Ver usuarios</a></footer>
     </section>
     <section class="tarjeta inicio-mes" aria-labelledby="inicio-mes-titulo">
         <header class="inicio-seccion-cabecera"><h2 id="inicio-mes-titulo">Este mes</h2><span class="inicio-periodo">{{ mes_actual|date:"F Y"|capfirst }}</span></header>

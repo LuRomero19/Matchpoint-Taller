@@ -4,21 +4,18 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina caja-encabezado">
-    <div><h1>Caja</h1><p>Consultá el efectivo y los movimientos de cada sesión.</p></div>
+<header class="tarjeta encabezado-pagina caja-encabezado encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
+    <h1>Caja</h1>
     {% if puede_cerrar %}<a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a>{% endif %}
 </header>
+<p class="tarjeta descripcion-seccion">Consultá el efectivo y los movimientos de cada sesión.</p>
 {% if sesion.estado == 'abierta' %}{% include "caja/navegacion.html" with seccion="actual" only %}{% else %}{% include "caja/navegacion.html" only %}{% endif %}
 <section class="tarjeta caja-sesion" aria-labelledby="sesion-titulo">
     <div class="caja-sesion-cabecera">
         <h2 id="sesion-titulo">{{ sesion.numero }}</h2>
         <span class="caja-estado{% if sesion.estado == 'abierta' %} caja-estado-abierta{% endif %}">{{ sesion.get_estado_display }}</span>
+        {% include "caja/_estado_informacion.html" with sesion=sesion only %}
     </div>
-    <dl class="caja-sesion-datos">
-        <div><dt>Abierta por</dt><dd>{{ sesion.responsable }}</dd></div>
-        <div><dt>Fecha de apertura</dt><dd>{{ sesion.creado_en|date:"d/m/Y H:i" }}</dd></div>
-        {% if sesion.estado == 'cerrada' %}<div><dt>Fecha de cierre</dt><dd>{{ sesion.cerrada_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
-    </dl>
     <dl class="caja-importes">
         <div class="caja-importe-principal"><dt>Efectivo esperado</dt><dd>$ {{ esperado|floatformat:"2g" }}</dd></div>
         <div><dt>Efectivo inicial</dt><dd>$ {{ sesion.efectivo_inicial|floatformat:"2g" }}</dd></div>
@@ -36,8 +33,8 @@
     {% endif %}
 </section>
 <section class="tarjeta caja-listado" aria-labelledby="movimientos-titulo">
-    <header class="caja-listado-cabecera"><h2 id="movimientos-titulo">Movimientos de la sesión</h2></header>
-    <form method="get" class="caja-filtros-sesion tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de movimientos de la sesión">
+    <header class="caja-listado-cabecera"><h2 id="movimientos-titulo">Movimientos de esta caja</h2></header>
+    <form method="get" class="caja-filtros-sesion tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de movimientos de esta caja">
         {% if formulario_filtros.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario_filtros.non_field_errors }}</div>{% endif %}
         <div class="detalle-grid">
             {% for campo in formulario_filtros %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}

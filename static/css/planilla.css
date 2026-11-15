@@ -75,7 +75,7 @@ button.planilla-celda-seleccionada { background: var(--primario-suave); color: v
     border-top: 3px solid var(--acento);
     border-radius: 10px;
     margin-bottom: 20px;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .planilla-encabezado p {
@@ -143,3 +143,13 @@ button.planilla-celda-ocupada { background: var(--primario-suave); color: var(--
 .planilla-menu-opciones button:focus-visible { outline: 2px solid var(--primario); outline-offset: -2px; }
 
 .planilla-seleccion-separador { align-self: stretch; flex: 0 0 1px; background: var(--borde); }
+
+.planilla-contexto { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; }
+.planilla-informacion { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e0e8ba; border-radius: 10px; background: var(--acento-suave); }
+.planilla-informacion > svg { flex-shrink: 0; color: var(--acento-texto); }
+.planilla-informacion p { margin: 0; color: var(--acento-texto); font-size: .9rem; }
+@media (max-width: 900px) {
+    .planilla-contexto { grid-template-columns: minmax(0, 1fr); }
+}
+
+button.planilla-celda-vacia:not(.planilla-celda-seleccionada):hover { background: var(--acento-suave); color: var(--acento-texto); }
