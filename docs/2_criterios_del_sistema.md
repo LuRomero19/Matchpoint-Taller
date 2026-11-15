@@ -50,6 +50,9 @@ Todos estos límites se validan en el servidor y se exponen además en los contr
 
 ### 2.1 Gestión de clases
 
+El detalle de clase presenta sede, cancha, fecha y horario en una tabla de campo y valor; el origen se muestra sólo a administración. Mantiene el estado visible, las observaciones y el motivo de anulación. Profesores y participantes se presentan en tablas compactas; respuesta de participación y asistencia ocupan columnas independientes, sujetas a los permisos de consulta. Los datos del registro se despliegan bajo demanda y las acciones se agrupan en un menú de cabecera según los permisos, la asignación y el estado temporal de la clase. El aviso No asisto solicita confirmación con su efecto y carácter irreversible. El detalle usa borde superior lima y no agrega borde inferior.
+
+
 El sistema incluirá la gestión de clases de la academia.
 
 Cada clase y cada horario de planilla registran ubicación, horario, profesores, participantes y observaciones. Los horarios de planilla pueden crearse sin profesores ni participantes y conservarse incompletos. La generación exige que todas las celdas del alcance y período consultados tengan al menos un profesor; si falta, bloquea el proceso e identifica sede, cancha, día y hora. La modalidad individual o grupal es una característica comercial de los planes.

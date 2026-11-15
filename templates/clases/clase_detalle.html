@@ -1,89 +1,59 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block titulo %}Clase {{ clase.id }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
-
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/clase-detalle.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-clase-detalle{% endblock %}
 {% block contenido %}
 <article class="tarjeta perfil">
-    <header class="perfil-cabecera">
-        <div>
-            <p class="perfil-contexto">Detalle de clase</p>
-            <div class="perfil-identidad">
-                <h1>Clase {{ clase.id }}</h1>
-                {% include "componentes/badge_estado.html" with estado=clase.estado texto=clase.estado_texto only %}
-            </div>
-        </div>
-    </header>
-    <div class="perfil-cuerpo">
-        <div class="perfil-datos">
-            <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
-                <h2 id="clase-datos-titulo">Datos de la clase</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Sede y cancha</dt><dd>{{ clase.sede.nombre }} → {{ clase.cancha.nombre }}</dd></div>
-                    <div class="perfil-fila"><dt>Fecha y horario</dt><dd>{{ clase.fecha|date:"d/m/Y" }} → {{ clase.hora_inicio|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</dd></div>
-                    {% if clase.es_administrador %}<div class="perfil-fila"><dt>Origen</dt><dd>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</dd></div>{% endif %}
-                </dl>
-            </section>
-            {% if puede_consultar_grupo or clase.profesores %}
-                {% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes vacio="Sin profesores en la clase" solo_propios=False only %}
-            {% endif %}
-            {% if puede_consultar_grupo or clase.participantes %}
-                {% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}
-            {% endif %}
-            {% if clase.observaciones %}
-                <section class="perfil-seccion" aria-labelledby="clase-observaciones-titulo">
-                    <h2 id="clase-observaciones-titulo">Observaciones</h2><p class="perfil-observaciones">{{ clase.observaciones|linebreaksbr }}</p>
-                </section>
-            {% endif %}
-            {% if clase.estado == 'anulado' %}
-                <section class="perfil-seccion" aria-labelledby="clase-anulacion-titulo">
-                    <h2 id="clase-anulacion-titulo">Motivo de anulación</h2><p class="perfil-observaciones">{{ clase.motivo_anulacion|linebreaksbr }}</p>
-                </section>
-            {% endif %}
-        </div>
-        <aside class="perfil-lateral" aria-label="Registro y acciones de la clase">
-            {% if registrado_por or clase.estado == 'finalizado' and puede_consultar_grupo %}
-            <section class="perfil-seccion" aria-labelledby="clase-registro-titulo">
-                <h2 id="clase-registro-titulo">Registro</h2>
-                <dl class="perfil-lista">
-                    {% if registrado_por %}<div class="perfil-fila"><dt>Registrada por</dt><dd>{{ registrado_por }} {% include "componentes/info.html" with texto=clase.creado_en|date:"d/m/Y H:i" only %}</dd></div>{% endif %}
-                    {% if clase.estado == 'finalizado' and puede_consultar_grupo %}<div class="perfil-fila"><dt>Finalizada por</dt><dd>{{ finalizado_por|default:"Finalización automática" }} {% include "componentes/info.html" with texto=clase.finalizado_en|date:"d/m/Y H:i" only %}</dd></div>{% endif %}
-                    <div class="perfil-fila"><dt>Última modificación</dt><dd>{{ clase.actualizado_en|date:"d/m/Y H:i" }}</dd></div>
-                </dl>
-            </section>
-            {% endif %}
-            <section class="perfil-seccion" aria-labelledby="clase-acciones-titulo">
-                <h2 id="clase-acciones-titulo">Acciones</h2>
+    <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
+        <div><p class="perfil-contexto">Detalle de clase</p><div class="perfil-identidad"><h1>Clase {{ clase.id }}</h1>{% include "componentes/badge_estado.html" with estado=clase.estado texto=clase.estado_texto only %}</div></div>
+        <details class="detalle-menu" data-menu-contextual>
+            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="clase-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
+            <div class="detalle-menu-opciones" id="clase-acciones">
+                <a href="{{ url_agenda }}">Ver en agenda</a>
+                {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
+                {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}
+                {% if clase.puede_editar %}<a href="{% url 'clases:clase_editar' clase.id %}">Editar clase</a>{% endif %}
+                {% if clase.puede_cambiar_cancha %}<a href="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</a>{% endif %}
                 {% if clase.puede_responder %}
-                <details>
-                    <summary>No asisto</summary>
-                    <form method="post" action="{% url 'clases:clase_responder' clase.id %}">
-                        {% csrf_token %}
-                        <p>Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si más adelante cambiás de opinión, comunicate con tu profesor.</p>
-                        <input type="hidden" name="respuesta" value="no_asistira">
-                        <input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}">
-                        <button class="boton boton-secundario" type="submit">No asisto</button>
-                    </form>
-                </details>
+                <form method="post" action="{% url 'clases:clase_responder' clase.id %}" data-confirmar="Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia puede registrarse sin modificar el aviso." data-confirmar-titulo="Avisar que no asistís" data-confirmar-boton="No asisto">
+                    {% csrf_token %}<input type="hidden" name="respuesta" value="no_asistira"><input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}"><button type="submit">No asisto</button>
+                </form>
                 {% endif %}
-                {% if clase.mi_respuesta.respuesta == 'no_asistira' %}
-                <details>
-                    <summary>Sobre tu aviso de no asistencia</summary>
-                    <p>Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si más adelante cambiás de opinión, comunicate con tu profesor.</p>
-                    <p>Si finalmente asistís, tu presencia se registra en la asistencia sin modificar este aviso.</p>
-                </details>
-                {% endif %}
-                <div class="perfil-acciones perfil-acciones-botones">
-                    {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
-                    {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}
-                    {% if clase.puede_editar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_editar' clase.id %}">Editar clase</a>{% endif %}
-                    {% if clase.puede_cambiar_cancha %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</a>{% endif %}
-                    <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Ver en agenda</a>
-                </div>
-                {% include "clases/_acciones_anulacion.html" with clase_id=clase.id puede_anular=clase.puede_anular puede_bloquear=clase.puede_anular_bloquear only %}
-            </section>
-        </aside>
+                {% if clase.puede_anular %}<a class="detalle-menu-peligro" href="{% url 'clases:clase_anular' clase.id %}">Anular y liberar</a>{% endif %}
+                {% if clase.puede_anular_bloquear %}<a class="detalle-menu-peligro" href="{% url 'clases:clase_anular_bloquear' clase.id %}">Anular y bloquear</a>{% endif %}
+            </div>
+        </details>
+    </header>
+    <div class="clase-detalle-cuerpo">
+        <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
+            <h2 id="clase-datos-titulo">Datos de la clase</h2>
+            <div class="tabla-contenedor detalle-datos-tabla"><table aria-labelledby="clase-datos-titulo"><tbody>
+                <tr><th scope="row">Sede</th><td>{{ clase.sede.nombre }}</td></tr>
+                <tr><th scope="row">Cancha</th><td>{{ clase.cancha.nombre }}</td></tr>
+                <tr><th scope="row">Fecha</th><td>{{ clase.fecha|date:"d/m/Y" }}</td></tr>
+                <tr><th scope="row">Horario</th><td>{{ clase.hora_inicio|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td></tr>
+                {% if clase.es_administrador %}<tr><th scope="row">Origen</th><td>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</td></tr>{% endif %}
+            </tbody></table></div>
+        </section>
+        {% if clase.mi_respuesta.respuesta == 'no_asistira' %}
+        <section class="clase-detalle-aviso" aria-label="Tu aviso de no asistencia"><strong>Avisaste que no vas a asistir</strong><p>El aviso libera tu disponibilidad y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia se registra sin modificar este aviso.</p></section>
+        {% endif %}
+        {% if clase.observaciones %}<section class="perfil-seccion"><h2>Observaciones</h2><p class="perfil-observaciones">{{ clase.observaciones|linebreaksbr }}</p></section>{% endif %}
+        {% if clase.estado == 'anulado' %}<section class="perfil-seccion"><h2>Motivo de anulación</h2><p class="perfil-observaciones">{{ clase.motivo_anulacion|linebreaksbr }}</p></section>{% endif %}
+        {% if puede_consultar_grupo or clase.profesores %}{% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes vacio="Sin profesores en la clase" solo_propios=False only %}{% endif %}
+        {% if puede_consultar_grupo or clase.participantes %}{% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}{% endif %}
+        {% if registrado_por or clase.estado == 'finalizado' and puede_consultar_grupo %}
+        <details class="clase-detalle-registro"><summary>Datos del registro</summary>
+            <div class="tabla-contenedor detalle-datos-tabla"><table aria-label="Registro de la clase"><tbody>
+                {% if registrado_por %}<tr><th scope="row">Registrada por</th><td>{{ registrado_por }}</td></tr><tr><th scope="row">Fecha de registro</th><td>{{ clase.creado_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
+                {% if clase.estado == 'finalizado' and puede_consultar_grupo %}<tr><th scope="row">Finalizada por</th><td>{{ finalizado_por|default:"Finalización automática" }}</td></tr><tr><th scope="row">Fecha de finalización</th><td>{{ clase.finalizado_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
+                {% if clase.estado == 'anulado' and anulado_por %}<tr><th scope="row">Anulada por</th><td>{{ anulado_por }}</td></tr><tr><th scope="row">Fecha de anulación</th><td>{{ clase.anulado_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
+                <tr><th scope="row">Última modificación</th><td>{{ clase.actualizado_en|date:"d/m/Y H:i" }}</td></tr>
+            </tbody></table></div>
+        </details>
+        {% endif %}
     </div>
 </article>
+<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}
