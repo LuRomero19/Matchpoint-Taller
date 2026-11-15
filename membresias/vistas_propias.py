@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
@@ -52,6 +54,9 @@ def mis_contrataciones(request):
     modelo = MODELOS_CONTRATACIONES[tipo]
     contrataciones = modelo.objects.filter(usuario=titular).select_related("usuario", tipo)
     datos = listar_contrataciones(contrataciones, request.GET, tipo=tipo, buscar_usuario=False)
+    datos["parametros"] = urlencode({
+        "tipo": tipo, "q": datos["busqueda"], "estado": datos["estado_actual"], "mes": datos["mes_actual"],
+    })
     return render(request, "membresias/contratacion_lista.html", {**datos, **_contexto(tipo)})
 
 
