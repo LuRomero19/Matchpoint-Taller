@@ -9,18 +9,18 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from instalaciones.models import Cancha, Sede
 
-from .forms import ClaseForm, PlanillaFiltroForm
+from .forms import ObservacionesPlanillaForm, PlanillaFiltroForm
 from .models import TurnoPlanilla
 from .permisos import exigir_administracion_clases
 from .planilla import (
-    consultar_planilla, editar_turno_planilla, quitar_turno_planilla,
+    consultar_planilla, editar_turno_planilla, quitar_turno_planilla, quitar_turnos_planilla,
     registrar_turnos_planilla, validar_version_turno_planilla, version_turno_planilla,
 )
-from .validaciones import validar_horario_planilla, validar_usuarios_clase
+from .validaciones import validar_horario_planilla
 
 
 def _url_planilla(cancha):
@@ -74,7 +74,7 @@ def planilla(request):
                     url = None
                     if turno:
                         url = reverse("clases:planilla_detalle", args=[turno["id"]])
-                    seleccionable = not turno and habilitada and cancha.estado == Cancha.Estado.ACTIVA and cancha.sede.estado == Sede.Estado.ACTIVA
+                    seleccionable = habilitada and cancha.estado == Cancha.Estado.ACTIVA and cancha.sede.estado == Sede.Estado.ACTIVA
                     celdas.append({
                         "turno": turno, "habilitada": habilitada, "url": url, "dia": nombre,
                         "numero_dia": dia, "seleccionable": seleccionable,
@@ -117,57 +117,91 @@ def planilla_detalle(request, pk):
 
 @login_required
 @never_cache
-@require_http_methods(["GET", "POST"])
-def planilla_formulario(request, pk=None):
+@require_POST
+def planilla_crear(request):
     usuario = exigir_administracion_clases(request.user)
-    turno = None
-    inicial = {}
-    profesores_actuales = []
-    participantes_actuales = []
-    if pk is not None:
-        turno = get_object_or_404(TurnoPlanilla.objects.select_related("cancha__sede"), pk=pk)
-        cancha, dia, hora = turno.cancha, turno.dia_semana, turno.hora_inicio
-        coordenadas = [(dia, hora)]
-        profesores_actuales = list(turno.profesores.values_list("profesor_id", flat=True))
-        participantes_actuales = list(turno.alumnos.values_list("usuario_id", flat=True))
-        inicial = {
-            "profesores": profesores_actuales, "participantes": participantes_actuales,
-            "observaciones": turno.observaciones,
-        }
-    else:
-        cancha_id = request.GET.get("cancha", "")
-        valores = request.GET.getlist("turno")
-        if not cancha_id.isdecimal() or len(cancha_id) > 18 or not valores or len(valores) > 161:
-            raise Http404("Elegí un horario de la planilla.")
+    cancha_id = request.POST.get("cancha", "")
+    if not cancha_id.isdecimal() or len(cancha_id) > 18:
+        raise Http404("Elegí una cancha válida de la planilla.")
+    cancha = get_object_or_404(Cancha.objects.select_related("sede"), pk=int(cancha_id))
+    try:
+        valores = request.POST.getlist("turno")
+        if not valores or len(valores) > 161:
+            raise ValidationError("Seleccioná los horarios que querés crear.")
         coordenadas = []
         for valor in valores:
             partes = valor.split("-")
             if len(partes) != 2 or any(not parte.isdecimal() or len(parte) > 2 for parte in partes):
-                raise Http404("Elegí un horario válido de la planilla.")
-            dia, numero_hora = map(int, partes)
-            if dia not in TurnoPlanilla.DiaSemana.values or numero_hora not in range(23):
-                raise Http404("Elegí un horario válido de la planilla.")
-            coordenadas.append((dia, time(numero_hora)))
-        coordenadas = sorted(set(coordenadas))
-        cancha = get_object_or_404(Cancha.objects.select_related("sede"), pk=int(cancha_id))
-    url_cancelar = reverse("clases:planilla_detalle", args=[pk]) if turno else _url_planilla(cancha)
+                raise ValidationError("La selección contiene un horario inválido.")
+            dia, hora = map(int, partes)
+            if dia not in TurnoPlanilla.DiaSemana.values or hora not in range(23):
+                raise ValidationError("La selección contiene un horario inválido.")
+            coordenadas.append((dia, time(hora)))
+        creados = registrar_turnos_planilla(usuario, cancha, coordenadas)
+        messages.success(request, f"Horarios creados: {len(creados)}. Podés asignarles profesores y participantes.")
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    return redirect(_url_planilla(cancha))
+
+
+@login_required
+@never_cache
+@require_POST
+def planilla_quitar(request):
+    usuario = exigir_administracion_clases(request.user)
+    cancha_id = request.POST.get("cancha", "")
+    if not cancha_id.isdecimal() or len(cancha_id) > 18:
+        raise Http404("Elegí una cancha válida de la planilla.")
+    cancha = get_object_or_404(Cancha.objects.select_related("sede"), pk=int(cancha_id))
+    try:
+        identificadores = request.POST.getlist("turno_id")
+        firmas = request.POST.getlist("version")
+        if not identificadores or len(identificadores) > 161 or len(identificadores) != len(firmas):
+            raise ValidationError("Seleccioná los horarios que querés quitar.")
+        versiones = {}
+        for identificador, firma in zip(identificadores, firmas):
+            if not identificador.isdecimal() or len(identificador) > 18 or int(identificador) < 1:
+                raise ValidationError("La selección contiene un horario inválido.")
+            pk = int(identificador)
+            if pk in versiones:
+                raise ValidationError("La selección contiene horarios repetidos.")
+            versiones[pk] = firma
+        cantidad = quitar_turnos_planilla(usuario, cancha, versiones)
+        messages.success(request, f"Horarios quitados: {cantidad}. Las clases ya generadas se conservan.")
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    return redirect(_url_planilla(cancha))
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def planilla_formulario(request, pk):
+    usuario = exigir_administracion_clases(request.user)
+    turno = get_object_or_404(TurnoPlanilla.objects.select_related("cancha__sede"), pk=pk)
+    cancha, dia, hora = turno.cancha, turno.dia_semana, turno.hora_inicio
+    coordenadas = [(dia, hora)]
+    profesores_actuales = list(turno.profesores.values_list("profesor_id", flat=True))
+    participantes_actuales = list(turno.alumnos.values_list("usuario_id", flat=True))
+    inicial = {
+        "observaciones": turno.observaciones,
+    }
+    url_cancelar = reverse("clases:planilla_detalle", args=[pk])
     if request.method == "POST":
         version = request.POST.get("version", "")
     else:
-        version = version_turno_planilla(turno) if turno else ""
-    formulario = ClaseForm(
+        version = version_turno_planilla(turno)
+    formulario = ObservacionesPlanillaForm(
         request.POST if request.method == "POST" else None, initial=inicial,
-        profesores_actuales=profesores_actuales, participantes_actuales=participantes_actuales,
     )
     impedimento = None
     try:
         if cancha.estado != Cancha.Estado.ACTIVA or cancha.sede.estado != Sede.Estado.ACTIVA:
             raise ValidationError("La sede y la cancha deben estar activas para guardar la planilla.")
-        ocupados = set(TurnoPlanilla.objects.filter(cancha=cancha).values_list("dia_semana", "hora_inicio")) if not turno else set()
         for dia, hora in coordenadas:
             validar_horario_planilla(cancha.sede, dia, hora)
-            if (dia, hora) in ocupados:
-                raise ValidationError("Ya existe un turno de planilla para esa cancha, día y hora.")
     except ValidationError as error:
         impedimento = " ".join(error.messages)
     revision = None
@@ -175,14 +209,11 @@ def planilla_formulario(request, pk=None):
         try:
             if impedimento:
                 raise ValidationError(impedimento)
-            parametros = formulario.parametros()
-            personas = {
-                persona.pk: persona for persona in list(formulario.cleaned_data["profesores"].prefetch_related("roles__rol"))
-                + list(formulario.cleaned_data["participantes"].prefetch_related("roles__rol"))
+            parametros = {
+                "profesores_ids": set(profesores_actuales), "participantes_ids": set(participantes_actuales),
+                "observaciones": formulario.cleaned_data["observaciones"],
             }
-            validar_usuarios_clase(personas, parametros["profesores_ids"], parametros["participantes_ids"])
-            if turno:
-                validar_version_turno_planilla(turno, version)
+            validar_version_turno_planilla(turno, version)
             datos_revision = {
                 "actor": usuario.pk, "turno": pk, "cancha": cancha.pk,
                 "horarios": [[dia, hora.isoformat()] for dia, hora in coordenadas],
@@ -198,12 +229,7 @@ def planilla_formulario(request, pk=None):
                     raise ValidationError("La revisión venció o no es válida. Revisá nuevamente antes de guardar.") from None
                 if confirmado != datos_revision:
                     raise ValidationError("Los datos cambiaron. Revisá nuevamente antes de guardar.")
-                if turno:
-                    guardado = editar_turno_planilla(usuario, pk, **parametros, version=version)
-                else:
-                    registrar_turnos_planilla(usuario, cancha, coordenadas, **parametros)
-                    messages.success(request, "El horario de la planilla fue guardado.")
-                    return redirect(_url_planilla(cancha))
+                guardado = editar_turno_planilla(usuario, pk, **parametros, version=version)
                 messages.success(request, "El horario de la planilla fue guardado.")
                 return redirect("clases:planilla_detalle", pk=guardado.pk)
             if paso == "revisar":
@@ -214,16 +240,14 @@ def planilla_formulario(request, pk=None):
             raise Http404("El horario ya no existe en la planilla.") from None
         except ValidationError as error:
             formulario.add_error(None, error)
-    titulo = "Editar horario habitual" if turno else "Agregar horario habitual"
+    titulo = "Editar observaciones"
     return render(request, "clases/planilla_formulario.html", {
-        "titulo": titulo, "editando": turno is not None, "formulario": formulario,
+        "titulo": titulo, "editando": True, "formulario": formulario,
         "cancha": cancha, "version": version,
         "horarios": [
             {"dia": TurnoPlanilla.DiaSemana(dia).label, "hora": hora, "hora_fin": time(hora.hour + 1)}
             for dia, hora in coordenadas
         ],
         "revision": revision, "impedimento": impedimento,
-        "profesores": formulario.seleccionados("profesores"),
-        "participantes": formulario.seleccionados("participantes"),
         "url_cancelar": url_cancelar,
     })

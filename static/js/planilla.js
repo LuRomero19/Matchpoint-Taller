@@ -11,11 +11,53 @@ document.addEventListener("DOMContentLoaded", function () {
     var barra = document.querySelector("[data-planilla-seleccion]");
     if (!tabla || !barra) return;
     var celdas = Array.from(tabla.querySelectorAll("[data-seleccionar-turno]"));
+    var porCoordenada = new Map(celdas.map(function (celda) { return [celda.dataset.seleccionarTurno, celda]; }));
+    var aviso = document.querySelector("[data-planilla-aviso]");
+    var crear = barra.querySelector("[data-crear-horarios]");
+    var quitar = barra.querySelector("[data-quitar-horarios]");
+    var formularioQuitar = document.querySelector("[data-quitar-formulario]");
+    var detalle = barra.querySelector("[data-ver-horario]");
+    var accionesPersonas = barra.querySelectorAll("[data-gestionar-personas]");
+    var menusPersonas = Array.from(barra.querySelectorAll("[data-menu-personas]"));
+    var funcionPersonas = barra.querySelector("[data-funcion-personas]");
+
+    function cerrarMenus(excepto) {
+        menusPersonas.forEach(function (menu) { if (menu !== excepto) menu.open = false; });
+    }
+    menusPersonas.forEach(function (menu) {
+        menu.addEventListener("toggle", function () {
+            menu.querySelector("summary").setAttribute("aria-expanded", String(menu.open));
+            if (menu.open) cerrarMenus(menu);
+        });
+    });
+    document.addEventListener("click", function (evento) {
+        menusPersonas.forEach(function (menu) { if (!menu.contains(evento.target)) menu.open = false; });
+    });
+    document.addEventListener("keydown", function (evento) {
+        if (evento.key !== "Escape") return;
+        var abierto = menusPersonas.find(function (menu) { return menu.open; });
+        if (abierto) {
+            evento.preventDefault();
+            cerrarMenus();
+            abierto.querySelector("summary").focus();
+        }
+    });
     var seleccion = new Set();
+    var tipo = null;
     var arrastre = null;
     var omitirClick = false;
 
+    function informar(texto) {
+        aviso.textContent = texto;
+        aviso.hidden = !texto;
+    }
+
+    function compatible(celda) {
+        return !tipo || celda.dataset.tipoTurno === tipo;
+    }
+
     function actualizar() {
+        if (!seleccion.size) tipo = null;
         celdas.forEach(function (celda) {
             var elegida = seleccion.has(celda.dataset.seleccionarTurno);
             celda.classList.toggle("planilla-celda-seleccionada", elegida);
@@ -23,14 +65,43 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         barra.hidden = seleccion.size === 0;
         barra.querySelector("[data-seleccion-cantidad]").textContent = seleccion.size === 1
-            ? "1 turno seleccionado" : seleccion.size + " turnos seleccionados";
+            ? "1 horario seleccionado"
+            : seleccion.size + " horarios seleccionados";
+        crear.hidden = tipo !== "libre";
+        crear.disabled = tipo !== "libre";
+        quitar.hidden = tipo !== "creado";
+        barra.querySelector("[data-separador-quitar]").hidden = tipo !== "creado";
+        quitar.disabled = tipo !== "creado";
+        var valoresQuitar = formularioQuitar.querySelector("[data-quitar-valores]");
+        valoresQuitar.replaceChildren();
+        if (tipo === "creado") {
+            seleccion.forEach(function (valor) {
+                var celda = porCoordenada.get(valor);
+                [["turno_id", celda.dataset.turnoId], ["version", celda.dataset.version]].forEach(function (dato) {
+                    var entrada = document.createElement("input");
+                    entrada.type = "hidden";
+                    entrada.name = dato[0];
+                    entrada.value = dato[1];
+                    valoresQuitar.append(entrada);
+                });
+            });
+        }
+        formularioQuitar.dataset.confirmar = (seleccion.size === 1
+            ? "Se quitará 1 horario de la planilla"
+            : "Se quitarán " + seleccion.size + " horarios de la planilla")
+            + " con sus profesores y participantes. Las clases ya generadas se conservan.";
+        cerrarMenus();
+        menusPersonas.forEach(function (menu) { menu.hidden = tipo !== "creado"; });
+        accionesPersonas.forEach(function (boton) {
+            boton.hidden = tipo !== "creado";
+            boton.disabled = tipo !== "creado";
+        });
+        detalle.hidden = tipo !== "creado" || seleccion.size !== 1;
+        detalle.removeAttribute("href");
+        if (!detalle.hidden) detalle.href = porCoordenada.get(seleccion.values().next().value).dataset.urlDetalle;
         var valores = barra.querySelector("[data-seleccion-valores]");
         valores.replaceChildren();
-        Array.from(seleccion).sort(function (a, b) {
-            var inicio = a.split("-").map(Number);
-            var fin = b.split("-").map(Number);
-            return inicio[0] - fin[0] || inicio[1] - fin[1];
-        }).forEach(function (valor) {
+        Array.from(seleccion).sort().forEach(function (valor) {
             var entrada = document.createElement("input");
             entrada.type = "hidden";
             entrada.name = "turno";
@@ -41,44 +112,56 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function alternar(celda) {
+        if (!compatible(celda)) {
+            informar("No se pueden mezclar horarios libres y creados. Limpiá la selección para cambiar de tipo.");
+            return;
+        }
+        informar("");
         var valor = celda.dataset.seleccionarTurno;
         if (seleccion.has(valor)) seleccion.delete(valor);
-        else seleccion.add(valor);
+        else {
+            tipo = celda.dataset.tipoTurno;
+            seleccion.add(valor);
+        }
         actualizar();
     }
 
     tabla.addEventListener("click", function (evento) {
-        if (omitirClick) {
-            evento.preventDefault();
-            return;
-        }
+        if (omitirClick) { evento.preventDefault(); return; }
         var celda = evento.target.closest("[data-seleccionar-turno]");
         if (celda) {
             if (evento.detail === 0) alternar(celda);
             return;
         }
         var hora = evento.target.closest("[data-seleccionar-hora]");
-        if (hora) {
-            celdas.forEach(function (vacia) {
-                if (vacia.closest("td").dataset.hora === hora.dataset.seleccionarHora) {
-                    seleccion.add(vacia.dataset.seleccionarTurno);
-                }
-            });
-            actualizar();
+        if (!hora) return;
+        var fila = celdas.filter(function (item) { return item.closest("td").dataset.hora === hora.dataset.seleccionarHora; });
+        var tipos = new Set(fila.map(function (item) { return item.dataset.tipoTurno; }));
+        if (!tipo && tipos.size > 1) {
+            informar("Seleccioná primero una celda libre o creada para elegir qué horarios sumar de esta fila.");
+            return;
         }
+        if (!tipo && fila.length) tipo = fila[0].dataset.tipoTurno;
+        fila.filter(compatible).forEach(function (item) { seleccion.add(item.dataset.seleccionarTurno); });
+        informar("");
+        actualizar();
     });
 
     tabla.addEventListener("pointerdown", function (evento) {
         var celda = evento.target.closest("[data-seleccionar-turno]");
         if (!celda || evento.button !== 0 || !evento.isPrimary) return;
-        evento.preventDefault();
-        celda.focus();
+        if (!compatible(celda)) {
+            informar("No se pueden mezclar horarios libres y creados. Limpiá la selección para cambiar de tipo.");
+            return;
+        }
+        informar("");
         var posicion = celda.closest("td");
         arrastre = {
             pointerId: evento.pointerId, celda: celda,
             dia: Number(posicion.dataset.dia), hora: Number(posicion.dataset.hora),
-            inicial: new Set(seleccion), movido: false,
+            inicial: new Set(seleccion), tipoInicial: tipo, movido: false,
         };
+        tipo = celda.dataset.tipoTurno;
     });
 
     document.addEventListener("pointermove", function (evento) {
@@ -91,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (dia === arrastre.dia && hora === arrastre.hora && !arrastre.movido) return;
         arrastre.movido = true;
         seleccion = new Set(arrastre.inicial);
-        celdas.forEach(function (celda) {
+        celdas.filter(compatible).forEach(function (celda) {
             var ubicacion = celda.closest("td");
             var diaCelda = Number(ubicacion.dataset.dia);
             var horaCelda = Number(ubicacion.dataset.hora);
@@ -114,16 +197,27 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("pointercancel", function (evento) {
         if (!arrastre || evento.pointerId !== arrastre.pointerId) return;
         seleccion = arrastre.inicial;
+        tipo = arrastre.tipoInicial;
         arrastre = null;
         actualizar();
     });
 
     barra.querySelector("[data-limpiar-seleccion]").addEventListener("click", function () {
         seleccion.clear();
+        informar("");
         actualizar();
         if (celdas.length) celdas[0].focus();
     });
+    formularioQuitar.addEventListener("submit", function (evento) {
+        if (!seleccion.size || tipo !== "creado") evento.preventDefault();
+    });
     barra.addEventListener("submit", function (evento) {
-        if (seleccion.size === 0) evento.preventDefault();
+        var gestionaPersonas = evento.submitter && evento.submitter.hasAttribute("data-gestionar-personas");
+        if (!seleccion.size || (gestionaPersonas ? tipo !== "creado" : tipo !== "libre")) {
+            evento.preventDefault();
+            return;
+        }
+        funcionPersonas.disabled = !gestionaPersonas;
+        funcionPersonas.value = gestionaPersonas ? evento.submitter.dataset.funcion : "";
     });
 });

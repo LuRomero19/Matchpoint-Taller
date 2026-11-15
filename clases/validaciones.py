@@ -45,9 +45,9 @@ def validar_horario_clase(sede, fecha, hora_inicio):
 
 def validar_usuarios_clase(
     usuarios, profesores_ids, participantes_ids,
-    profesores_actuales=frozenset(), participantes_actuales=frozenset(),
+    profesores_actuales=frozenset(), participantes_actuales=frozenset(), *, exigir_profesor=True,
 ):
-    if not profesores_ids:
+    if exigir_profesor and not profesores_ids:
         raise ValidationError("Agregá al menos un profesor.")
     if profesores_ids & participantes_ids:
         raise ValidationError("Una persona no puede dictar y participar en la misma clase.")

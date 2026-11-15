@@ -62,7 +62,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Planilla y generación de clases | FL-23 | Consultar la planilla de una cancha |
 | Planilla y generación de clases | FL-24 | Crear un turno de planilla |
 | Planilla y generación de clases | FL-25 | Modificar un turno de planilla |
-| Planilla y generación de clases | FL-26 | Quitar un turno de planilla |
+| Planilla y generación de clases | FL-26 | Quitar horarios de planilla |
 | Planilla y generación de clases | FL-27 | Registrar o quitar un feriado |
 | Planilla y generación de clases | FL-28 | Generar clases para un período |
 | Agenda | FL-31 | Consultar la agenda diaria |
@@ -103,7 +103,6 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Bloqueos | FL-65 | Liberar un bloqueo |
 | Bloqueos | FL-66 | Anular y liberar eventos en lote |
 | Bloqueos | FL-67 | Consultar bloqueos |
-| Clases | FL-76 | Consultar contrataciones de alumnos de la plantilla |
 | Contrataciones | FL-81 | Responder o cambiar respuesta de continuidad |
 | Contrataciones | FL-82 | Consultar continuidad de planes y membresías |
 | Membresías | FL-77 | Ajustar horas de una contratación |
@@ -875,7 +874,7 @@ flowchart TD
 
 La planilla semanal de una cancha es única y viva (ver `1_organizacion.md`, 2.1 y `2_criterios_del_sistema.md`, 2.1): no existen versiones por período, ni un estado de "en preparación" o "confirmada". Editar la planilla no crea ni modifica clases por sí solo; generar clases para un período (**FL-28**) es la única operación que lee la planilla y crea clases concretas a partir de ella.
 
-Cada turno de planilla debe tener al menos un profesor previsto, con cuenta activa y rol Profesor. Esta condición se valida al crear y editar el turno. Los participantes previstos deben ser usuarios activos; la selección propone Alumno por defecto y permite ampliar a cualquier usuario activo, incluidos profesores. Participar no exige ni otorga Alumno, no requiere un plan y no genera cargos. Una persona no se asigna a una misma celda en ambas funciones.
+Los turnos de planilla pueden crearse sin personas y conservarse sin profesores. Para asignar un profesor se exige una cuenta activa y rol Profesor. La generación se bloquea si alguna celda del alcance y período consultados no tiene profesor; se identifica sede, cancha, día y hora antes de permitir continuar. Los participantes previstos deben ser usuarios activos; la selección propone Alumno por defecto y permite ampliar a cualquier usuario activo, incluidos profesores. Participar no exige ni otorga Alumno, no requiere un plan y no genera cargos. Una persona no se asigna a una misma celda en ambas funciones.
 
 #### FL-23. Consultar la planilla de una cancha
 
@@ -887,7 +886,7 @@ Recorrido:
 
 1. El administrador selecciona una sede y luego una de sus canchas activas.
 2. El sistema muestra la grilla semanal con los turnos vigentes: día, horario, profesores y alumnos previstos.
-3. El administrador puede seleccionar un turno para ejecutar **FL-25** o **FL-26**, o crear uno nuevo mediante **FL-24**.
+3. El administrador selecciona celdas libres o horarios creados. La primera selección determina el tipo y no se permite mezclar ambos. El arrastre y la selección por hora incorporan sólo celdas del mismo tipo. Si una fila mezcla tipos y no hay selección inicial, debe elegirse primero una celda. Con un único horario creado seleccionado puede abrir su detalle; las celdas libres se crean mediante **FL-24**.
 
 Alternativas:
 
@@ -904,90 +903,81 @@ flowchart TD
     C -->|No| E[Ofrecer FL-24]
 ```
 
-#### FL-24. Crear un turno de planilla
+#### FL-24. Crear horarios de planilla
 
-- **Objetivo:** ocupar una celda de la planilla semanal de una cancha.
+- **Objetivo:** registrar horarios habituales vacíos en la planilla de una cancha.
 - **Actor:** administrador.
-- **Precondición:** cancha activa seleccionada mediante **FL-23**.
-- **Entradas:** día de la semana, horario, observaciones opcionales, profesores y alumnos previstos.
+- **Precondición:** sede y cancha activas seleccionadas mediante **FL-23**.
+- **Entradas:** una selección de celdas libres, cada una con día y hora.
 
 Recorrido:
 
-1. El administrador selecciona una celda vacía (día y horario) de la cancha.
-2. Ingresa observaciones y profesores y alumnos previstos.
-3. El sistema valida que no exista ya un turno para esa cancha, día y horario, y comprueba las condiciones de profesores y participantes previstas en esta sección.
-4. Presenta la revisión y guarda el turno y sus asignaciones en una transacción.
+1. Selecciona una o varias celdas libres mediante clic, teclado, arrastre o selección de fila.
+2. Solicita Crear horarios mediante POST. No completa profesores ni participantes durante esta operación.
+3. El servidor comprueba el acceso, la validez de las coordenadas, el horario de funcionamiento y que todas las celdas sigan libres.
+4. Crea el conjunto completo en una transacción. Si alguna celda ya existe o no está habilitada, rechaza todo el lote.
+5. Vuelve a la grilla con los horarios creados, identificados como Sin profesores hasta que se asignen.
 
-Alternativas:
+Un horario vacío creado se selecciona como creado. No vuelve a ser libre al quitar sus personas; liberar la celda requiere quitar el horario. La creación no ocupa fechas concretas de Agenda ni genera clases.
 
-- Crear o editar un turno sin profesores se rechaza con el mensaje «Agregá al menos un profesor».
-- No puede haber dos turnos para la misma cancha, día y horario.
+- **Resultado:** horarios visibles en la grilla, disponibles para asignar personas.
+- **Datos:** turnos de planilla.
 
-- **Resultado:** nuevo turno visible en la grilla.
-- **Datos:** turnos de planilla y sus profesores y usuarios previstos.
+#### FL-25. Gestionar asignaciones de planilla
 
-```mermaid
-flowchart TD
-    A[Seleccionar celda vacía] --> B[Ingresar datos y asignaciones]
-    B --> C{Celda disponible}
-    C -->|No| D[Informar duplicación]
-    C -->|Sí| E[Guardar turno]
-```
-
-#### FL-25. Modificar un turno de planilla
-
-- **Objetivo:** cambiar observaciones, profesores o alumnos previstos de un turno, sin moverlo.
+- **Objetivo:** agregar o quitar profesores o participantes sin reemplazar el resto de las asignaciones.
 - **Actor:** administrador.
-- **Precondición:** turno seleccionado mediante **FL-23**.
+- **Precondición:** uno o varios horarios creados seleccionados en una cancha activa mediante **FL-23**.
 
 Recorrido:
 
-1. El sistema muestra los datos del turno.
-2. El administrador modifica observaciones, profesores o alumnos previstos.
-3. Valida las condiciones de profesores y participantes, presenta las advertencias de cantidad cuando corresponden y guarda los cambios en una transacción.
+1. Abre el menú Profesores o Participantes de la barra de selección.
+2. Elige Agregar o Quitar y abre directamente la operación elegida. La selección queda firmada para el actor y conserva la versión de cada horario.
+3. Para agregar, busca y selecciona personas elegibles. La búsqueda de participantes propone alumnos y permite ampliar a otras cuentas. Para quitar, elige entre las personas asignadas e identifica en cuántos horarios está cada una.
+4. Solicita agregar o quitar desde el formulario. Un modal pide una confirmación básica de la operación sobre los horarios seleccionados, sin navegar a una revisión. Las personas ya presentes al agregar o ausentes al quitar no producen modificaciones.
+5. Confirma en el modal y envía mediante POST. Se revalidan la firma de selección, el actor, la selección completa, las instalaciones, los horarios y las condiciones de las personas. Se bloquean usuarios, sede, cancha y horarios según el orden común y se guarda todo el lote en una transacción.
+6. Vuelve a la planilla con las asignaciones actualizadas y el resumen de cambios.
 
-Alternativas:
+Las observaciones, las asignaciones de la otra función y las clases concretas se conservan. No se notifica a las personas por cambios de la planilla. Una persona no puede dictar y participar en el mismo horario. Si un horario cambió o desapareció, o alguna asignación es inválida, no se guarda ninguna parte de la operación. Quitar al último profesor es válido; ese horario impedirá generar clases hasta completarlo.
 
-- La cancha, el día y el horario de un turno guardado no se modifican; para reubicarlo se ejecutan **FL-26** y luego **FL-24**.
-- Los cambios no alteran clases ya generadas. Cada clase concreta se modifica mediante sus acciones individuales; volver a generar conserva las existentes y omite sus turnos ocupados.
+El detalle de un único horario permite consultar sus datos y modificar observaciones. La cancha, el día y la hora se conservan; reubicarlo requiere quitar el horario y crear otro.
 
-- **Resultado:** turno actualizado.
-- **Datos:** turnos de planilla y sus profesores y usuarios previstos.
+- **Resultado:** asignaciones actualizadas en el conjunto seleccionado.
+- **Datos:** turnos de planilla, sus profesores y participantes y auditoría.
 
-```mermaid
-flowchart TD
-    A[Abrir turno] --> B[Modificar datos o asignaciones]
-    B --> C{Datos válidos}
-    C -->|No| B
-    C -->|Sí| D[Guardar turno]
-```
+#### FL-26. Quitar horarios de planilla
 
-#### FL-26. Quitar un turno de planilla
-
-- **Objetivo:** retirar una celda de la planilla.
+- **Objetivo:** liberar una o varias celdas de la planilla.
 - **Actor:** administrador.
-- **Precondición:** turno seleccionado mediante **FL-23**.
+- **Precondición:** horarios creados seleccionados de una misma cancha mediante **FL-23**, o consulta del detalle de un horario.
 
 Recorrido:
 
-1. El administrador solicita quitar el turno.
-2. El sistema muestra sus profesores y alumnos previstos, y advierte si ya generó clases.
+1. El administrador selecciona horarios creados y solicita Quitar horarios, o solicita quitar desde el detalle de un horario.
+2. Un modal pide confirmación y advierte que se eliminan los horarios y sus asignaciones previstas, conservando las clases ya generadas. Para una selección múltiple muestra la cantidad de horarios.
 3. El administrador confirma.
-4. El sistema elimina el turno y sus asignaciones.
+4. El sistema bloquea los usuarios involucrados, la sede, la cancha y los horarios, y revalida las versiones de los registros seleccionados.
+5. El sistema elimina todos los horarios seleccionados y sus asignaciones en una única transacción, registra la auditoría y muestra la planilla actualizada.
 
 Alternativas:
 
-- Las clases ya generadas desde ese turno no se eliminan: conservan su historia, sus asignaciones y su indicador de origen sin modificaciones.
+- Cancelar conserva los horarios y la selección.
+- Si un horario cambió, desapareció o no pertenece a la cancha indicada, se rechaza toda la operación y se solicita renovar la selección. Las versiones vencen a los quince minutos.
+- Las clases ya generadas conservan su historia, sus asignaciones y su indicador de origen sin modificaciones.
+- Quitar no exige que la sede o la cancha estén activas ni que el horario siga habilitado. Los horarios que no admiten selección en la grilla se pueden quitar desde su detalle.
 
-- **Resultado:** celda libre en la planilla.
+- **Resultado:** celdas libres en la planilla.
 - **Datos:** turnos de planilla y sus asignaciones.
 
 ```mermaid
 flowchart TD
-    A[Solicitar quitar turno] --> B[Mostrar datos y clases ya generadas]
-    B --> C{Confirmar}
-    C -->|No| D[Conservar turno]
-    C -->|Sí| E[Eliminar turno de la grilla]
+    A[Seleccionar horarios creados] --> B[Solicitar quitar]
+    B --> C{Confirmar en modal}
+    C -->|No| D[Conservar selección]
+    C -->|Sí| E[Revalidar selección bajo bloqueo]
+    E --> F{Todos conservan su versión}
+    F -->|No| G[Rechazar el lote completo]
+    F -->|Sí| H[Eliminar horarios y asignaciones previstas]
 ```
 
 #### FL-27. Registrar o quitar un feriado
@@ -1050,7 +1040,7 @@ Recorrido:
 
 Alternativas:
 
-- Los usuarios inactivos, profesores sin rol Profesor, celdas sin profesor, asignaciones en ambas funciones, instalaciones inactivas y turnos fuera de horario originan omisiones informadas.
+- Los usuarios inactivos, profesores sin rol Profesor, asignaciones en ambas funciones, instalaciones inactivas y turnos fuera de horario originan omisiones informadas.
 - Las clases Anuladas no generan conflictos. Una clase Finalizada conserva la ocupación y las asignaciones que correspondan.
 - Las reservas no Anuladas ocupan su turno e impiden generar en él. La participación personal incompatible en una reserva, aunque sea en otra cancha, omite la candidata completa.
 - Una clase omitida no ocupa el turno ni reserva sus usuarios para las candidatas posteriores.
@@ -2409,38 +2399,7 @@ flowchart TD
     D -->|Sí| E[Mostrar detalle]
 ```
 
-### 3.17 Contratación propia y seguimiento de planes
-
-#### FL-76. Consultar contrataciones de alumnos de la plantilla
-
-- **Objetivo:** identificar la situación comercial de las personas previstas en la plantilla para un mes.
-- **Actor:** Administrador.
-- **Entradas:** plantilla consultada y mes calendario dentro del calendario operativo.
-
-Recorrido:
-
-1. Desde la plantilla solicita consultar contrataciones y elige el mes, sin crear una versión mensual de planilla.
-2. Obtiene personas y asignaciones recurrentes del alcance consultado y busca la contratación de plan no Anulada de cada titular para ese período.
-3. Muestra persona, horarios previstos, producto contratado o Sin contratación. Puede localizar los casos sin contratación y consultar diferencias de producto respecto del mes anterior para revisar su programación.
-4. Desde la consulta accede al contrato autorizado o a los recorridos administrativos de alta y modificación de asignaciones, como operaciones independientes.
-
-Alternativas:
-
-- Sin contratación no se interpreta como baja, indecisión, deuda o ausencia de pago. Se conservan participaciones de prueba y acuerdos fuera de contratación.
-- Muestra la respuesta de continuidad del contrato consultado, sin inferirla desde el contrato siguiente. Enlaza a FL-82 para consultar planes y membresías, incluidos titulares sin planilla. No retira personas ni ofrece un botón para quitar en lote a quienes no contrataron.
-- Contratar o no contratar no modifica clases concretas, respuestas, asistencia, cobros ni plantilla. Las modificaciones se confirman por sus recorridos propios.
-- Un caso sin datos muestra texto breve, sin abrir un alta comercial por cada fila.
-
-- **Resultado:** situación comercial del mes consultada sin cambios automáticos en la programación.
-- **Datos:** usuarios, turnos_planilla, turnos_planilla_alumnos, planes y planes_usuarios.
-
-```mermaid
-flowchart TD
-    A[Consultar plantilla y elegir mes] --> B[Obtener personas previstas]
-    B --> C[Buscar contrataciones no Anuladas del período]
-    C --> D[Mostrar producto o Sin contratación]
-    D --> E[Acceder a operaciones administrativas propias]
-```
+### 3.17 Contratación propia y continuidad
 
 #### FL-81. Responder o cambiar respuesta de continuidad
 
@@ -2462,12 +2421,12 @@ La ventana es desde el 25 del mes cubierto a las 00:00 hasta el 6 del siguiente 
 - **Actor:** Administrador.
 - **Entradas:** mes cubierto, tipo de producto y respuesta, incluido Sin responder.
 
-1. Abre Continuidad desde Membresías o desde el seguimiento de la plantilla.
+1. Abre Continuidad desde Planes y membresías o desde Inicio.
 2. Selecciona filtros y consulta todas las contrataciones del alcance elegido, incluso sin titular en planilla.
 3. Revisa titular, producto, mes, estado, respuesta y fecha en filas compactas y paginadas.
 4. Abre el detalle autorizado para consultar el contrato y su respuesta. Administración no responde por el titular.
 
-La consulta conserva los casos Anulados para leer respuestas previas. Indeciso es distinto de Sin responder. No crea contrataciones ni altera la programación. FL-76 conserva el seguimiento comercial de personas previstas en la plantilla y enlaza esta consulta general.
+La consulta conserva los casos Anulados para leer respuestas previas. Indeciso es distinto de Sin responder. No crea contrataciones ni altera la programación.
 
 - **Resultado:** intenciones consultadas sin cambios operativos.
 - **Datos:** usuarios, planes, membresias, planes_usuarios y membresias_usuarios.

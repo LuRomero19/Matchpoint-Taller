@@ -31,7 +31,7 @@
         <section class="perfil-seccion">
             <h2 id="acciones-titulo">Acciones</h2>
             <div class="perfil-acciones perfil-acciones-botones">
-                {% if puede_editar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:planilla_editar' turno.pk %}">Editar horario</a>{% endif %}
+                {% if puede_editar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:planilla_editar' turno.pk %}">Editar observaciones</a>{% endif %}
                 <a class="boton boton-secundario boton-chico" href="{{ url_planilla }}">Volver a la planilla</a>
             </div>
             <div class="acciones-anulacion">

@@ -1,6 +1,6 @@
 <section class="clase-selector" data-selector-personas data-tipo="{{ campo.name }}" data-url="{% url 'clases:buscar_personas' %}">
     <div class="clase-seccion-titulo">
-        <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required and not aviso_profesores %} <span aria-hidden="true">*</span>{% endif %}</h2>
+        <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required and not aviso_profesores and not sin_asterisco %} <span aria-hidden="true">*</span>{% endif %}</h2>
     </div>
     {% if aviso_profesores %}<p class="agenda-clase-aviso" role="alert" tabindex="-1" data-clase-profesores-error hidden></p>{% endif %}
     <div class="clase-buscador">

@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("submit", async function (evento) {
         var formulario = evento.target;
         if (!formulario.matches("form[data-confirmar]") || evento.defaultPrevented) return;
+        if (evento.submitter && evento.submitter.hasAttribute("data-sin-confirmar")) return;
 
         if (formularioAutorizado === formulario) {
             formularioAutorizado = null;

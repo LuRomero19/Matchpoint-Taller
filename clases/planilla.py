@@ -30,6 +30,7 @@ def consultar_planilla(usuario, sede_id, cancha_id):
         "turnos": [
             {
                 "id": turno.pk,
+                "version": version_turno_planilla(turno),
                 "dia_semana": turno.dia_semana,
                 "hora_inicio": turno.hora_inicio,
                 "hora_fin": time(turno.hora_inicio.hour + 1),
@@ -56,8 +57,8 @@ def _datos_version_planilla(turno):
         "dia": turno.dia_semana,
         "hora": turno.hora_inicio.isoformat(),
         "actualizado_en": turno.actualizado_en.isoformat(),
-        "profesores": sorted(turno.profesores.values_list("profesor_id", flat=True)),
-        "participantes": sorted(turno.alumnos.values_list("usuario_id", flat=True)),
+        "profesores": sorted(v.profesor_id for v in turno.profesores.all()),
+        "participantes": sorted(v.usuario_id for v in turno.alumnos.all()),
     }
 
 
@@ -130,7 +131,7 @@ def registrar_turnos_planilla(
         validar_datos_planilla(dia, hora, observaciones)
     usuarios = bloquear_usuarios_clase(profesores_ids | participantes_ids | {registrado_por.pk})
     registrado_por = exigir_administracion_clases(usuarios.get(registrado_por.pk))
-    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
+    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids, exigir_profesor=False)
     sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
     cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
     _validar_instalaciones_planilla(sede, cancha)
@@ -168,7 +169,10 @@ def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, 
     validar_datos_planilla(turno.dia_semana, turno.hora_inicio, observaciones)
     _validar_instalaciones_planilla(sede, cancha)
     validar_horario_planilla(sede, turno.dia_semana, turno.hora_inicio)
-    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
+    validar_usuarios_clase(
+        usuarios, profesores_ids, participantes_ids,
+        profesores_actuales=profesores, participantes_actuales=participantes, exigir_profesor=False,
+    )
     if (
         profesores == profesores_ids and participantes == participantes_ids
         and turno.observaciones == observaciones
@@ -199,3 +203,34 @@ def quitar_turno_planilla(usuario, turno_id, *, version=None):
     with contexto_auditoria(usuario):
         turno.delete()
     return {"turno_id": turno_id}
+
+
+@transaction.atomic
+def quitar_turnos_planilla(usuario, cancha, versiones):
+    usuario = exigir_administracion_clases(usuario)
+    if not versiones or len(versiones) > 161:
+        raise ValidationError("Seleccioná los horarios que querés quitar.")
+    turnos = list(TurnoPlanilla.objects.filter(
+        cancha=cancha, pk__in=versiones,
+    ).prefetch_related("profesores", "alumnos").order_by("pk"))
+    if len(turnos) != len(versiones):
+        raise ValidationError("La selección cambió. Volvé a seleccionar los horarios.")
+    personas = {usuario.pk}
+    for turno in turnos:
+        validar_version_turno_planilla(turno, versiones[turno.pk])
+        personas.update(v.profesor_id for v in turno.profesores.all())
+        personas.update(v.usuario_id for v in turno.alumnos.all())
+    usuarios = bloquear_usuarios_clase(personas)
+    usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
+    sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
+    cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
+    turnos = list(TurnoPlanilla.objects.select_for_update().filter(
+        cancha=cancha, pk__in=versiones,
+    ).prefetch_related("profesores", "alumnos").order_by("pk"))
+    if len(turnos) != len(versiones):
+        raise ValidationError("La selección cambió. Volvé a seleccionar los horarios.")
+    for turno in turnos:
+        validar_version_turno_planilla(turno, versiones[turno.pk])
+    with contexto_auditoria(usuario):
+        TurnoPlanilla.objects.filter(cancha=cancha, pk__in=versiones).delete()
+    return len(turnos)

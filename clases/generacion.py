@@ -32,6 +32,16 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     celdas = list(TurnoPlanilla.objects.filter(cancha__sede=sede).select_related("cancha").prefetch_related(
         "profesores", "alumnos",
     ).order_by("hora_inicio", "cancha_id", "pk"))
+    dias_del_periodo = {fecha.isoweekday() for fecha in _fechas_del_periodo(fecha_desde, fecha_hasta)}
+    sin_profesores = [
+        f"Sin profesor: {sede.nombre} — {celda.cancha.nombre} — "
+        f"{celda.get_dia_semana_display()} {celda.hora_inicio:%H:%M} a {time(celda.hora_inicio.hour + 1):%H:%M}."
+        for celda in celdas if celda.dia_semana in dias_del_periodo and not celda.profesores.all()
+    ]
+    if sin_profesores:
+        raise ValidationError([
+            "Completá los profesores de la planilla antes de generar clases.", *sin_profesores,
+        ])
     usuarios_ids = set()
     for celda in celdas:
         usuarios_ids.update(v.profesor_id for v in celda.profesores.all())
