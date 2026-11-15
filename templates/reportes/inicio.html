@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Reportes | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/reportes.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-reportes{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas"><h1>Reportes</h1></header>
+<p class="tarjeta descripcion-seccion">Consultá información consolidada de contrataciones, clases, reservas y caja. Cada reporte permite filtrar los datos y descargar el resultado completo en PDF.</p>
+<section class="reportes-catalogo" aria-label="Reportes administrativos">
+    {% for tipo, reporte in reportes %}
+    <article class="tarjeta reporte-opcion">
+        <h2>{{ reporte.titulo }}</h2>
+        <p class="reporte-opcion-descripcion">{{ reporte.descripcion }}</p>
+        <footer class="reporte-opcion-pie"><a href="{% url 'reportes:detalle' tipo %}">Ver reporte</a></footer>
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

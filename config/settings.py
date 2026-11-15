@@ -106,6 +106,11 @@ DATABASES = {
     }
 }
 
+DATABASES["reportes"] = {
+    **DATABASES["default"],
+    "OPTIONS": {"options": "-c default_transaction_read_only=on"},
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

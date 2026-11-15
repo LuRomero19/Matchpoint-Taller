@@ -31,7 +31,7 @@ class ContextoAuditoriaMiddleware:
         if ruta is None:
             return None
         if isinstance(exception, PermissionDenied) and ruta.namespace in (
-            "usuarios", "instalaciones", "clases", "reservas", "agenda", "membresias", "auditoria",
+            "usuarios", "instalaciones", "clases", "reservas", "agenda", "membresias", "auditoria", "reportes",
         ):
             registrar_intento(
                 request, IntentoAuditoria.Tipo.ACCESO_DENEGADO, IntentoAuditoria.Motivo.PERMISOS_INSUFICIENTES,

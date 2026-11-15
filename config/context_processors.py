@@ -13,6 +13,7 @@ DESTINOS_NAVEGACION = {
     "usuarios:usuario_lista": ("usuarios", "gestion"),
     "membresias:catalogos": ("libro", "gestion"),
     "caja:caja_actual": ("cartera", "gestion"),
+    "reportes:inicio": ("auditoria", "seguimiento"),
     "instalaciones:sede_lista": ("ubicacion", "academia"),
     "clases:feriado_lista": ("calendario", "academia"),
     "membresias:oferta": ("libro", "academia"),
@@ -113,6 +114,10 @@ def navegacion(request):
         ))
     if administrador:
         administracion.append(enlace("Caja", "caja:caja_actual", namespace == "caja", "Apertura, consulta y cierre de la sesión de caja."))
+        administracion.append(enlace(
+            "Reportes", "reportes:inicio", namespace == "reportes",
+            "Información consolidada de contrataciones, clases, reservas y caja.",
+        ))
     auditoria = enlace(
         "Auditoría", "auditoria:auditoria_lista", namespace == "auditoria",
         "Historial de operaciones y consulta de sus valores anteriores y actuales.",

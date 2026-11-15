@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static estados %}
+{% block titulo %}{{ reporte.titulo }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/reportes.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-reportes{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
+    <h1>{{ reporte.titulo }}</h1>
+    <div class="acciones">{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}<a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a></div>
+</header>
+<p class="tarjeta descripcion-seccion">{{ reporte.descripcion }}</p>
+<section class="tarjeta reporte-alcance" aria-label="Alcance del reporte">
+    <div class="reporte-consulta-actual"><h2>Consulta actual</h2>
+        {% if filtros_aplicados %}<ul class="reporte-filtros-aplicados">{% for filtro in filtros_aplicados %}<li>{{ filtro }}</li>{% endfor %}</ul>{% else %}<p class="texto-secundario">Sin filtros adicionales</p>{% endif %}
+    </div>
+    <details class="reporte-filtros"{% if formulario.errors %} open{% endif %}>
+        <summary class="boton boton-secundario boton-chico">Modificar filtros</summary>
+        <form method="get" class="filtros-compactos">
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+            <div class="detalle-grid">
+                {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
+            </div>
+            <div class="acciones-formulario">
+                <button class="boton boton-primario" type="submit">Aplicar filtros</button>
+                <a class="boton boton-secundario" href="{% url 'reportes:detalle' tipo %}">Restablecer</a>
+            </div>
+        </form>
+    </details>
+</section>
+<details class="tarjeta reporte-criterios">
+    <summary>Criterios de cálculo</summary>
+    <div class="reporte-criterios-contenido"><dl><dt>Información incluida</dt><dd>{{ reporte.procesos }}</dd></dl>{% for nota in reporte.notas %}<p>{{ nota }}</p>{% endfor %}</div>
+</details>
+{% if totales_tabla %}
+{% if indicadores %}<section class="tarjeta reporte-resumen" aria-label="Indicadores del reporte"><dl class="reporte-indicadores">{% for etiqueta, valor in indicadores %}<div><dt>{{ etiqueta }}</dt><dd>{{ valor }}</dd></div>{% endfor %}</dl></section>{% endif %}
+<section class="tarjeta reporte-resultados" aria-label="Resultado consolidado">
+    <header class="reporte-resultados-cabecera"><h2>Resultados</h2><dl><div><dt>Filas</dt><dd>{{ pagina.paginator.count }}</dd></div><div><dt>Consultado</dt><dd>{{ generado_en|date:"d/m/Y H:i" }}</dd></div></dl></header>
+    <div class="tabla-contenedor" role="region" aria-label="Tabla de {{ reporte.titulo }}" tabindex="0">
+        <table class="reporte-tabla">
+            <caption>{{ reporte.titulo }}</caption>
+            <thead><tr>{% for clave, titulo, formato, peso in columnas %}<th scope="col"{% if clave == 'estado' %} class="reporte-estado"{% elif formato == 'dinero' or formato == 'entero' or formato == 'porcentaje' %} class="reporte-numero"{% endif %}>{{ titulo }}</th>{% endfor %}</tr></thead>
+            <tbody>{% for fila in pagina %}<tr>{% for celda in fila %}<td{% if tipo == 'contrataciones' and forloop.counter == 4 %} class="reporte-estado"{% elif celda.numero %} class="reporte-numero"{% endif %}>{% if forloop.first %}<strong>{{ celda.texto }}</strong>{% elif tipo == 'contrataciones' and forloop.counter == 4 %}{% indicador_estado "contratacion" celda.texto|lower texto=celda.texto %}{% else %}{{ celda.texto }}{% endif %}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="{{ columnas|length }}" class="estado-vacio">No hay resultados para los filtros aplicados.</td></tr>{% endfor %}</tbody>
+            <tfoot><tr>{% for total in totales_tabla %}{% if forloop.first %}<th scope="row">{{ total }}</th>{% else %}<td>{{ total }}</td>{% endif %}{% endfor %}</tr></tfoot>
+        </table>
+    </div>
+    <p class="reporte-total-alcance">Los totales corresponden a todas las filas filtradas.</p>
+    {% include "componentes/paginacion.html" with pagina=pagina entidad="filas" parametros=parametros only %}
+</section>
+{% endif %}
+{% endblock %}
