@@ -12,7 +12,7 @@
         {% endif %}
     </tbody></table>
 </div>
-{% if not invitacion.participacion_computable %}<p class="perfil-descripcion invitacion-aclaracion">Esta invitación no compromete tu disponibilidad ni tus horas y no genera adicional.</p>{% endif %}
+{% if not invitacion.participacion_computable %}<p class="perfil-descripcion invitacion-aclaracion">El estado actual de esta invitación no compromete tu disponibilidad ni tus horas y no genera adicional.</p>{% endif %}
 {% if puede_responder %}
     <form method="post" action="{% url 'reservas:reserva_responder' reserva.pk %}" class="invitacion-respuesta-acciones">
         {% csrf_token %}<input type="hidden" name="version" value="{{ version }}">

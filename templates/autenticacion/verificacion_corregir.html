@@ -1,3 +1,9 @@
-{% extends "base.html" %}
+{% extends "autenticacion/base_recuperacion.html" %}
 {% block titulo %}Corregir correo | Academia TM{% endblock %}
-{% block contenido %}<section class="tarjeta"><h1>Corregir mi correo</h1><p>Ingresá el correo correcto y tu contraseña actual. Esta corrección no extiende el plazo de siete días para verificar la cuenta.</p><form method="post">{% csrf_token %}{{ formulario.as_p }}<button class="boton boton-primario" type="submit">Corregir y enviar enlace</button></form><p><a href="{% url 'estado_verificacion' %}">Cancelar</a></p></section>{% endblock %}
+{% block recuperacion_contenido %}
+<h1 id="recuperacion-titulo">Corregir mi correo</h1>
+<p class="recuperacion-descripcion">Ingresá el correo correcto y tu contraseña actual.</p>
+<p class="recuperacion-nota">Esta corrección no extiende el plazo de siete días para verificar la cuenta.</p>
+<form method="post">{% csrf_token %}{% include "autenticacion/campos_formulario.html" with form=formulario %}<button class="boton boton-primario boton-bloque" type="submit">Corregir y enviar enlace</button></form>
+<div class="recuperacion-enlaces"><a href="{% url 'estado_verificacion' %}">Cancelar</a></div>
+{% endblock %}

@@ -1,3 +1,7 @@
-{% extends "base.html" %}
-{% block titulo %}Recuperación solicitada | Academia TM{% endblock %}
-{% block contenido %}<section class="tarjeta"><h1>Revisá tu correo</h1><p>Si la cuenta está habilitada y su correo está verificado, recibirás un enlace para recuperar tu contraseña.</p><a href="{% url 'login' %}">Volver al acceso</a></section>{% endblock %}
+{% extends "autenticacion/base_recuperacion.html" %}
+{% block titulo %}Revisá tu correo | Academia TM{% endblock %}
+{% block recuperacion_contenido %}
+<h1 id="recuperacion-titulo">Revisá tu correo</h1>
+<p class="recuperacion-descripcion">Si la cuenta está habilitada y su correo está verificado, recibirás un enlace para recuperar tu contraseña.</p>
+<div class="recuperacion-enlaces"><a href="{% url 'login' %}">Volver al acceso</a></div>
+{% endblock %}

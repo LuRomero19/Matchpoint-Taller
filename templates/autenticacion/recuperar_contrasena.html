@@ -1,3 +1,13 @@
-{% extends "base.html" %}
+{% extends "autenticacion/base_recuperacion.html" %}
 {% block titulo %}Recuperar contraseña | Academia TM{% endblock %}
-{% block contenido %}<section class="tarjeta tarjeta-formulario"><h1>Recuperar contraseña</h1><p>Ingresá el correo verificado de tu cuenta. El enlace dura quince minutos desde su emisión.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button class="boton boton-primario" type="submit">Solicitar enlace</button></form><p><a href="{% url 'estado_verificacion' %}">Todavía no verifiqué mi correo</a></p><a href="{% url 'login' %}">Volver al acceso</a></section>{% endblock %}
+{% block recuperacion_contenido %}
+<h1 id="recuperacion-titulo">Recuperar contraseña</h1>
+<p class="recuperacion-descripcion">Ingresá el correo verificado de tu cuenta para recibir un enlace de recuperación.</p>
+<p class="recuperacion-nota">El enlace dura quince minutos desde su emisión.</p>
+<form method="post">
+    {% csrf_token %}
+    {% include "autenticacion/campos_formulario.html" %}
+    <button class="boton boton-primario boton-bloque" type="submit">Solicitar enlace</button>
+</form>
+<div class="recuperacion-enlaces"><a href="{% url 'estado_verificacion' %}">Todavía no verifiqué mi correo</a><a href="{% url 'login' %}">Volver al acceso</a></div>
+{% endblock %}
