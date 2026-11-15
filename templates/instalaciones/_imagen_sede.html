@@ -1,0 +1,6 @@
+{% load static %}
+{% with nombre=sede.nombre|lower %}
+            <div class="sede-tarjeta-imagen-marco{% if 'sirio' in nombre or 'española' in nombre or 'espanola' in nombre %} sede-tarjeta-imagen-zoom{% endif %}{% if 'española' in nombre or 'espanola' in nombre %} sede-tarjeta-imagen-espanola{% endif %}">
+            <img class="sede-tarjeta-imagen" src="{% if 'sirio' in nombre %}{% static 'img/sede-sirio-libanesa-fachada.png' %}{% elif 'española' in nombre or 'espanola' in nombre %}{% static 'img/sede-sociedad-espanola-fachada.png' %}{% else %}{% static 'img/sedes-geometria.svg' %}{% endif %}" alt="" width="600" height="300">
+            </div>
+            {% endwith %}

@@ -1,3 +1,19 @@
 {% extends "base.html" %}
-{% block titulo %}Sedes | Academia TM{% endblock %}
-{% block contenido %}{% include "membresias/_oferta_navegacion.html" with tipo="sede" only %}<section class="tarjeta"><h1>Sedes de la academia</h1><ul>{% for sede in sedes %}<li><a href="{% url 'instalaciones:publico_sede' sede.pk %}">{{ sede.nombre }}</a> · {{ sede.direccion }}</li>{% empty %}<li>No hay sedes disponibles.</li>{% endfor %}</ul></section>{% endblock %}
+{% load static %}
+{% block titulo %}Sedes y canchas | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}"><link rel="stylesheet" href="{% static 'css/instalaciones.css' %}"><link rel="stylesheet" href="{% static 'css/instalaciones-publicas.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-instalaciones instalaciones-publicas contenido-oferta{% endblock %}
+{% block contenido %}
+{% include "membresias/_oferta_cabecera.html" with tipo="sede" only %}
+<header class="oferta-catalogo-encabezado"><h2>Sedes y canchas</h2></header>
+<section class="sedes-tarjetas" aria-label="Sedes disponibles">
+    {% for sede in sedes %}
+    <article class="tarjeta sede-tarjeta">
+        {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
+        <h2>{{ sede.nombre }}</h2>
+        <p>{{ sede.direccion|default:"Dirección sin informar" }}</p>
+        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:publico_sede' sede.pk %}">Ver sede</a>
+    </article>
+    {% empty %}<p class="tarjeta estado-vacio">No hay sedes disponibles.</p>{% endfor %}
+</section>
+{% endblock %}

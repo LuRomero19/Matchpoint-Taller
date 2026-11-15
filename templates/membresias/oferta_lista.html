@@ -2,11 +2,12 @@
 {% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-oferta{% endblock %}
 {% block contenido %}
-{% include "membresias/_oferta_navegacion.html" with tipo=tipo only %}
+{% include "membresias/_oferta_cabecera.html" with tipo=tipo only %}
 {% url ruta_catalogo as url_catalogo %}
 <header class="oferta-catalogo-encabezado">
-    <h1>{{ titulo }}</h1>
+    <h2>{{ titulo }}</h2>
     {% if pagina or busqueda %}
         <form class="oferta-buscador" method="get" role="search" aria-label="Buscar en el catálogo" data-filtros-automaticos>
             <div class="oferta-buscador-campo">

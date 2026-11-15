@@ -8,11 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
         var boton = evento.target.closest("[data-oferta-descripcion]");
         if (!boton || evento.defaultPrevented) return;
         var tarjeta = boton.closest(".oferta-producto");
-        var descripcion = tarjeta.querySelector(".oferta-producto-descripcion");
+        var descripcion = boton.dataset.descripcion;
         if (!descripcion) return;
         origen = boton;
         modal.querySelector("[data-oferta-descripcion-titulo]").textContent = tarjeta.querySelector("h2").textContent;
-        modal.querySelector("[data-oferta-descripcion-texto]").textContent = descripcion.textContent;
+        modal.querySelector("[data-oferta-descripcion-texto]").textContent = descripcion;
         document.documentElement.classList.add("modal-abierto");
         modal.showModal();
         cerrar.focus({preventScroll: true});
