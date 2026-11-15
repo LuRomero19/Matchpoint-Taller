@@ -3,15 +3,18 @@
 {% load static %}
 {% block titulo %}Uso de membresías | Academia TM{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Uso de membresías</h1></header>
+<header class="tarjeta encabezado-pagina"><h1>{% if contrato %}Uso de membresía{% else %}Uso de membresías{% endif %}</h1>{% if contrato %}<a class="boton boton-secundario" href="{% url 'membresias:mis_contrataciones' %}?tipo=membresia">Mis contrataciones</a>{% endif %}</header>
+{% if not contrato %}
 <details class="tarjeta"{% if formulario.errors %} open{% endif %}><summary>Cambiar período</summary>
 <form class="tarjeta-busqueda filtros-compactos" method="get" data-uso-formulario>{{ formulario.non_field_errors }}
 {% for campo in formulario %}<div class="grupo-campo"{% if campo.name == 'mes' %} data-uso-campo="mes"{% if formulario.modo.value != 'mes' %} hidden{% endif %}{% elif campo.name == 'desde' or campo.name == 'hasta' %} data-uso-campo="rango"{% if formulario.modo.value != 'rango' %} hidden{% endif %}{% endif %}><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}<button class="boton boton-secundario">Consultar</button></form>
 </details>
+{% endif %}
 <script src="{% static 'js/uso-membresia.js' %}" defer></script>
 {% if titular %}
 <section class="tarjeta">
-    <h2>{{ titular }} · Resumen por meses completos</h2>
+    <h2>{% if contrato %}{{ contrato.producto.nombre }}{% else %}{{ titular }}{% endif %}</h2>
+    {% if contrato %}<p>{{ contrato.mes_cubierto|date:"F \d\e Y"|capfirst }}</p>{% endif %}
     <p>Los cupos de organizador e invitado son independientes. Aceptar una invitación con beneficio compromete una hora de invitado y la consume al comenzar el turno. Las Pendientes y Rechazadas no comprometen horas ni generan adicional. El saldo incluye usos conservados de contrataciones Anuladas.</p>
     <div class="tabla-contenedor"><table>
         <thead><tr><th>Mes</th><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>

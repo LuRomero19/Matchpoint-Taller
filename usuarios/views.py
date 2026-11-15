@@ -92,7 +92,6 @@ def usuario_detalle(request, pk):
             "usuario_obj": usuario,
             "formulario_correo": UsuarioEditarForm(instance=usuario) if request.user.has_perm("usuarios.change_usuario") else None,
             "roles_asignados": roles_asignados,
-            "puede_consultar_actividad": request.user.esta_habilitado and (request.user.pk == usuario.pk or request.user.tiene_rol(Rol.ADMINISTRADOR)),
             "roles_gestionables": [
                 {"codigo": codigo, "nombre": nombre, "asignado": codigo in roles_actuales}
                 for codigo, nombre in (

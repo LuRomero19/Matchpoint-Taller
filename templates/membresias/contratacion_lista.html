@@ -42,7 +42,7 @@
     </form>
     <section class="tarjeta tabla-contenedor" aria-label="Contrataciones de {{ plural }}">
         <table>
-            <thead><tr>{% if not propias %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr>{% if not propias %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>
                 {% for contratacion in pagina %}
                     <tr>
@@ -51,7 +51,9 @@
                         <td>{{ contratacion.mes_cubierto|date:"F Y" }}</td>
                         <td class="catalogo-importe">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
                         <td>{% indicador_estado "contratacion" contratacion.estado %}</td>
-                        <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></td>
+                        <td class="acciones-columna"><div class="acciones">
+                            {% if propias and tipo == 'membresia' %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>{% endif %}
+                            <a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></div></td>
                     </tr>
                 {% empty %}<tr><td class="estado-vacio" colspan="{% if propias %}5{% else %}6{% endif %}">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>

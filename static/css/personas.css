@@ -173,3 +173,14 @@ body > .contenido-principal.contenido-usuarios {
     padding-top: 0;
     border-top: 0;
 }
+
+.perfil-usuario .tarjeta,
+.perfil-usuario .boton,
+.perfil-usuario .form-control,
+.perfil-usuario .perfil-roles li { border-radius: 10px; }
+.perfil-usuario > .perfil { border: 0; border-top: 3px solid var(--acento); }
+.perfil-usuario .perfil-cabecera { padding: 24px; border-radius: 8px 8px 0 0; }
+.perfil-usuario .perfil-datos,
+.perfil-usuario .perfil-lateral { padding: 24px; }
+.perfil-usuario .perfil-seccion + .perfil-seccion { margin-top: 24px; padding-top: 24px; }
+.perfil-usuario .perfil-seccion h2 { margin-bottom: 16px; }

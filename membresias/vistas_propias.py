@@ -89,3 +89,30 @@ def contratacion_propia_comprobante(request, pk, tipo="plan"):
     return render(request, "membresias/contratacion_comprobante.html", {
         **_contexto(tipo), "contratacion": contratacion,
     })
+
+
+@login_required
+@never_cache
+@require_GET
+def uso_membresia_propia(request, pk):
+    from reservas.horas import resumen_horas_del_mes
+    from reservas.models import Reserva, ReservaInvitado
+
+    titular = _exigir_titular(request.user)
+    contrato = get_object_or_404(
+        MembresiaUsuario.objects.select_related("membresia"), pk=pk, usuario=titular,
+    )
+    reservas = Reserva.objects.filter(
+        organizador=titular, membresia_usuario=contrato,
+    ).select_related("evento__turno__cancha__sede").order_by("evento__turno__fecha", "evento__turno__hora_inicio")
+    invitaciones = ReservaInvitado.objects.filter(
+        usuario=titular, membresia_usuario=contrato,
+    ).select_related("reserva__evento__turno__cancha__sede").order_by(
+        "reserva__evento__turno__fecha", "reserva__evento__turno__hora_inicio",
+    )
+    return render(request, "reservas/uso_membresia.html", {
+        "titular": titular, "contrato": contrato,
+        "meses": resumen_horas_del_mes(titular.pk, contrato.mes_cubierto, contrato),
+        "reservas": reservas,
+        "invitaciones": [{"invitacion": i, "respuesta_texto": i.get_respuesta_display()} for i in invitaciones],
+    })
