@@ -461,8 +461,6 @@ def actividad_clases(request, usuario_id):
     resumen = None
     pagina = None
     vistas = []
-    url_anterior = None
-    url_siguiente = None
     if formulario.is_valid():
         filtros = formulario.cleaned_data
         actividad = consultar_actividad_clases(
@@ -522,15 +520,12 @@ def actividad_clases(request, usuario_id):
             if es_alumno and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
                 fila["asistencia_texto"] = Asistencia.Estado(fila["asistencia"]).label
         enlaces["vista"] = filtros["vista"]
-        if pagina.has_previous():
-            url_anterior = request.path + "?" + urlencode({**enlaces, "pagina": pagina.previous_page_number()})
-        if pagina.has_next():
-            url_siguiente = request.path + "?" + urlencode({**enlaces, "pagina": pagina.next_page_number()})
     url_perfil = reverse("usuarios:usuario_detalle", args=[usuario_id])
     return render(request, "clases/actividad_clases.html", {
         "titular": titular, "actividad": actividad, "formulario": formulario,
         "es_profesor": es_profesor, "es_alumno": es_alumno, "resumen": resumen,
-        "vistas": vistas, "pagina": pagina, "url_anterior": url_anterior, "url_siguiente": url_siguiente,
+        "vistas": vistas, "pagina": pagina,
+        "parametros_paginacion": urlencode(enlaces) if actividad else "",
         "url_perfil": url_perfil,
     })
 
