@@ -25,7 +25,7 @@
 .clase-opciones legend { margin-bottom: 10px; font-size: .95rem; font-weight: 600; }
 .clase-opciones-lista { display: flex; flex-wrap: wrap; gap: 6px; }
 .clase-opciones-lista label { position: relative; cursor: pointer; }
-.clase-opciones-lista span { display: block; padding: 9px 16px; border: 1px solid var(--borde); border-radius: 4px; color: var(--texto-suave); }
+.clase-opciones-lista span { display: block; padding: 9px 16px; border: 1px solid var(--borde); border-radius: 8px; color: var(--texto-suave); }
 .clase-opciones-lista input:checked + span { background: var(--primario-suave); border-color: var(--primario); color: var(--primario); font-weight: 600; }
 .clase-opciones-lista input:focus-visible + span { outline: 2px solid var(--primario); outline-offset: 3px; }
 .clase-observaciones { overflow-wrap: anywhere; }
@@ -41,7 +41,7 @@
 .clase-revision-nombres { display: grid; gap: 0 24px; list-style: none; padding: 0; margin: 0; }
 .clase-revision-nombres-columnas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .clase-revision-persona { min-width: 0; padding: 10px 0; overflow-wrap: anywhere; }
-.clase-revision-vacio { margin: 0; padding: 14px; border: 1px dashed var(--borde); border-radius: 4px; color: var(--texto-suave); font-size: .9rem; }
+.clase-revision-vacio { margin: 0; padding: 14px; border: 1px dashed var(--borde); border-radius: 8px; color: var(--texto-suave); font-size: .9rem; }
 .clase-revision-observaciones { margin-top: 24px; }
 .clase-revision-observaciones p { margin-bottom: 0; }
 .clase-revision .mensaje { margin-top: 24px; }

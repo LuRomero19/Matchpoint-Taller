@@ -1,4 +1,8 @@
-"""Genera cuatro gráficos ejecutivos leyendo PostgreSQL en una transacción de sólo lectura."""
+"""Lee la base del proyecto y genera cuatro gráficos para la administración.
+
+Pandas organiza los datos, numpy calcula los valores del resumen y matplotlib
+dibuja los gráficos. Los resultados se guardan como imágenes PNG y un resumen de texto.
+"""
 
 import argparse
 from datetime import date, datetime, time, timedelta
@@ -8,6 +12,7 @@ from zoneinfo import ZoneInfo
 
 import matplotlib
 
+# Permite guardar los gráficos sin abrir ventanas, incluso dentro de Docker.
 matplotlib.use("Agg")
 
 import matplotlib.dates as mdates
@@ -48,13 +53,15 @@ def argumentos():
 
 
 def consultar(conexion, sql, parametros=()):
-    # El cursor nativo evita depender de SQLAlchemy para cargar los DataFrame.
+    # Los datos se leen con el conector de PostgreSQL y se pasan a una tabla de pandas.
     with conexion.cursor() as cursor:
         cursor.execute(sql, parametros)
         return pd.DataFrame(cursor.fetchall(), columns=[columna.name for columna in cursor.description])
 
 
 def leer_datos(conexion, opciones):
+    # Finalizado indica que terminó el horario; no confirma que la actividad se realizó.
+    # Los eventos programados, anulados y bloqueos quedan fuera del análisis de actividad.
     condiciones = ["t.fecha BETWEEN %s AND %s", "e.estado = 'finalizado'", "e.tipo IN ('clase', 'reserva')"]
     parametros = [opciones.desde, opciones.hasta]
     alcance = []
@@ -75,7 +82,7 @@ def leer_datos(conexion, opciones):
         parametros.append(opciones.cancha)
         alcance.append(f"Cancha: {cancha.iloc[0]['nombre']}")
 
-    # Sólo se interpolan condiciones fijas; todos los valores se envían como parámetros.
+    # Las fechas y los filtros se envían separados de la consulta para leerlos como valores.
     eventos = consultar(conexion, f"""
         SELECT e.id AS evento_id, e.tipo, t.fecha, t.hora_inicio
         FROM eventos e JOIN turnos t ON t.id = e.turno_id
@@ -85,7 +92,8 @@ def leer_datos(conexion, opciones):
     """, parametros)
     eventos["fecha"] = pd.to_datetime(eventos["fecha"])
 
-    # La unión incluye asignados sin carga y asistencias de personas no asignadas.
+    # Se incluye a quienes estaban asignados y a quienes tienen asistencia cargada,
+    # contando una sola vez a cada persona por clase. Sin carga no significa ausente.
     asistencias = consultar(conexion, f"""
         WITH personas AS (
             SELECT clase_id, usuario_id FROM clases_alumnos
@@ -103,8 +111,12 @@ def leer_datos(conexion, opciones):
     """, parametros)
     asistencias["fecha"] = pd.to_datetime(asistencias["fecha"])
 
+    # El día final se incluye completo, desde las 00:00 hasta antes del día siguiente,
+    # usando la hora de Salta para que los cobros no cambien de día por la zona horaria.
     inicio = datetime.combine(opciones.desde, time.min, ZONA_HORARIA)
     fin = datetime.combine(opciones.hasta + timedelta(days=1), time.min, ZONA_HORARIA)
+    # Caja se consulta de forma global: las contrataciones de planes y membresías
+    # no tienen una sede asociada. Sólo se toman cobros y devoluciones vigentes.
     fondos = consultar(conexion, """
         SELECT clase, categoria_ingreso, categoria_egreso, monto
         FROM movimientos_fondos
@@ -128,6 +140,8 @@ def figura(titulo, opciones, alcance):
 
 
 def guardar(fig, opciones, nombre, nota):
+    # Cada imagen conserva el período, el alcance y una nota para poder interpretarla
+    # sin tener que abrir el programa que la generó.
     fig.text(0.08, 0.055, nota, fontsize=9, color="#454545", linespacing=1.6)
     destino = opciones.salida / nombre
     fig.savefig(destino, dpi=160, facecolor=fig.get_facecolor())
@@ -141,14 +155,19 @@ def sin_datos(ax, mensaje):
 
 
 def actividad_mensual(eventos, opciones, alcance):
+    """¿Cómo se distribuye la actividad mensual entre clases y reservas?"""
     fig, ax = figura("Actividad mensual por tipo", opciones, alcance)
     if eventos.empty:
         sin_datos(ax, "Sin clases ni reservas finalizadas en el período.")
     else:
+        # Se cuenta cada tipo de actividad por mes. Los meses sin actividad aparecen
+        # con cero para que no desaparezcan del período solicitado.
         meses = pd.period_range(opciones.desde, opciones.hasta, freq="M")
         actividad = eventos.assign(mes=eventos.fecha.dt.to_period("M")).pivot_table(
             index="mes", columns="tipo", values="evento_id", aggfunc="count", fill_value=0,
         ).reindex(index=meses, columns=["clase", "reserva"], fill_value=0)
+        # Cada evento ocupa una hora, por eso la cantidad de eventos equivale a horas.
+        # Las barras quedan una al lado de la otra para comparar clases y reservas.
         posiciones = np.arange(len(meses))
         for indice, (tipo, etiqueta) in enumerate((("clase", "Clases"), ("reserva", "Reservas"))):
             ax.bar(posiciones + (indice - 0.5) * 0.36, actividad[tipo], 0.36, label=etiqueta, color=COLORES[indice])
@@ -166,7 +185,10 @@ def actividad_mensual(eventos, opciones, alcance):
 
 
 def composicion_ingresos(fondos, opciones):
+    """¿Qué parte de los cobros corresponde a planes, membresías y reservas?"""
     fig, ax = figura("Composición de los ingresos cobrados", opciones, "Caja global · Sin filtro de sede o cancha")
+    # Se suman los cobros por categoría. Cada sector muestra su parte del total.
+    # Las devoluciones se informan aparte para que los sectores representen sólo cobros.
     ingresos = fondos.loc[fondos.clase == "ingreso"].groupby("categoria_ingreso").monto.sum()
     ingresos = ingresos.reindex(["planes", "membresias", "reservas", "otros"], fill_value=0)
     ingresos = ingresos[ingresos > 0]
@@ -189,18 +211,25 @@ def composicion_ingresos(fondos, opciones):
 
 
 def evolucion_asistencia(asistencias, opciones, alcance):
+    """¿Cómo cambia la asistencia a clases de una semana a otra?"""
     fig, ax = figura("Evolución semanal de la asistencia", opciones, alcance)
+    # Cada semana comienza el lunes y termina el domingo. Se cuentan por separado
+    # presentes, ausentes y participaciones sin registrar.
     semanas = pd.period_range(opciones.desde, opciones.hasta, freq="W-SUN")
     semanal = asistencias.assign(semana=asistencias.fecha.dt.to_period("W-SUN")).groupby(
         ["semana", "estado"],
     ).size().unstack(fill_value=0).reindex(
         index=semanas, columns=["presente", "ausente", "sin_registrar"], fill_value=0,
     )
+    # El porcentaje usa sólo presentes y ausentes. Una semana sin marcas queda
+    # sin valor, en lugar de mostrar un 0 % que podría confundirse con inasistencia.
     registradas = semanal.presente + semanal.ausente
     porcentaje = semanal.presente.div(registradas.where(registradas > 0)).mul(100)
     if porcentaje.notna().any():
         fechas = semanas.start_time
         ax.plot(fechas, porcentaje, marker="o", color=COLORES[0], label="Asistencia registrada")
+        # La línea de tendencia promedia los porcentajes de las últimas semanas
+        # elegidas para suavizar las variaciones. Cada semana con datos pesa lo mismo.
         tendencia = porcentaje.rolling(opciones.ventana_tendencia, min_periods=1).mean()
         # Una semana sin registros no se representa como una medición de asistencia.
         tendencia = tendencia.where(porcentaje.notna())
@@ -227,16 +256,23 @@ def evolucion_asistencia(asistencias, opciones, alcance):
 
 
 def concentracion(eventos, opciones, alcance):
+    """¿En qué días y horarios se concentra la actividad de las canchas?"""
     fig, ax = figura("Concentración de turnos por día y hora", opciones, alcance)
     percentil = None
     if eventos.empty:
         sin_datos(ax, "Sin clases ni reservas finalizadas en el período.")
     else:
+        # Cada casilla reúne los turnos de un día de semana y una hora de inicio.
+        # Se muestran los siete días y las horas de inicio permitidas, de 00 a 22.
         matriz = eventos.assign(dia=eventos.fecha.dt.dayofweek, hora=eventos.hora_inicio.map(lambda hora: hora.hour)).pivot_table(
             index="dia", columns="hora", values="evento_id", aggfunc="count", fill_value=0,
         ).reindex(index=range(7), columns=range(23), fill_value=0)
         valores = matriz.to_numpy(dtype=int)
+        # El percentil 90 indica el valor por debajo o igual al cual queda aproximadamente el 90 %
+        # de las casillas. También considera las casillas con cero turnos.
         percentil = float(np.percentile(valores, 90))
+        # Un color más oscuro representa más turnos. Es un conteo de actividad,
+        # no un porcentaje de ocupación de la capacidad disponible.
         imagen = ax.imshow(valores, cmap="YlGn", aspect="auto", vmin=0, vmax=max(1, int(np.max(valores))))
         barra = fig.colorbar(imagen, ax=ax, pad=0.02)
         barra.set_label("Turnos acumulados en el período")
@@ -258,6 +294,7 @@ def concentracion(eventos, opciones, alcance):
 
 def main():
     parser, opciones = argumentos()
+    # Se usa la conexión configurada para el proyecto, sin escribir credenciales aquí.
     nombres_entorno = ("DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT")
     faltantes = [nombre for nombre in nombres_entorno if not os.environ.get(nombre)]
     if faltantes:
@@ -267,6 +304,8 @@ def main():
         with psycopg.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"],
                              password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"],
                              port=os.environ["DB_PORT"], connect_timeout=10) as conexion:
+            # Las tres lecturas ven el mismo estado de la base, aunque alguien cargue
+            # datos mientras se ejecuta el script. Esta conexión no permite escribir.
             conexion.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             eventos, asistencias, fondos, alcance = leer_datos(conexion, opciones)
     except ValueError as error:
@@ -279,6 +318,8 @@ def main():
     total, devoluciones = composicion_ingresos(fondos, opciones)
     porcentaje, sin_registrar = evolucion_asistencia(asistencias, opciones, alcance)
     percentil = concentracion(eventos, opciones, alcance)
+    # Este promedio da el mismo peso a cada semana con datos. No equivale al
+    # porcentaje de asistencia de todas las personas juntas en el período.
     media = f"{np.mean(porcentaje.dropna().to_numpy()):.2f}%" if porcentaje.notna().any() else "Sin datos"
     resumen = (
         f"Academia TM | Analítica\nPeríodo: {opciones.desde} a {opciones.hasta} (ambos incluidos)\n"

@@ -1,6 +1,7 @@
 .perfil {
     padding: 0;
-    border-top: 3px solid var(--primario);
+    border-top: 3px solid var(--acento);
+    border-bottom: 0;
 }
 
 .perfil-cabecera {
@@ -32,7 +33,7 @@
 .perfil-total {
     padding: 12px 20px;
     border: 1px solid var(--borde);
-    border-radius: 2px;
+    border-radius: 10px;
     background: var(--fondo);
 }
 
@@ -158,7 +159,7 @@
 .perfil-roles li {
     padding: 5px 10px;
     border: 1px solid var(--borde);
-    border-radius: 2px;
+    border-radius: 8px;
     font-size: 0.9rem;
 }
 

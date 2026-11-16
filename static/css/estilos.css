@@ -267,7 +267,7 @@ h2 {
 .tarjeta {
     padding: 20px;
     border: 1px solid var(--borde);
-    border-radius: 2px;
+    border-radius: 10px;
     background: var(--superficie);
 }
 
@@ -559,7 +559,7 @@ tbody tr:last-child td {
     display: inline-flex;
     padding: 3px 7px;
     border: 1px solid currentColor;
-    border-radius: 2px;
+    border-radius: 8px;
     font-family: var(--fuente-detalles);
     font-size: 0.82rem;
     font-weight: 700;
@@ -632,7 +632,7 @@ tbody tr:last-child td {
     min-height: 42px;
     padding: 9px 16px;
     border: 1px solid transparent;
-    border-radius: 2px;
+    border-radius: 10px;
     font: inherit;
     font-weight: 700;
     text-decoration: none;
@@ -747,7 +747,7 @@ tbody tr:last-child td {
     margin: 20px 0;
     padding: 12px 14px 14px;
     border: 1px solid var(--borde);
-    border-radius: 2px;
+    border-radius: 10px;
 }
 
 .grupo-roles legend {
@@ -765,7 +765,7 @@ tbody tr:last-child td {
     min-height: 44px;
     padding: 10px 12px;
     border: 1px solid #cbd2dc;
-    border-radius: 2px;
+    border-radius: 10px;
     background: #ffffff;
     color: var(--texto);
     font: inherit;
@@ -861,7 +861,7 @@ textarea.form-control {
     margin-bottom: 14px;
     padding: 12px 16px;
     border: 1px solid transparent;
-    border-radius: 2px;
+    border-radius: 10px;
     transition: opacity 200ms ease;
 }
 
