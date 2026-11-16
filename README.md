@@ -46,6 +46,14 @@ docker compose start
 
 Docker Compose habilita la simulación por defecto con `EMAILS_SIMULACION=1`. Todos los correos llegan a la bandeja local en <http://localhost:8025/>, independientemente del destinatario: nadie los recibe en su casilla real. Podés consultar el HTML, el texto y abrir los enlaces.
 
+## Notificaciones internas
+
+Cada cuenta activa y verificada, con su contraseña personal, consulta sus avisos desde Notificaciones en la cabecera. El contador muestra los no leídos. La bandeja y la lectura funcionan independientemente de la entrega de emails. Los enlaces de verificación, confirmación de correo y recuperación se reciben exclusivamente por correo.
+
+Los recordatorios y las campañas de continuidad se revisan cada minuto y se programan con `NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS=1`, habilitado por defecto. Requieren los servicios worker y beat activos. Los avisos se generan desde las operaciones y tareas funcionales; no se importan emails históricos a la bandeja.
+
+Administración consulta los plazos desde **Reglas de notificación** en la navegación. Cada fila ofrece Modificar para abrir únicamente su campo y Guardar regla para aplicar ese cambio de forma independiente. Los valores iniciales son sesenta minutos para clases y reservas; continuidad abre el 25 y recuerda el último día del mes y el 5 siguiente, a las 09:00 de Salta. Los cambios se aplican sin reiniciar los servicios y también ajustan la ventana para responder continuidad.
+
 ## Consultar registros
 
 ```powershell

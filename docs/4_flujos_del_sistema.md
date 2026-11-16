@@ -112,7 +112,9 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 
 Los recorridos de cuenta incluyen CU-01 (verificar correo) y CU-02 (reenviar/corregir correo inicial).
 
-Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Apertura y recordatorios de continuidad, 4.6 Recordatorios horarios de clases y 4.8 Recordatorios horarios de reservas.
+Los avisos de operaciones y seguridad de cuenta guardan una notificación interna breve y su email en la misma transacción, según criterios 2.6. Los recorridos que envían enlaces de bienvenida, verificación, confirmación de correo o recuperación utilizan exclusivamente email. Desde la cabecera, el usuario habilitado abre su bandeja personal, consulta Todas, Sin leer o Leídas y abre un aviso mediante POST para registrar su primera lectura y consultar el destino autorizado. Un aviso sin destino permite Marcar leída; Acciones ofrece marcar todas las propias como leídas. El contador refleja las pendientes del titular, sin acceso a bandejas ajenas ni dependencia del resultado de entrega del correo.
+
+Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Apertura y recordatorios de continuidad, 4.6 Recordatorios de clases y 4.8 Recordatorios de reservas.
 
 ---
 
@@ -1036,7 +1038,7 @@ Recorrido:
 5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer ni eliminación física de clases. Las generadas por error pueden anularse antes de su inicio desde su detalle mediante **FL-37** o desde Acciones del día o del mes, conservando su historia.
 6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
 7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones con Asistirá para participantes y sin respuesta para profesores. Las observaciones se copian al evento.
-8. Guarda un aviso agrupado por profesor y corrida con sus clases, fechas, horarios y ubicaciones. Los participantes de clases creadas dentro de la hora previa reciben aviso inmediato; los demás quedan para el recordatorio. Antes de entregar el agrupado se excluyen apartados de clases anuladas o asignaciones retiradas.
+8. Guarda un aviso agrupado por profesor y corrida con sus clases, fechas, horarios y ubicaciones. Los participantes de clases creadas dentro del plazo de recordatorio configurado reciben aviso inmediato; los demás quedan para el recordatorio. Antes de entregar el agrupado se excluyen apartados de clases anuladas o asignaciones retiradas.
 
 Alternativas:
 
@@ -1194,7 +1196,7 @@ Alternativas:
 - Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
 
-La confirmación guarda avisos a los profesores con fecha, horario, sede, cancha y acceso al detalle. Sólo los participantes asignados dentro de la hora previa reciben aviso inmediato, que cubre su recordatorio de esa participación. La revisión previa no encola mensajes.
+La confirmación guarda avisos a los profesores con fecha, horario, sede, cancha y acceso al detalle. Sólo los participantes asignados dentro del plazo de recordatorio configurado reciben aviso inmediato, que cubre su recordatorio de esa participación. La revisión previa no encola mensajes.
 
 - **Resultado:** una clase concreta de una hora en estado **Programada**.
 - **Datos:** eventos, turnos, clases, horarios de sede, profesores y usuarios asignados.
@@ -1235,7 +1237,7 @@ Alternativas:
 - Quitar profesores o participantes exige que la clase Programada no haya comenzado. Se captura el aviso, se elimina cada relación y se guarda el email en la misma transacción. La lista conserva sólo asignados; asistencia e historia de auditoría permanecen independientes.
 - Agregar nuevamente crea una relación con UUID nuevo y respuesta inicial Asistirá. No se recupera el aviso No asistirá ni se reutilizan sus claves de envío. Las versiones de edición y de respuesta distinguen cada participación.
 
-Los profesores nuevos reciben su aviso de asignación. Los participantes nuevos sólo reciben aviso inmediato dentro de la hora previa. Una retirada captura su aviso antes del borrado; cambiar de cancha avisa a quienes siguen asignados con la ubicación nueva. Cambiar únicamente observaciones no encola emails.
+Los profesores nuevos reciben su aviso de asignación. Los participantes nuevos sólo reciben aviso inmediato dentro del plazo de recordatorio configurado. Una retirada captura su aviso antes del borrado; cambiar de cancha avisa a quienes siguen asignados con la ubicación nueva. Cambiar únicamente observaciones no encola emails.
 
 - **Resultado:** datos, participantes y, si correspondía, cancha actualizados, con el mismo día y horario.
 - **Datos:** clases, eventos, turnos, profesores y usuarios asignados, y horarios de sede.
@@ -1404,7 +1406,7 @@ Alternativas:
 - Un cambio de selección, cobertura, precio o disponibilidad exige una nueva revisión, sin escrituras parciales. Cancelar la revisión no registra nada.
 - No hay reservas recurrentes. El portal no cobra; pagos y devoluciones corresponden a caja como operaciones independientes.
 
-La reserva confirmada guarda un aviso al organizador y una invitación por invitado, con fecha, horario, ubicación y acceso autorizado. No se envían invitaciones durante la revisión ni antes de crear la reserva. Una creación dentro de la hora previa cubre el recordatorio correspondiente.
+La reserva confirmada guarda un aviso al organizador y una invitación por invitado, con fecha, horario, ubicación y acceso autorizado. No se envían invitaciones durante la revisión ni antes de crear la reserva. Una creación dentro del plazo de recordatorio configurado cubre el recordatorio correspondiente.
 
 - **Resultado:** Reserva propia Programada con sus importes aplicados e invitaciones Pendientes.
 - **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, membresias, membresias_usuarios y reservas_invitados.
@@ -1881,7 +1883,7 @@ Alternativas:
 - La reserva con membresía no exige tarifa normal. Los invitados con beneficio comprometen una hora de invitado y todos se identifican en esta modalidad.
 - Si falla el cobro posterior, la reserva conserva su existencia e importes; no hay reversión conjunta con caja.
 
-La creación administrativa guarda la confirmación al organizador y una invitación por invitado una vez creada la reserva, con fecha, horario y ubicación. Son avisos al titular, no al administrador que realizó el alta. Dentro de la hora previa cubren el recordatorio.
+La creación administrativa guarda la confirmación al organizador y una invitación por invitado una vez creada la reserva, con fecha, horario y ubicación. Son avisos al titular, no al administrador que realizó el alta. Dentro del plazo de recordatorio configurado cubren el recordatorio.
 
 - **Resultado:** Reserva Programada del organizador elegido, sin cobro automático.
 - **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, membresias_usuarios y reservas_invitados.
@@ -2416,7 +2418,7 @@ flowchart TD
 3. Mediante POST confirma una respuesta válida. Se bloquean titular y contrato, se revalidan identidad, habilitación, verificación, estado y ventana de Salta.
 4. Guarda respuesta y fecha en una sola actualización auditada. Repetir la misma respuesta no cambia fechas ni produce efectos.
 
-La ventana es desde el 25 del mes cubierto a las 00:00 hasta el 6 del siguiente a las 00:00, excluido. Vencido puede responder del 1 al 5; Anulado sólo permite consultar. No permite contratos ajenos ni vaciar una respuesta. Al cerrar queda sólo lectura. Cada contrato tiene su respuesta independiente; no se deduce del silencio ni de otro contrato. Responder no crea contratos, cobros, bajas, retiradas, modificaciones de planilla ni emails a administración.
+La ventana se calcula con la configuración de notificaciones: apertura a las 00:00 del día elegido y cierre al terminar el último día permitido del mes siguiente. Sus valores iniciales son del 25 del mes cubierto al 5 siguiente inclusive. Vencido puede responder dentro de esa ventana; Anulado sólo permite consultar. No permite contratos ajenos ni vaciar una respuesta. Al cerrar queda sólo lectura. Cada contrato tiene su respuesta independiente; no se deduce del silencio ni de otro contrato. Responder no crea contratos, cobros, bajas, retiradas, modificaciones de planilla ni emails a administración.
 
 - **Resultado:** última intención del titular guardada y consultable.
 - **Datos:** planes_usuarios o membresias_usuarios y log_auditoria.
@@ -2564,32 +2566,32 @@ flowchart TD
 ### 4.5 Apertura y recordatorios de continuidad
 
 - **Objetivo:** solicitar la intención del titular para el mes siguiente de cada contratación.
-- **Disparador:** revisión diaria a las 09:00 de Salta en las fechas de campaña.
+- **Disparador:** revisión cada minuto; en las fechas de campaña, desde la hora configurada de Salta (09:00 inicialmente).
 
-1. El 25 del mes cubierto selecciona encuestas disponibles de planes y membresías no Anulados.
-2. El último día del mes y el 5 del siguiente selecciona únicamente las encuestas Sin responder. Indeciso es una respuesta y no se incluye en estos recordatorios.
-3. Revalida cuenta habilitada, correo verificado, apertura de la encuesta, estado y respuesta. Si la tarea comienza después de las 09:00 procesa la campaña de ese mismo día; no recupera campañas de fechas anteriores. Vencido puede participar del 1 al 5; Anulado queda excluido.
-4. Agrupa por titular y fecha un email con los apartados y accesos correspondientes. Conserva seguimiento por contratación y fecha para evitar duplicados e intenta completar pendientes durante ese mismo día.
+1. El día de apertura configurado (25 inicialmente) selecciona encuestas disponibles de planes y membresías no Anulados.
+2. El día de recordatorio y el último día para responder del mes siguiente (último día real del mes y 5 siguiente inicialmente) selecciona únicamente las encuestas Sin responder. Indeciso es una respuesta y no se incluye en estos recordatorios.
+3. Revalida cuenta habilitada, correo verificado, apertura de la encuesta, estado y respuesta. Si la tarea comienza después de la hora configurada procesa la campaña de ese mismo día; no recupera campañas de fechas anteriores. Vencido puede participar mientras la ventana siga abierta; Anulado queda excluido.
+4. Agrupa por titular y fecha una notificación breve y un email con los apartados y accesos correspondientes. Conserva seguimiento por contratación y fecha para evitar duplicados e intenta completar pendientes durante ese mismo día.
 5. El mensaje del último día del mes recuerda el plazo restante; el del día 5 destaca que el plazo termina hoy. Los enlaces llevan al detalle con autenticación y no guardan respuestas.
 
 Una contratación registrada con encuesta abierta recibe el acceso en su confirmación comercial, sin otro email de apertura. Tener otro contrato para el mes siguiente no responde la encuesta. La campaña no deduce bajas desde el silencio, no renueva, cobra, retira personas ni modifica la planilla. La última respuesta y su fecha se consultan mediante FL-81, FL-82 y el detalle de cada contrato.
 
 - **Resultado:** avisos de encuesta registrados por contratación y fecha.
-- **Datos:** usuarios, planes_usuarios, membresias_usuarios y envios_email.
+- **Datos:** configuracion_notificaciones, usuarios, planes_usuarios, membresias_usuarios, notificaciones y envios_email.
 
-### 4.6 Recordatorios horarios de clases
+### 4.6 Recordatorios de clases
 
-- **Disparador:** Celery Beat una vez por hora, en punto, en Salta.
+- **Disparador:** Celery Beat cada minuto, consultando la anticipación configurada para el tipo de actividad.
 
-1. Selecciona clases Programadas cuyo inicio real aún es futuro y cuya hora de aviso ya llegó: desde una hora antes hasta el inicio, excluido. El cálculo incluye el cambio de fecha y recupera una ejecución demorada.
+1. Selecciona clases Programadas cuyo inicio real aún es futuro y cuya hora de aviso ya llegó: desde la anticipación configurada para clases (sesenta minutos inicialmente) hasta el inicio, excluido. El cálculo incluye el cambio de fecha y recupera una ejecución demorada.
 2. Bloquea las personas involucradas y el evento y revalida estado y horario. Considera profesores y participantes que siguen asignados; excluye No asistirá y cuentas inactivas o sin verificar.
-3. Comprueba la clave de la participación y la cobertura de avisos de creación, asignación o generación dentro de la hora previa, incluidos los pendientes de entrega. No crea otro aviso paralelo cuando el primero debe reintentarse.
+3. Comprueba la clave de la participación y la cobertura de avisos de creación, asignación o generación dentro del plazo de recordatorio configurado, incluidos los pendientes de entrega. No crea otro aviso paralelo cuando el primero debe reintentarse.
 4. Guarda un recordatorio por función e identidad de participación, con fecha, horario, sede, cancha y acceso al detalle. Un nuevo agregado después de una retirada tiene identidad distinta.
 5. Antes de entregar vuelve a comprobar actividad futura, asignación, cuenta y respuesta. Al iniciar o anular la clase se descarta el pendiente; un fallo de transporte conserva su propia política de reintento.
 
-La cola es la fuente del seguimiento, sin marcas de recordatorio en el vínculo. No se agregan revisiones por minuto. La programación y ejecución de campañas se habilita por configuración y permanece apagada hasta la activación coordinada.
+Las claves de aviso y los registros persistidos son la fuente del seguimiento, sin marcas de recordatorio en el vínculo. La revisión cada minuto consulta la configuración vigente. `NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS` controla la programación y ejecución, con valor habilitado por defecto e independiente de la entrega de correo.
 
-- **Datos:** eventos, turnos, clases, clases_profesores, clases_alumnos y envios_email.
+- **Datos:** configuracion_notificaciones, eventos, turnos, clases, clases_profesores, clases_alumnos, notificaciones y envios_email.
 
 ### 4.7 Limpieza de cuentas iniciales sin verificar
 
@@ -2599,16 +2601,16 @@ Si sólo conserva sus roles iniciales, elimina cuenta y roles en una transacció
 
 La verificación usa el mismo bloqueo. Si se verifica primero, la limpieza la conserva; si se elimina primero, la confirmación informa que ya no está disponible. No se rechaza una verificación sólo por edad de la cuenta: hasta su eliminación puede confirmar un enlace vigente. Un reenvío, una corrección y un enlace vencido no reinician los siete días ni eliminan por sí solos la cuenta.
 
-### 4.8 Recordatorios horarios de reservas
+### 4.8 Recordatorios de reservas
 
-- **Disparador:** Celery Beat una vez por hora, en punto, en Salta.
+- **Disparador:** Celery Beat cada minuto, consultando la anticipación configurada para el tipo de actividad.
 
-1. Selecciona reservas Programadas con inicio futuro y hora de aviso cumplida, hasta una hora de anticipación. Usa la fecha y hora real del turno, también al cruzar medianoche o recuperar una tarea demorada.
+1. Selecciona reservas Programadas con inicio futuro y hora de aviso cumplida, hasta la anticipación configurada (sesenta minutos inicialmente). Usa la fecha y hora real del turno, también al cruzar medianoche o recuperar una tarea demorada.
 2. Bajo bloqueo revalida organizador e invitados vinculados. Incluye al organizador, invitados Aceptados e invitados Pendientes; excluye Rechazados, cuentas inactivas y correos sin verificar.
-3. Omite participaciones cubiertas por la confirmación o invitación creada dentro de la hora previa, aunque el aviso siga pendiente. Usa una única clave por organizador–reserva o identidad del invitado.
+3. Omite participaciones cubiertas por la confirmación o invitación creada dentro del plazo de recordatorio configurado, aunque el aviso siga pendiente. Usa una única clave por organizador–reserva o identidad del invitado.
 4. Guarda un aviso de inicio al organizador y Aceptados, y uno de respuesta pendiente a quienes todavía no respondieron. Antes de entregar adapta el texto a la respuesta actual y revalida el vínculo y la actividad.
 5. Aceptar después de recibir el recordatorio de Pendiente no genera otro recordatorio. Rechazar, retirar o alcanzar el inicio descarta un pendiente. Volver a invitar crea una participación nueva con su propia cobertura.
 
-Los enlaces llevan al detalle autorizado de la reserva, sin exponer Caja ni información comercial ajena. No hay revisión por minuto ni marcas paralelas al registro de envíos.
+Los enlaces llevan al detalle autorizado de la reserva, sin exponer Caja ni información comercial ajena. Las claves por participación y el registro de avisos evitan duplicados entre revisiones.
 
-- **Datos:** eventos, turnos, reservas, reservas_invitados y envios_email.
+- **Datos:** configuracion_notificaciones, eventos, turnos, reservas, reservas_invitados, notificaciones y envios_email.

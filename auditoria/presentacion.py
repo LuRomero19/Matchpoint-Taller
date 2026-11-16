@@ -14,6 +14,7 @@ from clases.models import (
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
 )
 from instalaciones.models import Cancha, Sede, SedeHorario
+from comunicaciones.models import ConfiguracionNotificaciones
 from membresias.models import AjusteHorasMembresia, Membresia, MembresiaUsuario, Plan, PlanUsuario
 from reservas.models import Evento, Reserva, ReservaInvitado, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
@@ -22,6 +23,7 @@ from .models import LogAuditoria
 
 
 TIPOS_REGISTRO = {
+    "configuracion_notificaciones": (ConfiguracionNotificaciones, "Reglas de notificación", (), None),
     "movimientos_fondos": (MovimientoFondo, "Movimiento de fondos", ("sesion", "registrado_por"), "caja:movimiento_detalle"),
     "sesiones_caja": (SesionCaja, "Sesión de caja", ("responsable",), "caja:sesion_detalle"),
     "usuarios": (Usuario, "Usuario", (), "usuarios:usuario_detalle"),
@@ -83,6 +85,8 @@ def _relacion(objeto, nombre):
 
 
 def _referencia_breve(objeto):
+    if isinstance(objeto, ConfiguracionNotificaciones):
+        return "Reglas de notificación"
     if isinstance(objeto, (Usuario, Rol, Sede, Plan, Membresia)):
         return str(objeto)
     if isinstance(objeto, UsuarioRol):
@@ -122,6 +126,8 @@ def _referencia_breve(objeto):
 
 
 def _url_registro(objeto):
+    if isinstance(objeto, ConfiguracionNotificaciones):
+        return reverse("comunicaciones:configuracion_notificaciones")
     ruta = TIPOS_REGISTRO[objeto._meta.db_table][3]
     if ruta:
         return reverse(ruta, kwargs={"pk": objeto.pk})

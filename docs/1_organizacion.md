@@ -99,7 +99,7 @@ Anular una contratación conserva su historia y permite un reemplazo para el mis
 
 ## 5. Funcionamiento operativo
 
-Las operaciones confirmadas guardan sus emails junto con la reserva, clase, contratación, ajuste o movimiento vinculado. La generación agrupa clases por profesor y corrida. Las anulaciones individuales y masivas notifican a las personas que siguen vinculadas, con las exclusiones de respuesta correspondientes; la retirada avisa a la persona quitada. La entrega respeta el acceso actual y no bloquea la operación cuando falla el correo.
+Las operaciones confirmadas guardan una notificación interna breve y su email junto con la reserva, clase, contratación, ajuste o movimiento vinculado. Cada usuario habilitado consulta su bandeja personal y el contador de no leídas en la cabecera; la lectura se registra independientemente de la entrega del correo. La generación agrupa clases por profesor y corrida. Las anulaciones individuales y masivas notifican a las personas que siguen vinculadas, con las exclusiones de respuesta correspondientes; la retirada avisa a la persona quitada. La entrega respeta el acceso actual y no bloquea la operación cuando falla el correo.
 
 Las clases conservan al menos un profesor. Administración puede quitar profesores y participantes únicamente antes del inicio de una clase Programada: se elimina la asignación y se avisa a la persona retirada. La lista muestra a quienes siguen asignados; la auditoría identifica las retiradas y su responsable. Las asistencias se conservan independientemente de la asignación. Agregar nuevamente crea una participación nueva, con respuesta inicial Asistirá. Quitar un invitado de una reserva elimina su relación y le avisa; agregarlo de nuevo crea una invitación Pendiente. Cambiar la planilla no envía estos avisos ni modifica las clases concretas ya generadas.
 
@@ -147,7 +147,7 @@ Administración registra todas las contrataciones, renovaciones y cambios de pla
 
 El día 25 de cada mes se habilitan las contrataciones administrativas del mes siguiente. Este límite no impide gestionar operaciones del mes vigente o históricas permitidas ni modificar horarios. Las contrataciones cubren meses completos, sin prorrateo.
 
-Cada contratación tiene una encuesta sobre el mes siguiente: Continuar con el mismo producto, Cambiar de producto, Todavía no sé o No continuar en la academia. El titular habilitado puede responder y cambiar su respuesta desde el 25 del mes cubierto hasta terminar el 5 del siguiente, aunque su contrato esté Vencido. Los Anulados conservan las respuestas para consulta y no admiten responder. Administración consulta la intención y su fecha, sin responder por el titular.
+Cada contratación tiene una encuesta sobre el mes siguiente: Continuar con el mismo producto, Cambiar de producto, Todavía no sé o No continuar en la academia. El titular habilitado puede responder y cambiar su respuesta durante la ventana configurada, inicialmente desde el 25 del mes cubierto hasta terminar el 5 del siguiente, aunque su contrato esté Vencido. Los Anulados conservan las respuestas para consulta y no admiten responder. Administración consulta la intención y su fecha, sin responder por el titular.
 
 La respuesta se consulta primero en el detalle; Responder o Cambiar respuesta abre el formulario. Al cerrar el plazo queda sólo lectura. La falta de respuesta y una contratación del mes siguiente no permiten deducir una intención. Responder no contrata, genera cobros, modifica clases o plantilla ni retira personas. La lista administrativa de continuidad abarca planes y membresías, incluso sin asignaciones en plantilla, y permite filtrar por mes y respuesta.
 
@@ -158,7 +158,7 @@ Administración consulta para el mes elegido quiénes de la plantilla semanal ti
 Los cobros menores al importe contratado pueden ser parciales o responder a acuerdos excepcionales aceptados administrativamente. El concepto del ingreso explica el cobro y las observaciones de la contratación conservan acuerdos generales. No se recalcula deuda ni se modifica el precio contratado a partir de esa explicación.
 
 
-Los recordatorios de clases y reservas se revisan por hora y se envían una hora antes, sin duplicar los avisos de altas tardías. Los pendientes de invitación reciben un recordatorio para responder; No asisto y las invitaciones Rechazadas no reciben recordatorio de inicio. Las encuestas se comunican el 25, último día del mes y 5 del siguiente a las 09:00 de Salta, agrupadas por persona; los dos recordatorios incluyen sólo las que siguen Sin responder.
+Los recordatorios de clases y reservas se revisan cada minuto y utilizan la anticipación configurada, inicialmente sesenta minutos, sin duplicar los avisos de altas tardías. Los pendientes de invitación reciben un recordatorio para responder; No asisto y las invitaciones Rechazadas no reciben recordatorio de inicio. Las encuestas utilizan días y hora configurables, inicialmente el 25, último día del mes y 5 del siguiente a las 09:00 de Salta, agrupadas por persona; los dos recordatorios incluyen sólo las que siguen Sin responder.
 
 ### 5.5 Ajustes de horas y consulta comercial
 

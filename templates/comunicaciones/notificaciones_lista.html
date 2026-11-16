@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Notificaciones | Academia TM{% endblock %}
+{% block clase_contenido %}contenido-notificaciones{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina encabezado-geometrico notificaciones-encabezado">
+    <div><h1>Notificaciones</h1><p class="texto-secundario">Avisos sobre tu cuenta y tu actividad en la academia.</p></div>
+    {% if navegacion_app.notificaciones_no_leidas %}
+    <details class="notificaciones-acciones">
+        <summary class="boton boton-secundario boton-chico">Acciones</summary>
+        <form method="post" action="{% url 'comunicaciones:notificaciones_leer_todas' %}">{% csrf_token %}<button class="boton boton-secundario boton-chico" type="submit">Marcar todas como leídas</button></form>
+    </details>
+    {% endif %}
+</header>
+<nav class="notificaciones-filtros" aria-label="Filtrar notificaciones">
+    <a href="{% url 'comunicaciones:notificaciones_lista' %}"{% if not estado_actual %} aria-current="page"{% endif %}>Todas</a>
+    <a href="?estado=pendientes"{% if estado_actual == 'pendientes' %} aria-current="page"{% endif %}>Sin leer</a>
+    <a href="?estado=leidas"{% if estado_actual == 'leidas' %} aria-current="page"{% endif %}>Leídas</a>
+</nav>
+<section class="tarjeta notificaciones-bandeja" aria-label="Bandeja de notificaciones">
+    <ul class="notificaciones-lista">
+    {% for notificacion in pagina %}
+        <li class="notificacion-fila{% if not notificacion.leida %} notificacion-pendiente{% endif %}">
+            <div class="notificacion-contenido">
+                <div class="notificacion-titulo"><strong>{{ notificacion.get_tipo_display }}</strong>{% if not notificacion.leida %}<span class="notificacion-sin-leer">Sin leer</span>{% endif %}</div>
+                <p>{{ notificacion.mensaje }}</p>
+                <small class="texto-secundario"><time datetime="{{ notificacion.creado_en|date:'c' }}">{{ notificacion.creado_en|date:"d/m/Y H:i" }}</time>{% if notificacion.fecha_lectura %} · Leída el {{ notificacion.fecha_lectura|date:"d/m/Y H:i" }}{% endif %}</small>
+            </div>
+            {% if not notificacion.leida %}
+            <form method="post" action="{% url 'comunicaciones:notificacion_leer' notificacion.pk %}">{% csrf_token %}<button class="boton boton-secundario boton-chico" type="submit">{% if notificacion.ruta %}Abrir{% else %}Marcar leída{% endif %}</button></form>
+            {% elif notificacion.ruta %}<a class="boton boton-secundario boton-chico" href="{{ notificacion.ruta }}">Ver detalle</a>{% endif %}
+        </li>
+    {% empty %}
+        <li class="notificacion-vacia">{% if estado_actual == 'pendientes' %}No tenés notificaciones sin leer.{% elif estado_actual == 'leidas' %}No tenés notificaciones leídas.{% else %}Todavía no tenés notificaciones.{% endif %}</li>
+    {% endfor %}
+    </ul>
+    {% include "componentes/paginacion.html" with pagina=pagina entidad="notificaciones" parametros=filtros only %}
+</section>
+{% endblock %}

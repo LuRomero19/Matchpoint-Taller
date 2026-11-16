@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.urls import reverse
 from django.utils.formats import date_format
 
@@ -5,20 +7,23 @@ from membresias.continuidad import encuesta_abierta, ventana_continuidad
 from membresias.fechas import mes_siguiente
 
 from .mensajes import dato_fecha, dato_importe
+from .configuracion import obtener_configuracion
 from .models import EnvioEmail
-from .servicios import encolar_email
+from .servicios import encolar_aviso
 
 
 def avisar_contratacion(contratacion, tipo):
+    configuracion = obtener_configuracion()
     parrafos = ["Administración registró tu contratación. Esta confirmación no acredita un pago."]
-    incluye_encuesta = encuesta_abierta(contratacion)
+    incluye_encuesta = encuesta_abierta(contratacion, configuracion)
     if incluye_encuesta:
-        _, cierre = ventana_continuidad(contratacion.mes_cubierto)
+        _, cierre = ventana_continuidad(contratacion.mes_cubierto, configuracion)
+        ultimo_dia = cierre - timedelta(days=1)
         parrafos.append(
             f"Ya podés responder la encuesta sobre {date_format(mes_siguiente(contratacion.mes_cubierto), 'F Y')}. "
-            f"Podés responder hasta terminar el día 5 de {date_format(cierre, 'F')}, desde el detalle de tu contratación."
+            f"Podés responder hasta terminar el {date_format(ultimo_dia, 'd/m/Y')}, desde el detalle de tu contratación."
         )
-    return encolar_email(
+    return encolar_aviso(
         clave=f"contratacion:{tipo}:{contratacion.pk}", tipo=EnvioEmail.Tipo.CONTRATACION,
         destinatario=contratacion.usuario.email,
         datos={
@@ -37,7 +42,7 @@ def avisar_contratacion(contratacion, tipo):
 
 
 def avisar_anulacion_contratacion(contratacion, tipo):
-    return encolar_email(
+    return encolar_aviso(
         clave=f"contratacion_anulada:{tipo}:{contratacion.pk}", tipo=EnvioEmail.Tipo.CONTRATACION_ANULADA,
         destinatario=contratacion.usuario.email,
         datos={"vigencia": {"usuario_id": contratacion.usuario_id, "contratacion": {"tipo": tipo, "id": contratacion.pk}},
@@ -48,7 +53,7 @@ def avisar_anulacion_contratacion(contratacion, tipo):
 
 def avisar_ajuste(ajuste):
     contrato = ajuste.membresia_usuario
-    return encolar_email(
+    return encolar_aviso(
         clave=f"ajuste_horas:{ajuste.pk}", tipo=EnvioEmail.Tipo.AJUSTE_HORAS, destinatario=contrato.usuario.email,
         datos={"vigencia": {"usuario_id": contrato.usuario_id}, "mensaje": {
             "parrafos": ["Se registró una reversión de horas." if ajuste.reversion_de_id else "Se registró un ajuste de horas."],

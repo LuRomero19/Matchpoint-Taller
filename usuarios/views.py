@@ -15,7 +15,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods
 
 from auditoria.contexto import contexto_auditoria
-from comunicaciones.servicios import encolar_email
+from comunicaciones.servicios import encolar_aviso
 from clases.validaciones import validar_retiro_rol_profesor
 from membresias.contrataciones import validar_retiro_rol_alumno
 from reservas.models import Evento
@@ -200,7 +200,7 @@ def usuario_cambiar_estado(request, pk):
         usuario.is_active = activar
         usuario.fecha_baja = None if activar else timezone.now()
         usuario.save(update_fields=["is_active", "fecha_baja", "actualizado_en"])
-        encolar_email(clave=f"estado_cuenta:{usuario.pk}:{uuid4()}", tipo="estado_cuenta", destinatario=usuario.email,
+        encolar_aviso(clave=f"estado_cuenta:{usuario.pk}:{uuid4()}", tipo="estado_cuenta", destinatario=usuario.email,
                       datos={"vigencia": {"usuario_id": usuario.pk}, "mensaje": {
                           "parrafos": ["Tu cuenta fue habilitada." if activar else "Tu cuenta fue deshabilitada. Tus relaciones e historial se conservan."],
                       }})

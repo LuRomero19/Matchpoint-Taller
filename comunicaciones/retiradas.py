@@ -1,6 +1,6 @@
 from .mensajes import dato_fecha, dato_hora
 from .models import EnvioEmail
-from .servicios import encolar_email
+from .servicios import encolar_aviso
 
 
 def _avisar_retirada(actividad, relacion, usuario, funcion, tipo):
@@ -10,7 +10,7 @@ def _avisar_retirada(actividad, relacion, usuario, funcion, tipo):
         "invitado": "Se retiró tu invitación a esta reserva.",
     }
     turno = actividad.evento.turno
-    return encolar_email(
+    return encolar_aviso(
         clave=f"{tipo}:{funcion}:{relacion.identidad}",
         tipo=tipo,
         destinatario=usuario.email,

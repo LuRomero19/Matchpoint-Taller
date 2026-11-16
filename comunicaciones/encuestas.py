@@ -11,19 +11,23 @@ from membresias.continuidad import MODELOS_CONTINUIDAD, ZONA_SALTA, encuesta_abi
 from membresias.fechas import mes_siguiente
 
 from .models import EnvioEmail
-from .servicios import encolar_email
+from .configuracion import obtener_configuracion
+from .servicios import encolar_aviso
 
 
-def campana_del_dia():
+def campana_del_dia(configuracion=None):
+    configuracion = configuracion or obtener_configuracion()
     ahora = timezone.localtime(timezone.now(), ZONA_SALTA)
-    if ahora.hour < 9:
+    if ahora.time() < configuracion.hora_continuidad:
         return None
     dia = ahora.date()
-    if dia.day == 25:
+    if dia.day == configuracion.dia_apertura_continuidad:
         return dia, dia.replace(day=1), 'apertura'
-    if dia.day == monthrange(dia.year, dia.month)[1]:
+    ultimo_dia = monthrange(dia.year, dia.month)[1]
+    dia_recordatorio = min(configuracion.dia_recordatorio_continuidad or ultimo_dia, ultimo_dia)
+    if dia.day == dia_recordatorio:
         return dia, dia.replace(day=1), 'recordatorio'
-    if dia.day == 5:
+    if dia.day == configuracion.dia_cierre_continuidad:
         return dia, (dia.replace(day=1)-timedelta(days=1)).replace(day=1), 'ultimo_dia'
     return None
 
@@ -36,9 +40,9 @@ def apertura_cubierta(tipo, contrato):
 
 
 @transaction.atomic
-def _encolar_para_titular(usuario_id, campana):
+def _encolar_para_titular(usuario_id, campana, configuracion):
     usuario = bloquear_usuarios({usuario_id}).get(usuario_id)
-    if usuario is None or not usuario.esta_habilitado or campana_del_dia() != campana:
+    if usuario is None or not usuario.esta_habilitado or campana_del_dia(configuracion) != campana:
         return 0
     fecha, mes, aviso = campana
     clave = f'continuidad:{usuario.pk}:{fecha.isoformat()}'
@@ -48,14 +52,15 @@ def _encolar_para_titular(usuario_id, campana):
     for tipo, modelo in MODELOS_CONTINUIDAD.items():
         contratos = modelo.objects.select_for_update(of=('self',)).select_related(tipo).filter(usuario=usuario, mes_cubierto=mes).exclude(estado='anulado')
         for contrato in contratos:
-            if not encuesta_abierta(contrato) or (aviso != 'apertura' and contrato.respuesta_continuidad):
+            if not encuesta_abierta(contrato, configuracion) or (aviso != 'apertura' and contrato.respuesta_continuidad):
                 continue
             if aviso == 'apertura' and apertura_cubierta(tipo, contrato):
                 continue
-            _, cierre = ventana_continuidad(mes)
+            _, cierre = ventana_continuidad(mes, configuracion)
+            ultimo_dia = cierre - timedelta(days=1)
             referencias.append({'tipo': tipo, 'id': contrato.pk, 'aviso': aviso})
             texto = ('Hoy es el último día para responder, hasta terminar el día.' if aviso == 'ultimo_dia' else
-                     f'Podés responder hasta el 5 de {date_format(cierre, "F")}, inclusive.')
+                     f'Podés responder hasta el {date_format(ultimo_dia, "d/m/Y")}, inclusive.')
             apartados.append({'titulo': contrato.producto.nombre,
                               'parrafos': [f'Continuidad para {date_format(mes_siguiente(mes), "F Y")}.', texto],
                               'acciones': [{'texto': 'Responder mi encuesta', 'ruta': reverse(f'membresias:mi_{tipo}_contratado', args=[contrato.pk])}]})
@@ -63,7 +68,7 @@ def _encolar_para_titular(usuario_id, campana):
         return 0
     fin = datetime.combine(fecha+timedelta(days=1), time.min, tzinfo=ZONA_SALTA)
     texto = 'Abrió la encuesta de continuidad.' if aviso == 'apertura' else 'Todavía falta tu respuesta de continuidad.'
-    encolar_email(clave=clave, tipo='continuidad', destinatario=usuario.email,
+    encolar_aviso(clave=clave, tipo='continuidad', destinatario=usuario.email,
                   datos={'vigencia': {'usuario_id': usuario.pk, 'vencer_en': fin.isoformat(),
                                      'campana_fecha': fecha.isoformat(), 'encuestas': referencias},
                          'mensaje': {'parrafos': [texto], 'apartados': apartados}})
@@ -71,7 +76,8 @@ def _encolar_para_titular(usuario_id, campana):
 
 
 def encolar_encuestas_continuidad():
-    campana = campana_del_dia()
+    configuracion = obtener_configuracion()
+    campana = campana_del_dia(configuracion)
     if campana is None:
         return 0
     _, mes, aviso = campana
@@ -81,4 +87,4 @@ def encolar_encuestas_continuidad():
         if aviso != 'apertura':
             contratos = contratos.filter(respuesta_continuidad='')
         ids.update(contratos.values_list('usuario_id', flat=True))
-    return sum(_encolar_para_titular(pk, campana) for pk in sorted(ids))
+    return sum(_encolar_para_titular(pk, campana, configuracion) for pk in sorted(ids))

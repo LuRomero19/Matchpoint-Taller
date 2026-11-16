@@ -61,6 +61,14 @@ def encolar_email(*, clave, tipo, destinatario, datos):
     return envio
 
 
+def encolar_aviso(*, clave, tipo, destinatario, datos):
+    from .notificaciones import registrar_notificacion
+
+    envio = encolar_email(clave=clave, tipo=tipo, destinatario=destinatario, datos=datos)
+    registrar_notificacion(envio)
+    return envio
+
+
 def _registrar_fallo(envio, ahora, error):
     envio.estado = EnvioEmail.Estado.FALLIDO if envio.intentos >= 4 else EnvioEmail.Estado.PENDIENTE
     if envio.estado == EnvioEmail.Estado.PENDIENTE:

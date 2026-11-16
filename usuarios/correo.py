@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from common.bloqueos import bloquear_usuarios
-from comunicaciones.servicios import encolar_email
+from comunicaciones.servicios import encolar_aviso
 from comunicaciones.models import EnvioEmail
 
 from .acceso import exigir_acceso_operativo
@@ -22,7 +22,7 @@ def _aviso_correo(usuario, direccion, tipo, clave, texto, *, revision=None, conf
     if confirmar:
         datos["enlace"] = {"ruta": "/cuentas/confirmar-correo/", "proposito": "cambio_correo", "datos": {"usuario_id": usuario.pk, "correo": direccion, "solicitud": str(revision)}}
         datos["mensaje"]["acciones"] = [{"texto": "Confirmar mi correo", "enlace_acceso": True}]
-    return encolar_email(clave=clave, tipo=tipo, destinatario=direccion, datos=datos)
+    return encolar_aviso(clave=clave, tipo=tipo, destinatario=direccion, datos=datos)
 
 
 @transaction.atomic

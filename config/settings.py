@@ -213,12 +213,12 @@ if EMAILS_HABILITADOS:
         "schedule": 60.0,
     }
 
-EMAILS_TAREAS_PROGRAMADAS_HABILITADAS = os.environ.get("EMAILS_TAREAS_PROGRAMADAS_HABILITADAS", "0") == "1"
-if EMAILS_TAREAS_PROGRAMADAS_HABILITADAS:
+NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS = os.environ.get("NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS", "1") == "1"
+if NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS:
     CELERY_BEAT_SCHEDULE.update({
-        "recordar-clases-cada-hora": {"task": "clases.tasks.recordar_clases", "schedule": crontab(minute=0)},
-        "recordar-reservas-cada-hora": {"task": "reservas.tasks.recordar_reservas", "schedule": crontab(minute=0)},
-        "continuidad-cada-dia": {"task": "membresias.tasks.avisar_continuidad", "schedule": crontab(hour=9, minute=0)},
+        "recordar-clases": {"task": "clases.tasks.recordar_clases", "schedule": 60.0},
+        "recordar-reservas": {"task": "reservas.tasks.recordar_reservas", "schedule": 60.0},
+        "avisar-continuidad": {"task": "membresias.tasks.avisar_continuidad", "schedule": 60.0},
     })
 
 CUENTAS_LIMPIEZA_HABILITADA = os.environ.get("CUENTAS_LIMPIEZA_HABILITADA", "0") == "1"

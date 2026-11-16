@@ -1,5 +1,6 @@
 from django.urls import reverse
 
+from comunicaciones.models import Notificacion
 from usuarios.models import Rol
 
 
@@ -18,6 +19,7 @@ DESTINOS_NAVEGACION = {
     "clases:feriado_lista": ("calendario", "academia"),
     "membresias:oferta": ("libro", "academia"),
     "comunicaciones:envios_lista": ("correo", "seguimiento"),
+    "comunicaciones:configuracion_notificaciones": ("correo", "seguimiento"),
     "auditoria:auditoria_lista": ("auditoria", "seguimiento"),
 }
 
@@ -146,8 +148,13 @@ def navegacion(request):
         })
     if administrador:
         administracion.append(enlace(
-            "Envíos de email", "comunicaciones:envios_lista", namespace == "comunicaciones",
+            "Envíos de email", "comunicaciones:envios_lista", nombre_vista == "comunicaciones:envios_lista",
             "Consulta de entregas y fallos de los emails de la academia.",
+        ))
+        administracion.append(enlace(
+            "Reglas de notificación", "comunicaciones:configuracion_notificaciones",
+            nombre_vista == "comunicaciones:configuracion_notificaciones",
+            "Anticipación de recordatorios y calendario de continuidad.",
         ))
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
@@ -163,6 +170,9 @@ def navegacion(request):
         if items:
             grupos.append({"codigo": codigo, "titulo": titulo, "items": items})
     return {"navegacion_app": {
+        "mostrar_notificaciones": usuario.esta_habilitado and not solo_marca,
+        "notificaciones_no_leidas": Notificacion.objects.filter(destinatario=usuario, leida=False).count()
+            if usuario.esta_habilitado and not solo_marca else 0,
         "mostrar_sidebar": not solo_marca and (usuario.esta_habilitado or Rol.PUBLICO in roles),
         "solo_marca": solo_marca, "grupos": grupos,
         "mostrar_perfil": usuario.esta_habilitado or Rol.PUBLICO in roles,

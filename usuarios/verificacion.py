@@ -7,7 +7,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
-from comunicaciones.servicios import encolar_email
+from comunicaciones.servicios import encolar_aviso
 
 from .models import Rol, Usuario, UsuarioRol
 
@@ -19,7 +19,7 @@ def _encolar_verificacion(usuario, tipo, clave):
     parrafos = ["Verificá tu correo para habilitar las operaciones de tu cuenta. El enlace vence a los 15 minutos de su emisión."]
     if usuario.debe_cambiar_contrasena:
         parrafos.append("También deberás reemplazar tu contraseña provisoria. Si no la conocés, después de verificar podrás recuperar tu contraseña.")
-    return encolar_email(
+    return encolar_aviso(
         clave=clave, tipo=tipo, destinatario=usuario.email,
         datos={
             "mensaje": {"parrafos": parrafos, "acciones": [{"texto": "Verificar mi correo", "enlace_acceso": True}]},

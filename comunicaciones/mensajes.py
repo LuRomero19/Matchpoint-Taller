@@ -262,9 +262,11 @@ def preparar_mensaje(envio):
         envio.datos["mensaje"]["apartados"] = apartados
         envio.datos["vigencia"]["clases_generadas"] = referencias
     if envio.tipo == EnvioEmail.Tipo.CONTINUIDAD:
+        from .configuracion import obtener_configuracion
         from .encuestas import campana_del_dia
         from membresias.continuidad import MODELOS_CONTINUIDAD, encuesta_abierta
-        campana = campana_del_dia()
+        configuracion = obtener_configuracion()
+        campana = campana_del_dia(configuracion)
         if campana is None or envio.datos["vigencia"].get("campana_fecha") != campana[0].isoformat():
             raise DescartarEnvio("La fecha de la campaña terminó o aún no comenzó.")
         envio = copy(envio)
@@ -274,7 +276,7 @@ def preparar_mensaje(envio):
             contrato = MODELOS_CONTINUIDAD[referencia["tipo"]].objects.filter(
                 pk=referencia["id"], usuario=usuario, mes_cubierto=campana[1],
             ).first()
-            if contrato is not None and encuesta_abierta(contrato) and referencia["aviso"] == campana[2] and (
+            if contrato is not None and encuesta_abierta(contrato, configuracion) and referencia["aviso"] == campana[2] and (
                 referencia["aviso"] == "apertura" or not contrato.respuesta_continuidad
             ):
                 apartados.append(apartado)
@@ -290,7 +292,7 @@ def preparar_mensaje(envio):
         relacion = ReservaInvitado.objects.get(reserva_id=referencia["actividad_id"], usuario=usuario, identidad=referencia["identidad"])
         envio = copy(envio)
         envio.datos = deepcopy(envio.datos)
-        envio.datos["mensaje"]["parrafos"] = [texto_recordatorio_invitado(relacion.respuesta)]
+        envio.datos["mensaje"]["parrafos"] = [texto_recordatorio_invitado(relacion.respuesta, relacion.reserva.evento.turno.hora_inicio)]
     return renderizar_mensaje(envio, usuario=usuario)
 
 

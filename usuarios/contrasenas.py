@@ -8,7 +8,7 @@ from django.views.decorators.debug import sensitive_variables
 
 from auditoria.contexto import contexto_auditoria
 from auditoria.models import LogAuditoria
-from comunicaciones.servicios import encolar_email
+from comunicaciones.servicios import encolar_aviso
 
 from .models import Usuario
 from .tokens import TokenRecuperacion, huella_recuperacion
@@ -21,7 +21,7 @@ RESPUESTA_RECUPERACION = "Si la cuenta está habilitada y su correo está verifi
 def solicitar_recuperacion(email):
     usuario = Usuario.objects.select_for_update().filter(email__iexact=email, is_active=True, correo_verificado_en__isnull=False).first()
     if usuario is not None and usuario.has_usable_password():
-        encolar_email(
+        encolar_aviso(
             clave=f"recuperacion:{usuario.pk}:{uuid4()}", tipo="recuperacion", destinatario=usuario.email,
             datos={
                 "mensaje": {"parrafos": ["Solicitaste recuperar tu contraseña. El enlace vence a los quince minutos de su emisión. Si no lo solicitaste, podés ignorar este mensaje."], "acciones": [{"texto": "Elegir una contraseña", "enlace_acceso": True}]},
@@ -52,7 +52,7 @@ def guardar_contrasena_propia(usuario_id, nueva_contrasena, *, contrasena_actual
         usuario.set_password(nueva_contrasena)
         usuario.debe_cambiar_contrasena = False
         usuario.save(update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"])
-        encolar_email(
+        encolar_aviso(
             clave=f"contrasena:{usuario.pk}:{uuid4()}", tipo="contrasena_cambiada", destinatario=usuario.email,
             datos={"vigencia": {"usuario_id": usuario.pk}, "mensaje": {
                 "parrafos": ["Cambiaste tu contraseña. Si no realizaste este cambio, recuperá el acceso a tu cuenta."],

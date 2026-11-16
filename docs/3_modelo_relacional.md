@@ -13,7 +13,7 @@ Las reglas de negocio, permisos, validaciones de operaciones, confirmaciones y p
 ### 2.1 Nombres e identificadores
 
 - Tablas y columnas utilizan `snake_case`; los nombres de tablas están en plural.
-- Las claves primarias simples son `bigint GENERATED ALWAYS AS IDENTITY`, salvo `envios_email`, que identifica cada aviso mediante `uuid`.
+- Las claves primarias simples son `bigint GENERATED ALWAYS AS IDENTITY`, salvo `envios_email`, que identifica cada aviso mediante `uuid`, y `configuracion_notificaciones`, que utiliza la clave fija `smallint` 1.
 - Las tablas de relación utilizan claves primarias compuestas cuando corresponde.
 - Las claves foráneas terminan en `_id`.
 
@@ -759,12 +759,52 @@ Los recordatorios de clase tienen clave por función y UUID de participación; l
 
 Los emails de continuidad tienen clave por usuario y fecha de campaña. `vigencia.encuestas` conserva tipo, identificador de contratación y clase de aviso por apartado; `campana_fecha` y `vencer_en` acotan la entrega a ese día de Salta. La entrega filtra encuestas Anuladas, cerradas o respondidas cuando es un recordatorio, sin modificar la evidencia persistida. `incluye_encuesta` en la confirmación comercial cubre la apertura de una contratación tardía. No hay marcas paralelas en las contrataciones.
 
-Los avisos de reserva guardan su referencia y los de invitados la identidad de participación. Los agrupados de generación conservan una referencia de clase e identidad docente por apartado; al entregar se filtran los apartados sin vigencia sin reescribir el contenido persistido. `cubre_recordatorio` registra que un aviso de creación o asignación se originó dentro de la hora previa, por participación; no sustituye el estado de entrega del aviso. Las claves de respuestas y cambios de cancha distinguen transiciones efectivas aunque compartan marca temporal.
+Los avisos de reserva guardan su referencia y los de invitados la identidad de participación. Los agrupados de generación conservan una referencia de clase e identidad docente por apartado; al entregar se filtran los apartados sin vigencia sin reescribir el contenido persistido. `cubre_recordatorio` registra que un aviso de creación o asignación se originó dentro del plazo de recordatorio configurado, por participación; no sustituye el estado de entrega del aviso. Las claves de respuestas y cambios de cancha distinguen transiciones efectivas aunque compartan marca temporal.
+
+### 4.31 `notificaciones`
+
+Bandeja personal de avisos internos. Su destinatario es una cuenta de `usuarios`; la asignación de roles no multiplica el aviso. La notificación y el email se guardan junto con el hecho confirmado y tienen seguimiento independiente.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Descripción |
+|---|---|---|---|---|---|
+| PK | `id` | `bigint` identity | | | Identidad de la notificación. |
+| | `clave` | `varchar(250)` | | Sí | Hecho efectivo y destinatario, sin secretos. |
+| FK | `destinatario_id` | `bigint` | | | Cuenta que recibe el aviso. |
+| | `tipo` | `varchar(32)` | | | Tipo funcional compartido con el catálogo de avisos. |
+| | `mensaje` | `varchar(500)` | | | Frase breve del hecho comunicado, sin los datos operativos disponibles en el detalle. |
+| | `ruta` | `varchar(500)` | | | Ruta interna opcional, vacía cuando no corresponde un destino. |
+| | `creado_en` | `timestamptz` | | | Creación junto con la operación. |
+| | `leida` | `boolean` | | | Falso hasta registrar la lectura. |
+| | `fecha_lectura` | `timestamptz` | Sí | | Primera lectura del titular. |
+
+`notificacion_lectura_coherente` exige fecha de lectura presente únicamente cuando `leida` es verdadero. La clave única evita duplicados ante solicitudes concurrentes; repetir la lectura no reemplaza su fecha. Un índice por destinatario, fecha e identificador descendentes permite paginar la bandeja; un índice parcial por destinatario para no leídas permite contar pendientes. El destinatario tiene eliminación en cascada, y las notificaciones no se crean para cuentas iniciales sin verificar.
+
+La ruta no contiene tokens ni URLs externas. Los destinos aplican sus propios permisos actuales; la notificación conserva el resumen histórico sin restaurar relaciones retiradas. No contiene el cuerpo completo del email ni depende de una FK al envío. Las claves y el tipo relacionan conceptualmente ambos canales sin mezclar lectura con entrega. Los enlaces de verificación, confirmación y recuperación pertenecen exclusivamente a `envios_email`.
+
+### 4.32 `configuracion_notificaciones`
+
+Parámetros funcionales compartidos por las notificaciones internas, la preparación de emails y la ventana de respuesta de continuidad. La migración crea la fila única; las consultas no crean valores implícitos ni guardan copias en memoria del proceso.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Valor inicial y significado |
+|---|---|---|---|---|---|
+| PK | `id` | `smallint` | | | `1`, única clave admitida. |
+| | `anticipacion_clases_minutos` | `smallint` | | | `60`, anticipación del recordatorio de clases. |
+| | `anticipacion_reservas_minutos` | `smallint` | | | `60`, anticipación del recordatorio de reservas. |
+| | `dia_apertura_continuidad` | `smallint` | | | `25`, apertura en el mes cubierto. |
+| | `dia_recordatorio_continuidad` | `smallint` | | | `0`, último día real del mes; del 1 al 31, día elegido ajustado al último real si no existe. |
+| | `dia_cierre_continuidad` | `smallint` | | | `5`, último día inclusivo del mes siguiente para responder y recibir el segundo recordatorio. |
+| | `hora_continuidad` | `time` | | | `09:00`, hora de avisos de campaña en Salta. |
+| | `actualizado_en` | `timestamptz` | | | Última modificación efectiva de cualquiera de las reglas. |
+
+Las restricciones exigen la clave 1, anticipaciones entre 1 y 1440 minutos, apertura entre 1 y 27, cierre entre 1 y 26 y menor a apertura, y primer recordatorio igual a 0 o entre apertura más uno y 31. La apertura hasta el 27 garantiza un día posterior incluso en febrero; ajustar un recordatorio inexistente al último del mes conserva esa separación. La hora tiene segundos cero y el formulario admite minutos. La fila no ofrece alta ni eliminación desde la aplicación.
+
+Cada parámetro se edita y guarda por separado. La edición bloquea al administrador y luego la configuración, comprueba una firma del campo y su valor consultado y actualiza únicamente ese campo y `actualizado_en`, con auditoría mediante el trigger común `AFTER UPDATE OR DELETE`. Una modificación de otra regla no invalida la firma; una modificación del mismo parámetro exige renovar la consulta. Los días de campaña se validan también contra los valores vigentes de las reglas relacionadas. Guardar los mismos parámetros no modifica fecha ni genera un registro de diferencias. El historial identifica la configuración y permite consultar sus valores anteriores y actuales. Las notificaciones y emails preparados conservan el contenido capturado; las evaluaciones siguientes consultan la fila vigente.
 
 ## 5. Dependencias referenciales y eliminación
 
 - Las referencias a usuarios, sedes, canchas, productos y contrataciones protegen los registros que tienen datos dependientes. Cada contratación referencia obligatoriamente a su usuario y producto.
 - `usuarios_roles` utiliza cascada desde `usuarios`; `rol_id` protege el registro del catálogo mientras tenga asignaciones.
+- `notificaciones.destinatario_id` utiliza cascada desde `usuarios`; la bandeja pertenece a su titular y no condiciona la persistencia técnica de los emails.
 - `turnos_planilla_profesores` y `turnos_planilla_alumnos` utilizan cascada desde `turnos_planilla`.
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.

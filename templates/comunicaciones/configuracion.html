@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titulo %}Reglas de notificación | Academia TM{% endblock %}
+{% block clase_contenido %}contenido-notificaciones{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina encabezado-geometrico notificaciones-encabezado">
+    <div><h1>Reglas de notificación</h1><p class="texto-secundario">Plazos de recordatorios y calendario de continuidad.</p></div>
+</header>
+<section class="tarjeta" aria-label="Reglas vigentes de notificación">
+    <dl class="notificaciones-reglas">
+        {% for regla in reglas %}
+        <div id="regla-{{ regla.campo }}">
+            <dt>{{ regla.titulo }}</dt>
+            <dd>{{ regla.valor }}</dd>
+            {% if regla.campo == regla_actual %}
+            <dd class="notificacion-regla-formulario">
+                <form method="post" novalidate aria-label="Modificar {{ regla.titulo }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="regla" value="{{ regla.campo }}">
+                    {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+                    {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+                    {% for campo in formulario.visible_fields %}
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                        {{ campo }}
+                        {% if campo.help_text %}<p class="texto-secundario" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</p>{% endif %}
+                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    <div class="acciones-formulario"><button class="boton boton-primario boton-chico" type="submit">Guardar regla</button><a class="boton boton-secundario boton-chico" href="{% url 'comunicaciones:configuracion_notificaciones' %}#regla-{{ regla.campo }}">Cancelar</a></div>
+                </form>
+            </dd>
+            {% else %}
+            <dd class="notificacion-regla-accion"><a class="boton boton-secundario boton-chico" href="?editar={{ regla.campo }}#regla-{{ regla.campo }}" aria-label="Modificar {{ regla.titulo }}">Modificar</a></dd>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </dl>
+</section>
+<p class="texto-secundario">Cada regla se guarda por separado. La confirmación o asignación dentro del plazo de recordatorio cubre el aviso de esa participación. Los recordatorios de continuidad incluyen sólo a quienes no respondieron; un día inexistente se ajusta al último del mes.</p>
+<p class="texto-secundario">Los cambios se aplican en las próximas evaluaciones y a la ventana de respuesta de continuidad. Los avisos guardados conservan su texto y no se repiten por modificar estas reglas.</p>
+<p class="texto-secundario">Las reglas se revisan cada minuto. Última modificación: {{ configuracion.actualizado_en|date:"d/m/Y H:i" }}.</p>
+{% endblock %}

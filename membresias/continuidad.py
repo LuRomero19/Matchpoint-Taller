@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from common.bloqueos import bloquear_usuarios
+from comunicaciones.configuracion import obtener_configuracion
 from usuarios.acceso import exigir_acceso_operativo
 from usuarios.models import Rol
 
@@ -18,23 +19,26 @@ MODELOS_CONTINUIDAD = {"plan": PlanUsuario, "membresia": MembresiaUsuario}
 ZONA_SALTA = ZoneInfo("America/Argentina/Salta")
 
 
-def ventana_continuidad(mes):
-    apertura = datetime.combine(mes.replace(day=25), time.min, tzinfo=ZONA_SALTA)
-    cierre = datetime.combine(mes_siguiente(mes).replace(day=6), time.min, tzinfo=ZONA_SALTA)
+def ventana_continuidad(mes, configuracion=None):
+    configuracion = configuracion or obtener_configuracion()
+    apertura = datetime.combine(mes.replace(day=configuracion.dia_apertura_continuidad), time.min, tzinfo=ZONA_SALTA)
+    ultimo_dia = mes_siguiente(mes).replace(day=configuracion.dia_cierre_continuidad)
+    cierre = datetime.combine(ultimo_dia + timedelta(days=1), time.min, tzinfo=ZONA_SALTA)
     return apertura, cierre
 
 
-def encuesta_abierta(contratacion):
-    apertura, cierre = ventana_continuidad(contratacion.mes_cubierto)
+def encuesta_abierta(contratacion, configuracion=None):
+    apertura, cierre = ventana_continuidad(contratacion.mes_cubierto, configuracion)
     return contratacion.estado != contratacion.Estado.ANULADO and apertura <= timezone.now() < cierre
 
 
 def contexto_continuidad(contratacion, actor, *, tipo):
-    apertura, cierre = ventana_continuidad(contratacion.mes_cubierto)
+    configuracion = obtener_configuracion()
+    apertura, cierre = ventana_continuidad(contratacion.mes_cubierto, configuracion)
     puede_responder = (
         actor.pk == contratacion.usuario_id and actor.esta_habilitado
         and not actor.debe_cambiar_contrasena and not actor.tiene_rol(Rol.ADMINISTRADOR)
-        and encuesta_abierta(contratacion)
+        and encuesta_abierta(contratacion, configuracion)
     )
     return {"continuidad": {
         "mes_consultado": mes_siguiente(contratacion.mes_cubierto),
@@ -62,7 +66,8 @@ def responder_continuidad(actor, contratacion_id, respuesta, *, tipo):
     contratacion = modelo.objects.select_for_update().get(pk=contratacion_id)
     if contratacion.usuario_id != actor.pk:
         raise PermissionDenied
-    if not encuesta_abierta(contratacion):
+    configuracion = obtener_configuracion()
+    if not encuesta_abierta(contratacion, configuracion):
         raise ValidationError("La encuesta no está disponible para responder.")
     if respuesta not in RespuestaContinuidad.values:
         raise ValidationError("Elegí una de las respuestas disponibles.")
@@ -72,6 +77,6 @@ def responder_continuidad(actor, contratacion_id, respuesta, *, tipo):
         contratacion.respuesta_continuidad = respuesta
         contratacion.continuidad_respondida_en = timezone.now()
         contratacion.save(update_fields=["respuesta_continuidad", "continuidad_respondida_en", "actualizado_en"])
-        if not encuesta_abierta(contratacion):
+        if not encuesta_abierta(contratacion, configuracion):
             raise ValidationError("El plazo para responder terminó. No se guardó el cambio.")
     return contratacion

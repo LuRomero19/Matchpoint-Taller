@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/ayuda-contextual.css' %}">
     <link rel="stylesheet" href="{% static 'css/estados.css' %}">
     <link rel="stylesheet" href="{% static 'css/encabezados.css' %}">
+    <link rel="stylesheet" href="{% static 'css/notificaciones.css' %}">
     {% block estilos %}{% endblock %}
     <script src="{% static 'js/navegacion.js' %}" defer></script>
     <script src="{% static 'js/pestanas.js' %}" defer></script>
@@ -28,6 +29,9 @@
     {% block navegacion %}
         {% if navegacion_app.mostrar_sidebar %}
             {% include "componentes/sidebar.html" %}
+            {% if navegacion_app.mostrar_notificaciones %}
+            <header class="notificaciones-cabecera">{% include "componentes/notificaciones_acceso.html" %}</header>
+            {% endif %}
         {% else %}
             <header class="barra-superior">
                 <div class="contenedor cabecera-simple">
@@ -35,6 +39,7 @@
                         <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
                         <span>Academia TM</span>
                     </a>
+                    {% include "componentes/notificaciones_acceso.html" %}
                     {% if request.user.is_authenticated and not navegacion_app.solo_marca %}
                         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="cabecera-salir" type="submit">Cerrar sesión</button></form>
                     {% endif %}

@@ -1,5 +1,8 @@
+from datetime import time
 from uuid import uuid4
 
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -77,4 +80,73 @@ class EnvioEmail(models.Model):
                 models.Q(estado="enviado", aceptado_en__isnull=False)
                 | (~models.Q(estado="enviado") & models.Q(aceptado_en__isnull=True))
             ), name="envio_aceptacion_coherente"),
+        ]
+
+
+class Notificacion(models.Model):
+    clave = models.CharField(max_length=250, unique=True)
+    destinatario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notificaciones")
+    tipo = models.CharField(max_length=32, choices=EnvioEmail.Tipo.choices)
+    mensaje = models.CharField(max_length=500)
+    ruta = models.CharField(max_length=500, blank=True)
+    creado_en = models.DateTimeField(default=timezone.now, editable=False)
+    leida = models.BooleanField(default=False)
+    fecha_lectura = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "notificaciones"
+        ordering = ("-creado_en", "-pk")
+        default_permissions = ()
+        indexes = [
+            models.Index(fields=("destinatario", "-creado_en", "-id"), name="notificaciones_bandeja_idx"),
+            models.Index(fields=("destinatario",), condition=models.Q(leida=False), name="notificaciones_no_leidas_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=(
+                models.Q(leida=False, fecha_lectura__isnull=True)
+                | models.Q(leida=True, fecha_lectura__isnull=False)
+            ), name="notificacion_lectura_coherente"),
+        ]
+
+
+class ConfiguracionNotificaciones(models.Model):
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    anticipacion_clases_minutos = models.PositiveSmallIntegerField(
+        "Anticipación de clases (minutos)", default=60, validators=[MinValueValidator(1), MaxValueValidator(1440)],
+    )
+    anticipacion_reservas_minutos = models.PositiveSmallIntegerField(
+        "Anticipación de reservas (minutos)", default=60, validators=[MinValueValidator(1), MaxValueValidator(1440)],
+    )
+    dia_apertura_continuidad = models.PositiveSmallIntegerField(
+        "Día de apertura de continuidad", default=25, validators=[MinValueValidator(1), MaxValueValidator(27)],
+    )
+    dia_recordatorio_continuidad = models.PositiveSmallIntegerField(
+        "Día de recordatorio de continuidad", default=0,
+        choices=[(0, "Último día del mes"), *[(dia, str(dia)) for dia in range(1, 32)]],
+    )
+    dia_cierre_continuidad = models.PositiveSmallIntegerField(
+        "Último día de respuesta del mes siguiente", default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(26)],
+    )
+    hora_continuidad = models.TimeField("Hora de avisos de continuidad", default=time(9))
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "configuracion_notificaciones"
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(condition=models.Q(pk=1), name="notificaciones_config_unica"),
+            models.CheckConstraint(condition=(
+                models.Q(anticipacion_clases_minutos__range=(1, 1440))
+                & models.Q(anticipacion_reservas_minutos__range=(1, 1440))
+            ), name="notificaciones_anticipacion"),
+            models.CheckConstraint(condition=(
+                models.Q(dia_apertura_continuidad__range=(1, 27))
+                & models.Q(dia_cierre_continuidad__range=(1, 26))
+                & models.Q(dia_cierre_continuidad__lt=models.F("dia_apertura_continuidad"))
+                & models.Q(dia_recordatorio_continuidad__range=(0, 31))
+                & (models.Q(dia_recordatorio_continuidad=0)
+                   | models.Q(dia_recordatorio_continuidad__gt=models.F("dia_apertura_continuidad")))
+            ), name="notificaciones_campana_valida"),
+            models.CheckConstraint(condition=models.Q(hora_continuidad__second=0), name="notificaciones_hora_minutos"),
         ]
