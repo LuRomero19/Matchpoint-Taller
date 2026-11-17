@@ -48,7 +48,7 @@
     <section class="tarjeta inicio-continuidad" aria-labelledby="inicio-continuidad-titulo">
         <header class="inicio-seccion-cabecera"><h2 id="inicio-continuidad-titulo">Continuidad</h2><span class="inicio-estado{% if encuestas.abiertas %} inicio-estado-activo{% endif %}">{% if encuestas.abiertas %}Abierta{% else %}Cerrada{% endif %}</span></header>
         <div class="inicio-cuerpo">
-            <p class="inicio-valor">{{ encuestas.dias }} <span>día{{ encuestas.dias|pluralize }}</span></p>
+            <p class="inicio-valor"><span class="inicio-valor-numero">{{ encuestas.dias }}</span> <span>día{{ encuestas.dias|pluralize }}</span></p>
             <p class="inicio-descripcion">Para {% if encuestas.abiertas %}el cierre{% else %}la apertura{% endif %} de las encuestas</p>
         </div>
         <footer class="inicio-pie"><a href="{% url 'membresias:continuidad_lista' %}">Ver continuidad</a></footer>
