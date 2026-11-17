@@ -101,6 +101,7 @@ class MovimientoFondo(models.Model):
     anulado_en = models.DateTimeField(null=True, blank=True)
     anulado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="movimientos_anulados", null=True, blank=True)
     motivo_anulacion = models.TextField(blank=True, default="")
+    motivo_excedente = models.TextField(blank=True, default="")
 
     class Meta:
         db_table = "movimientos_fondos"
@@ -110,6 +111,12 @@ class MovimientoFondo(models.Model):
         verbose_name_plural = "movimientos de fondos"
         indexes = [models.Index(fields=("sesion", "id")), models.Index(fields=("creado_en",))]
         constraints = [
+            models.CheckConstraint(condition=(
+                models.Q(motivo_excedente="")
+                | (models.Q(clase="ingreso", motivo_excedente__regex=r"\S") & (
+                    models.Q(plan_usuario__isnull=False) | models.Q(membresia_usuario__isnull=False) | models.Q(reserva__isnull=False)
+                ))
+            ), name="caja_excedente_vinculado"),
             models.CheckConstraint(condition=models.Q(clase__in=("ingreso", "egreso", "aporte", "retiro"), monto__gt=0, concepto__regex=r"\S"), name="caja_movimiento_valido"),
             models.CheckConstraint(condition=(
                 models.Q(medio_pago="efectivo")
@@ -155,3 +162,28 @@ class MovimientoFondo(models.Model):
 
     def __str__(self):
         return self.numero
+
+
+class AjusteImporte(models.Model):
+    operacion_id = models.UUIDField(unique=True)
+    plan_usuario = models.ForeignKey("membresias.PlanUsuario", on_delete=models.PROTECT, related_name="ajustes_importe", null=True, blank=True)
+    membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="ajustes_importe", null=True, blank=True)
+    reserva = models.ForeignKey("reservas.Reserva", on_delete=models.PROTECT, related_name="ajustes_importe", null=True, blank=True)
+    importe_anterior = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
+    importe_nuevo = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
+    motivo = models.TextField()
+    registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="ajustes_importe_registrados")
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ajustes_importes"
+        ordering = ("-creado_en", "-pk")
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(condition=(
+                models.Q(plan_usuario__isnull=False, membresia_usuario__isnull=True, reserva__isnull=True)
+                | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=False, reserva__isnull=True)
+                | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False)
+            ), name="ajuste_importe_origen_unico"),
+            models.CheckConstraint(condition=models.Q(importe_anterior__gte=0, importe_nuevo__gte=0, motivo__regex=r"\S") & ~models.Q(importe_nuevo=models.F("importe_anterior")), name="ajuste_importe_valido"),
+        ]

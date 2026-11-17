@@ -15,7 +15,8 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from bloqueos.models import Bloqueo
-from caja.models import MovimientoFondo, SesionCaja
+from caja.finanzas import resumen_financiero
+from caja.models import AjusteImporte, MovimientoFondo, SesionCaja
 from caja.servicios import efectivo_esperado
 from clases.models import Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado
 from clases.validaciones import validar_horario_clase
@@ -113,6 +114,7 @@ class Command(BaseCommand):
                 self.crear_contrataciones()
                 self.crear_agenda()
                 self.crear_caja()
+                self.crear_escenarios_caja()
             # Las referencias de la importación deben resolverse antes de confirmar el lote.
             with connection.cursor() as cursor:
                 cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
@@ -430,6 +432,55 @@ class Command(BaseCommand):
             sesion.full_clean()
             sesion.save(update_fields=("estado", "cerrada_en", "efectivo_esperado", "efectivo_contado", "diferencia"))
             self.cantidades["cajas_cerradas"] += 1
+
+    def crear_escenarios_caja(self):
+        contratos = []
+        for contrato in self.contratos.values():
+            if contrato.mes_cubierto != self.mes_actual or not isinstance(contrato, PlanUsuario):
+                continue
+            resumen = resumen_financiero("plan", contrato)
+            if resumen["maximo_ingreso"] > 0 and resumen["neto_recibido"] >= Decimal("5000.00"):
+                contratos.append(contrato)
+                if len(contratos) == 4:
+                    break
+        if len(contratos) < 4:
+            return
+        sesion = SesionCaja.objects.create(responsable=self.admin, efectivo_inicial=Decimal("50000.00"))
+        for contrato, importe_nuevo, motivo in (
+            (contratos[0], resumen_financiero("plan", contratos[0])["neto_recibido"] - Decimal("5000.00"), "Reducción del importe acordado"),
+            (contratos[1], contratos[1].importe_acordado + Decimal("10000.00"), "Ampliación del importe acordado"),
+        ):
+            AjusteImporte.objects.create(
+                operacion_id=uuid4(), plan_usuario=contrato, importe_anterior=contrato.importe_acordado,
+                importe_nuevo=importe_nuevo,
+                motivo=f"{motivo} · {MARCA}", registrado_por=self.admin,
+            )
+            self.cantidades["ajustes_importe"] += 1
+        for numero, contrato in enumerate(contratos[2:], 1):
+            MovimientoFondo.objects.create(
+                operacion_id=uuid4(), sesion=sesion, clase="ingreso", concepto=f"Pago recibido con excedente · {MARCA}",
+                monto=resumen_financiero("plan", contrato)["maximo_ingreso"] + Decimal("5000.00"),
+                medio_pago="transferencia", referencia=f"DEMO-EXCEDENTE-{numero}",
+                categoria_ingreso="planes", plan_usuario=contrato, registrado_por=self.admin,
+                motivo_excedente="El cliente transfirió un importe mayor al saldo pendiente.",
+            )
+            self.cantidades["cobros_con_excedente"] += 1
+            if numero == 2:
+                maximo = resumen_financiero("plan", contrato)["maximo_devolucion"]
+                MovimientoFondo.objects.create(
+                    operacion_id=uuid4(), sesion=sesion, clase="egreso", categoria_egreso="devoluciones",
+                    concepto=f"Devolución del excedente recibido · {MARCA}", monto=maximo, medio_pago="transferencia",
+                    referencia=f"DEMO-DEVOLUCION-EXCEDENTE-{numero}", plan_usuario=contrato, registrado_por=self.admin,
+                )
+                self.cantidades["devoluciones"] += 1
+        sesion.estado = "cerrada"
+        sesion.cerrada_en = timezone.now()
+        sesion.efectivo_esperado = efectivo_esperado(sesion)
+        sesion.efectivo_contado = sesion.efectivo_esperado
+        sesion.diferencia = Decimal("0.00")
+        sesion.full_clean()
+        sesion.save(update_fields=("estado", "cerrada_en", "efectivo_esperado", "efectivo_contado", "diferencia"))
+        self.cantidades["cajas_cerradas"] += 1
 
     def resumen(self, semilla):
         return (

@@ -223,6 +223,11 @@ class Reserva(models.Model):
             for invitado in self.invitados.all()
         )
 
+    @property
+    def importe_acordado(self):
+        ajuste = self.ajustes_importe.first()
+        return ajuste.importe_nuevo if ajuste else self.total
+
 
 class ReservaInvitado(models.Model):
     class Respuesta(models.TextChoices):

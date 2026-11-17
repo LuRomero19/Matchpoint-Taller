@@ -24,7 +24,7 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 
 Las operaciones aplican criterios, 2.14. Los triggers de PostgreSQL registran cada modificación funcional, anulación y eliminación permitida en `log_auditoria`, con clave, valores anteriores y actuales, fecha y hora, actor, cuenta de base de datos y origen. Django comunica únicamente el contexto local de la operación. Sus entradas comparten un UUID y se confirman o revierten junto con los datos de negocio. Las escrituras SQL directas también quedan registradas, sin un usuario web ficticio. Los campos propios de auditoría de las entidades se conservan.
 
-El cierre de `sesiones_caja` y las anulaciones en `movimientos_fondos` participan del mecanismo común. La inmutabilidad de caja se valida en servicios; los triggers de auditoría registran cambios, incluidas escrituras SQL, pero no impiden modificar esas tablas.
+El cierre de `sesiones_caja` y las anulaciones en `movimientos_fondos` participan del mecanismo común. La inmutabilidad de sesiones y movimientos de caja se valida en servicios; los triggers de auditoría registran cambios, incluidas escrituras SQL, pero no impiden modificar esas tablas.
 
 Las altas, las consultas y las vistas previas sin cambios sobre registros existentes no agregan entradas. Preparar nuevos turnos tampoco genera auditoría. Los cambios de contraseña tienen su acción de auditoría específica, sin contraseñas, hashes ni indicadores artificiales. Se conservan únicamente diferencias reales no sensibles; los objetos pueden quedar vacíos. La actualización técnica del hash tiene su propia acción. El administrador consulta Auditoría desde la navegación o el inicio administrativo, recorre sus páginas y despliega los valores anteriores y actuales. El servidor valida el acceso y sólo admite GET; no hay operaciones de edición o eliminación del historial.
 
@@ -106,9 +106,11 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Contrataciones | FL-81 | Responder o cambiar respuesta de continuidad |
 | Contrataciones | FL-82 | Consultar continuidad de planes y membresías |
 | Membresías | FL-77 | Ajustar horas de una contratación |
-| Membresías | FL-78 | Revertir un ajuste de horas |
+| Membresías | FL-78 | Corregir horas mediante otro ajuste |
 | Consulta comercial | FL-79 | Consultar situación financiera |
 | Caja | FL-80 | Registrar una devolución vinculada |
+| Caja | CJ-05 | Registrar un cobro con excedente |
+| Importes | CJ-06 | Ajustar el importe acordado |
 
 Los recorridos de cuenta incluyen CU-01 (verificar correo) y CU-02 (reenviar/corregir correo inicial).
 
@@ -1507,7 +1509,7 @@ flowchart TD
 
 - **Objetivo:** registrar un ingreso, egreso, aporte o retiro.
 - **Actor:** responsable de la sesión abierta.
-- **Entradas:** clase, concepto, monto positivo y medio; referencia para no efectivo; categoría para Ingreso y Egreso; destinatario opcional para Egreso; vínculo comercial opcional para Ingreso.
+- **Entradas:** clase, concepto, monto positivo y medio; referencia para no efectivo; categoría para Ingreso y Egreso; destinatario opcional para Egreso; vínculo comercial obligatorio para cobros de reservas y contrataciones.
 - **Precondición:** sesión abierta a cargo del actor y operación efectivamente realizada.
 
 Recorrido:
@@ -1520,13 +1522,13 @@ Recorrido:
 
 Alternativas:
 
-- Al vincular una contratación, muestra producto, mes, precio_aplicado e ingresos Vigentes anteriores. El precio de referencia es el guardado, aunque el catálogo haya aumentado.
+- Al vincular una contratación, muestra producto, mes, precio_aplicado, situación financiera y máximo para el ingreso. El importe acordado incorpora su último ajuste; la tarifa aplicada y el catálogo conservan sus valores propios.
 - Un ingreso menor puede ser parcial o corresponder a un acuerdo excepcional administrativo, explicado en su concepto. No modifica el contrato ni registra descuentos; la situación financiera se consulta según FL-79. Las observaciones comerciales pueden documentar acuerdos generales.
 
-- Se admite como máximo un vínculo comercial por Ingreso y varios ingresos para el mismo origen. La consulta compara neto e importe acordado según FL-79, sin cambiar condiciones comerciales.
+- Se admite como máximo un vínculo comercial por Ingreso y varios pagos parciales hasta cubrir el importe acordado con el neto recibido. El máximo habitual es `max(0, importe acordado − neto recibido)`, mostrado como «Cobrar hasta $X». La selección omite operaciones cubiertas o con excedente; un importe superior se rechaza al confirmar bajo bloqueo común de sesión y origen. Los cobros de reservas y contrataciones exigen vínculo. Sin vínculo corresponde a otros conceptos y exige confirmación expresa de esa condición. El dinero recibido de más se registra mediante CJ-05, con revisión excepcional.
 - No se cobran contrataciones Anuladas ni reservas con evento Anulado. No se crea ni renueva el origen al registrar un cobro.
 - Egreso usa categorías alquiler, servicios, profesores, insumos, mantenimiento, publicidad, otros o devoluciones. Registra pagos realizados, no compromisos futuros. Registrar pagos a profesores no calcula salarios ni honorarios.
-- Una devolución es dinero efectivamente reintegrado a un cliente. Se registra como Egreso de categoría devoluciones por cualquiera de los cuatro medios, con concepto y referencia si no es efectivo; el destinatario es opcional. Puede vincularse a una reserva o contratación concreta, sin seleccionar un ingreso particular. El vínculo es opcional y el máximo es el neto recibido positivo del origen (ingresos Vigentes menos devoluciones Vigentes), incluso si está Anulado. Sin vínculo exige concepto y validaciones habituales de caja, sin tope comercial. Otros egresos no admiten vínculos comerciales; una compensación superior a lo recibido se registra en otra categoría con su concepto y no modifica automáticamente cobros, contratación ni reserva. En los resúmenes se presenta separada de gastos operativos. Si es efectivo, resta al esperado como cualquier egreso en efectivo.
+- Una devolución registra dinero efectivamente reintegrado como Egreso de categoría devoluciones. Para operaciones no Anuladas el máximo es su excedente; para Anuladas, su neto recibido positivo. Se admiten devoluciones parciales. Si corresponde a una reserva o contratación, exige vínculo y aplica FL-80; sin vínculo exige confirmar que corresponde a otro concepto. El destinatario es opcional y los medios no efectivos requieren referencia y verificación. Las compensaciones superiores a lo recibido corresponden a otros egresos; no modifican los cobros ni el origen.
 - Cancelar una reserva, o anular una contratación, no genera un reintegro ni anula cobros automáticamente. Si corresponde devolver, la administración ejecuta este flujo y registra el egreso efectivo. Anular una carga mediante FL-44 no representa ese reintegro.
 - Una salida de efectivo no supera lo disponible. Un aporte necesario se registra primero como otra operación. Aporte y Retiro no son cobros ni gastos operativos. Retirar efectivo para depositarlo no crea un ingreso por transferencia.
 - No se permite fecha editable, edición de datos originales ni eliminación. El UUID único se conserva al reenviar el formulario: con los mismos datos y actor devuelve el registro existente; con otro contenido o actor se rechaza. No se exige que coincida con el UUID del contexto de auditoría.
@@ -2042,7 +2044,7 @@ Recorrido:
 
 1. Limita la consulta al titular autorizado y obtiene contrataciones y reservas del período.
 2. Cuenta por separado horas de organizador e invitado. El organizador usa computa_hora_membresia; los invitados Aceptados con beneficio comprometen antes del inicio y consumen desde el inicio. Las cancelaciones liberan invitados; una propia tardía conserva consumo de organizador.
-3. Para cada rol y mes calcula cupo aplicado más otorgadas menos descontadas, comprometidas y consumidas, incluyendo usos conservados del titular de contrataciones Anuladas. Los ajustes y sus reversiones explican cada efecto. Si los usos conservados agotan el cupo del reemplazo, no hay horas disponibles.
+3. Para cada rol y mes calcula cupo aplicado más otorgadas menos descontadas, comprometidas y consumidas, incluyendo usos conservados del titular de contrataciones Anuladas. Los ajustes explican cada efecto. Si los usos conservados agotan el cupo del reemplazo, no hay horas disponibles.
 4. Muestra por rol cupo, otorgadas, descontadas, comprometidas, consumidas y disponibles, detalle de usos y contratación concreta e historial de ajustes con motivo visible al titular. Incluye reservas Anuladas que conservan cómputo de organizador.
 
 Alternativas:
@@ -2453,17 +2455,17 @@ La consulta conserva los casos Anulados para leer respuestas previas. Indeciso e
 
 La confirmación del ajuste guarda un aviso al titular con producto, tipo de horas, operación, cantidad, motivo visible y acceso a sus horas. El email informa el ajuste y no acredita un pago.
 
-#### FL-78. Revertir un ajuste de horas
+#### FL-78. Corregir horas mediante otro ajuste
 
 - **Actor:** Administrador activo con acceso vigente.
-- **Precondición:** Ajuste original sin reversión y contratación habilitada para ajustes según FL-77.
+- **Precondición:** Contratación habilitada para ajustes según FL-77.
 
-1. Desde el historial compacto abre Revertir para un ajuste elegible e ingresa motivo.
-2. Revisa tipo de horas, cantidad, efecto inverso y saldo resultante.
-3. Bajo los bloqueos comunes revalida elegibilidad, ausencia de reversión y disponibilidad no negativa.
-4. Registra un movimiento inverso vinculado al original, con motivo, responsable y fecha. Conserva ambos y rechaza una segunda reversión, sin editar ni borrar el ajuste.
+1. Consulta el historial compacto e identifica el error en las horas otorgadas o descontadas.
+2. Abre Ajustar horas y registra un otorgamiento o descuento por la cantidad necesaria, con un motivo que explique la corrección.
+3. Revisa y confirma el ajuste mediante FL-77, con los mismos permisos, bloqueos y límites de disponibilidad.
+4. El movimiento se guarda como un ajuste independiente con motivo, responsable y fecha. Todos los registros permanecen en el historial y participan del cálculo de horas, sin vínculos entre ajustes ni edición o borrado de movimientos.
 
-La reversión efectiva guarda otro aviso al titular que identifica su condición de reversión y el efecto sobre las horas, conservando los dos movimientos. Preparar o cancelar la revisión no envía mensajes.
+El ajuste confirmado guarda un aviso al titular con su operación, cantidad y motivo. Preparar o cancelar la revisión no envía mensajes.
 
 #### FL-79. Consultar situación financiera de una operación
 
@@ -2471,7 +2473,7 @@ La reversión efectiva guarda otro aviso al titular que identifica su condición
 
 1. Desde el detalle consulta una única situación financiera con importe acordado, cobros vigentes (suma de ingresos Vigentes), devoluciones vigentes y neto recibido (ingresos menos devoluciones). Los importes y el estado se calculan sin almacenar saldos ni estados de pago mutables.
 2. Si no está Anulada, compara neto e importe: Diferencia por cubrir, Cubierto o Excedente por resolver. La diferencia por cubrir no implica por sí sola una deuda exigible. Si está Anulada, muestra importes, movimientos y neto sin esos estados, sin exigir completar el precio ni presumir devolución.
-3. Una devolución reduce el neto sin modificar los cobros originales ni el importe acordado. Modificar el importe acordado requiere una operación autorizada y auditada, independiente de la devolución. Un neto negativo muestra una diferencia para revisión administrativa y sus movimientos explicativos.
+3. Una devolución reduce el neto sin modificar los cobros originales ni el importe acordado. Ajustar el importe requiere CJ-06, independiente de la devolución. Un neto negativo muestra una diferencia para revisión administrativa y sus movimientos explicativos.
 4. Despliega movimientos bajo demanda, incluidos los Anulados, y consulta concepto, medio, referencia y motivo de anulación. El titular ve los detalles dentro de su operación; el administrador puede abrir el movimiento en caja y volver a su origen. El historial se pagina de a 25 registros. Ninguna consulta genera cobros, devoluciones o compensaciones.
 
 #### FL-80. Registrar una devolución vinculada
@@ -2479,13 +2481,32 @@ La reversión efectiva guarda otro aviso al titular que identifica su condición
 - **Actor:** Administrador responsable de la sesión abierta.
 
 1. Abre Registrar egreso, elige Devoluciones y solicita vincular una reserva o contratación concreta, o continúa sin vínculo. Busca y selecciona un único origen en resultados compactos; admite orígenes Anulados con cobros.
-2. Revisa contexto del origen, ingresos, devoluciones y máximo disponible. Completa concepto obligatorio, monto positivo, medio y referencia para medios no efectivos; destinatario opcional. Sin vínculo se aplican las validaciones habituales de caja sin tope comercial.
-3. Confirma bajo bloqueos comunes de sesión y origen con ingresos, anulaciones y otras devoluciones; recalcula neto y rechaza un importe superior al máximo o un neto no positivo. Revalida efectivo disponible, medio y permisos.
+2. Revisa ingresos, devoluciones, importe acordado y máximo: excedente para orígenes no Anulados o neto positivo para Anulados. Completa concepto, monto positivo, medio y referencia para medios no efectivos; destinatario opcional. Sin vínculo exige confirmar que corresponde a otro concepto y se aplican las validaciones habituales sin tope comercial.
+3. Confirma bajo bloqueos comunes de sesión y origen con ingresos, anulaciones y otras devoluciones; recalcula importe acordado, neto y máximo; rechaza un importe superior al disponible, un máximo no positivo o una revisión desactualizada. Revalida efectivo disponible, medio y permisos.
 4. Guarda un egreso nuevo en la sesión abierta, con responsable, fecha e identificador de operación. Conserva ingresos originales y cierres anteriores. Una compensación mayor que lo recibido corresponde a otro egreso sin vínculo comercial.
 5. Muestra el movimiento y la situación financiera actualizada del origen, sin transferir movimientos a otra operación.
 
 La anulación de un ingreso por FL-44 conserva las devoluciones aunque revele neto negativo; exige motivo y auditoría y mantiene las validaciones de caja. El neto negativo no habilita nuevas devoluciones vinculadas.
 
+#### CJ-05. Registrar un cobro con excedente
+
+- **Actor:** Administrador responsable de la sesión abierta.
+
+1. Desde Más acciones de una reserva o contratación no Anulada solicita Cobro con excedente, únicamente si queda importe por cubrir.
+2. Ingresa el importe completo recibido, concepto, medio, motivo del excedente y referencia con verificación si no es efectivo.
+3. Revisa importe recibido y excedente resultante. Una revisión firmada conserva datos, actor, sesión, origen y situación financiera durante quince minutos.
+4. Confirma. El servicio bloquea personas, sesión y origen, revalida permisos, estado, datos y situación. Si ya quedó cubierto o excedido, rechaza el cobro. Los demás cambios exigen nueva revisión; si el pago no supera lo pendiente, corresponde al cobro habitual.
+5. Registra un único ingreso con motivo del excedente y aviso habitual al titular. El reenvío idéntico devuelve ese movimiento. El excedente queda señalado para devolver, sin compensaciones ni devoluciones automáticas.
+
+#### CJ-06. Ajustar el importe acordado
+
+- **Actor:** Administrador con acceso vigente; no exige caja abierta.
+
+1. Desde Más acciones de una reserva o contratación no Anulada con importe por cubrir abre Ajustar importe acordado.
+2. Ingresa un nuevo importe no negativo y motivo obligatorio; revisa importe anterior, nuevo y situación financiera. La revisión firmada vence a los quince minutos.
+3. Confirma bajo el bloqueo común de personas y origen. Si el importe ya está cubierto o excedido, rechaza el ajuste. Los demás cambios de importe, cobros, devoluciones o anulación exigen nueva revisión.
+4. Guarda el ajuste con importe anterior y nuevo, motivo, responsable, fecha e identificador único. La confirmación guarda un único aviso al titular con importes anterior y nuevo, motivo y acceso a su operación. Reenviar la misma confirmación no duplica el ajuste ni el aviso.
+5. El último ajuste fija el importe hasta otro ajuste, incluso si cambian participantes o condiciones de socios. Conserva catálogo, tarifas aplicadas y movimientos. Se consulta en detalles, comprobantes y reportes; el historial propio y administrativo se despliega bajo demanda y se pagina de a 25 registros. Otro ajuste sólo se admite mientras quede importe por cubrir.
 
 ## 4. Procesos automáticos
 

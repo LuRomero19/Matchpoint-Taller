@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}Cobro con excedente | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>Registrar cobro con excedente</h1><p>{{ sesion.numero }} · {{ origen }}</p>
+    {% include "caja/_resumen_financiero.html" %}
+    <p>Registrá el importe completo efectivamente recibido. El excedente queda disponible para devolver a esta misma operación.</p>
+    <form method="post"{% if not revision %} data-ingreso-formulario{% endif %} novalidate>{% csrf_token %}
+        {% include "caja/_errores_movimiento.html" %}
+        {% if revision %}
+            <h2>Revisar cobro</h2><p>{{ revision.concepto|linebreaksbr }}</p>
+            <p>Importe recibido: <strong>$ {{ revision.monto|floatformat:"2g" }}</strong> · {{ medio_texto }}</p>
+            {% if revision.referencia %}<p>Referencia: {{ revision.referencia }}</p>{% endif %}
+            <p>Motivo: {{ revision.motivo_excedente|linebreaksbr }}</p>
+            <p>Excedente resultante: <strong>$ {{ excedente_resultante|floatformat:"2g" }}</strong></p>
+            <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+        {% else %}
+            {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{% else %}
+            <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
+                {% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}
+            </div>{% endif %}{% endfor %}
+        {% endif %}
+        <div class="acciones-formulario">
+            <button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar dinero recibido{% else %}Revisar cobro{% endif %}</button>
+            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
+            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -211,6 +211,11 @@ class PlanUsuario(models.Model):
     def producto(self):
         return self.plan
 
+    @property
+    def importe_acordado(self):
+        ajuste = self.ajustes_importe.first()
+        return ajuste.importe_nuevo if ajuste else self.precio_aplicado
+
     def vigente_en(self, fecha):
         return self.estado == self.Estado.ACTIVO and self.fecha_inicio <= fecha <= self.fecha_fin
 
@@ -322,6 +327,11 @@ class MembresiaUsuario(models.Model):
     def producto(self):
         return self.membresia
 
+    @property
+    def importe_acordado(self):
+        ajuste = self.ajustes_importe.first()
+        return ajuste.importe_nuevo if ajuste else self.precio_aplicado
+
     def vigente_en(self, fecha):
         return self.estado == self.Estado.ACTIVO and self.fecha_inicio <= fecha <= self.fecha_fin
 
@@ -361,7 +371,6 @@ class AjusteHorasMembresia(models.Model):
     motivo = models.TextField()
     registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="ajustes_horas_registrados")
     creado_en = models.DateTimeField(auto_now_add=True)
-    reversion_de = models.OneToOneField("self", on_delete=models.PROTECT, related_name="reversion", null=True, blank=True)
 
     class Meta:
         db_table = "ajustes_horas_membresia"
@@ -375,7 +384,6 @@ class AjusteHorasMembresia(models.Model):
             models.CheckConstraint(condition=models.Q(operacion__in=("otorgar", "quitar")), name="ajuste_horas_operacion_valida"),
             models.CheckConstraint(condition=models.Q(cantidad__gte=1), name="ajuste_horas_cantidad_positiva"),
             models.CheckConstraint(condition=models.Q(motivo__regex=r"\S"), name="ajuste_horas_motivo_obligatorio"),
-            models.CheckConstraint(condition=~models.Q(reversion_de=models.F("pk")), name="ajuste_horas_reversion_distinta"),
         ]
 
     def __str__(self):

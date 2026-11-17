@@ -125,6 +125,8 @@ Las reservas son independientes: no existe restauración ni reprogramación vinc
 
 Se admiten señas o adelantos vinculados a reservas confirmadas, sin exigirlos para confirmar la reserva. Se registran como pagos parciales de esa reserva.
 
+El cobro habitual de reservas, planes y membresías permite pagos parciales hasta cubrir el importe acordado con el neto recibido (ingresos Vigentes menos devoluciones Vigentes). Las operaciones cubiertas o con excedente no aparecen en esa selección. El dinero efectivamente recibido de más se registra mediante Cobro con excedente sólo si aún queda importe por cubrir, con motivo y revisión del importe completo. El excedente queda disponible para devolver en la misma operación. Las operaciones Anuladas no admiten ingresos, tampoco excepcionales.
+
 Los pagos de la academia pueden realizarse mediante:
 
 - Efectivo
@@ -133,7 +135,7 @@ Los pagos de la academia pueden realizarse mediante:
 - Tarjeta de crédito
 - QR
 
-Las devoluciones son egresos efectivos de categoría Devoluciones, con vínculo opcional a una reserva o contratación concreta. Las vinculadas no superan el neto recibido disponible, incluso si el origen está anulado; las no vinculadas exigen concepto y las validaciones habituales de caja. Las compensaciones que exceden lo recibido se registran como otros egresos. Los ingresos y devoluciones permanecen en su operación y sesión de caja.
+Las devoluciones son egresos efectivos de categoría Devoluciones. En una operación no Anulada sólo se devuelve el excedente sobre el importe acordado; en una Anulada, hasta su neto recibido positivo. Se admiten devoluciones parciales y nunca automáticas. Los cobros y devoluciones correspondientes a reservas o contrataciones exigen su vínculo. Los movimientos sin vínculo corresponden a otros conceptos y requieren confirmarlo expresamente. Las compensaciones superiores a lo recibido se registran como otros egresos.
 
 Actualmente, los administradores registran ingresos y egresos de la academia. Los ingresos pueden provenir de planes, membresías de socios, reservas u otros conceptos. Los egresos incluyen conceptos como alquiler, luz, pago a profesores, publicidad y otros gastos operativos.
 
@@ -162,11 +164,11 @@ Los recordatorios de clases y reservas se revisan cada minuto y utilizan la anti
 
 ### 5.5 Ajustes de horas y consulta comercial
 
-Administración otorga o quita horas enteras positivas por contratación y rol, con motivo obligatorio visible para el titular, responsable y fecha. Sólo se ajustan contrataciones Activas del mes vigente o programadas para meses futuros. Los movimientos preservan el cupo base; su reversión exige motivo, responsable y fecha, no borra el ajuste y sólo se admite una vez. Un descuento o reversión no puede dejar horas disponibles negativas ni afectar participaciones existentes. No hay penalizaciones pendientes ni movimientos automáticos de dinero.
+Administración otorga o quita horas enteras positivas por contratación y rol, con motivo obligatorio visible para el titular, responsable y fecha. Sólo se ajustan contrataciones Activas del mes vigente o programadas para meses futuros. Cada movimiento es independiente y preserva el cupo base. Para corregir un error se registra otro ajuste con su motivo; los registros no se editan ni se borran. Un descuento no puede superar las horas disponibles ni afectar participaciones existentes. No hay penalizaciones pendientes ni movimientos automáticos de dinero.
 
 La consulta de cada rol distingue cupo contratado, horas otorgadas y descontadas por ajustes, comprometidas, consumidas y disponibles. Los usos conservados del titular y mes cuentan aunque provengan de contrataciones Anuladas.
 
-Reservas y contrataciones presentan una única situación financiera con importe acordado, cobros vigentes, devoluciones vigentes y neto recibido (ingresos menos devoluciones). Una devolución reduce el neto sin modificar los cobros originales ni el importe acordado. Modificar ese importe requiere una operación autorizada y auditada. Las no anuladas indican Diferencia por cubrir, Cubierto o Excedente por resolver. La diferencia por cubrir no implica por sí sola una deuda exigible. Las anuladas muestran movimientos y neto sin exigir completar el precio ni presumir devolución. Anular un ingreso erróneo exige motivo y auditoría y puede revelar un neto negativo; conserva devoluciones, mantiene las validaciones de caja e informa la diferencia para revisión administrativa.
+Reservas y contrataciones presentan una única situación financiera con importe acordado, cobros vigentes, devoluciones vigentes y neto recibido (ingresos menos devoluciones). Una devolución reduce el neto sin modificar los cobros originales ni el importe acordado. Administración ajusta el importe acordado sólo en operaciones no Anuladas con importe por cubrir, mediante revisión y confirmación, con importe anterior y nuevo no negativo, motivo, responsable y fecha. El último ajuste fija el importe hasta otro ajuste, incluso ante cambios de participantes de una reserva, y conserva las tarifas aplicadas y los precios del catálogo. El ajuste no genera movimientos de dinero. Las no anuladas indican Diferencia por cubrir, Cubierto o Excedente por resolver. La diferencia por cubrir no implica por sí sola una deuda exigible. Las anuladas muestran movimientos y neto sin exigir completar el precio ni presumir devolución. Anular un ingreso erróneo exige motivo y auditoría y puede revelar un neto negativo; conserva devoluciones, mantiene las validaciones de caja e informa la diferencia para revisión administrativa.
 
 
 ## 6. Cuentas y acceso a la oferta

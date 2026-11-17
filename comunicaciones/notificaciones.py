@@ -7,6 +7,7 @@ from .models import EnvioEmail, Notificacion
 
 
 MENSAJES_BREVES = {
+    EnvioEmail.Tipo.AJUSTE_IMPORTE: "Se ajustó el importe acordado de tu reserva o contratación.",
     EnvioEmail.Tipo.INVITACION: "Te invitaron a participar en una reserva.",
     EnvioEmail.Tipo.RESERVA_ANULADA: "Se anuló una reserva en la que participabas.",
     EnvioEmail.Tipo.CLASE_ANULADA: "Se anuló una de tus clases.",

@@ -33,7 +33,7 @@ class SeleccionOrigenMovimientoForm(forms.Form):
             consulta = modelo.objects.all().select_related("usuario", "plan" if tipo == "plan" else "membresia")
         if not devolucion:
             consulta = consulta.exclude(**{"evento__estado" if tipo == "reserva" else "estado": "anulado"})
-        self.fields["origen"].queryset = consulta
+        self.fields["origen"].queryset = consulta.prefetch_related("ajustes_importe")
 
 
 class IngresoForm(forms.Form):
@@ -44,10 +44,12 @@ class IngresoForm(forms.Form):
     verificado = forms.BooleanField(label="Verifiqué la recepción del pago o la aprobación de la operación con tarjeta", required=False)
     operacion_id = forms.UUIDField(widget=forms.HiddenInput())
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, sin_vinculo=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["operacion_id"].initial = uuid4()
         self.fields["medio_pago"].choices = [("", "Elegí un medio"), *MovimientoFondo.Medio.choices]
+        if sin_vinculo:
+            self.fields["sin_vinculo_confirmado"] = forms.BooleanField(label="Este movimiento no corresponde a una reserva ni a una contratación.")
 
     def clean(self):
         datos = super().clean()
@@ -72,6 +74,8 @@ class MovimientoCajaForm(IngresoForm):
         self.fields["categoria_egreso"].choices = [("", "Elegí una categoría"), *MovimientoFondo.CategoriaEgreso.choices]
         if clase == "egreso":
             self.fields["categoria_egreso"].required = True
+            if "sin_vinculo_confirmado" not in self.fields:
+                self.fields["sin_vinculo_confirmado"] = forms.BooleanField(label="Si es una devolución sin vínculo, confirmo que no corresponde a una reserva ni a una contratación.", required=False)
         else:
             for nombre in ("categoria_egreso", "destinatario", "medio_pago", "referencia", "verificado"):
                 self.fields.pop(nombre)
@@ -81,15 +85,33 @@ class MovimientoCajaForm(IngresoForm):
         datos = super().clean()
         if self.clase in ("aporte", "retiro"):
             datos["medio_pago"] = "efectivo"
+        if datos.get("categoria_egreso") == "devoluciones" and not datos.get("sin_vinculo_confirmado"):
+            self.add_error("sin_vinculo_confirmado", "Vinculá la operación o confirmá que corresponde a otro concepto.")
         return datos
 
 
 class DevolucionForm(MovimientoCajaForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, clase="egreso", **kwargs)
+    def __init__(self, *args, sin_vinculo=False, **kwargs):
+        super().__init__(*args, clase="egreso", sin_vinculo=sin_vinculo, **kwargs)
         self.fields.pop("categoria_egreso")
+        if not sin_vinculo:
+            self.fields.pop("sin_vinculo_confirmado")
         self.fields["concepto"].help_text = "Explicá el motivo de la devolución."
         self.fields["monto"].label = "Monto a devolver"
+
+
+class ExcedenteForm(IngresoForm):
+    motivo_excedente = forms.CharField(label="Motivo del cobro con excedente", min_length=5, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+
+
+class AjusteImporteForm(forms.Form):
+    importe_nuevo = forms.DecimalField(label="Nuevo importe acordado", min_value=Decimal("0.00"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
+    motivo = forms.CharField(label="Motivo", min_length=5, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    operacion_id = forms.UUIDField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["operacion_id"].initial = uuid4()
 
 
 class AnulacionMovimientoForm(forms.Form):

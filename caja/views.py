@@ -15,7 +15,7 @@ from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
     HistorialSesionesForm, IngresoForm, MovimientoCajaForm, MovimientosSesionForm, SeleccionOrigenMovimientoForm,
 )
-from .finanzas import resumen_financiero, situacion_financiera
+from .finanzas import origenes_con_pendiente, resumen_financiero, situacion_financiera
 from .ingresos import consultar_origen, origen_del_movimiento, ORIGENES, cobros_del_origen, filtrar_origenes, registrar_ingreso
 from .models import MovimientoFondo, SesionCaja
 from .movimientos import anular_movimiento, registrar_movimiento, revision_anulacion
@@ -154,7 +154,7 @@ def ingreso_crear(request, pk):
         seleccion = SeleccionOrigenMovimientoForm(datos if datos.get("origen") else None, tipo=tipo)
         contexto.update({"seleccion": seleccion, "numero_paso": 2, "nombre_paso": "Seleccionar registro"})
         if paso in ("volver", "buscar") or "pagina_origen" in datos or not datos.get("origen") or not seleccion.is_valid():
-            consulta = seleccion.fields["origen"].queryset
+            consulta = origenes_con_pendiente(seleccion.fields["origen"].queryset, tipo)
             busqueda = datos.get("q", "").strip()[:100]
             consulta = filtrar_origenes(consulta, tipo, busqueda)
             contexto.update({
@@ -166,7 +166,7 @@ def ingreso_crear(request, pk):
         origen = seleccion.cleaned_data["origen"]
         contexto.update({
             "origen": origen, "categoria_texto": dict(MovimientoFondo.CategoriaIngreso.choices)[ORIGENES[tipo][2]],
-            "importe_aplicado": origen.total if tipo == "reserva" else origen.precio_aplicado,
+            "importe_aplicado": origen.importe_acordado,
             "pagina_cobros": Paginator(cobros_del_origen(tipo, origen.pk), 25).get_page(request.GET.get("pagina")),
         })
         parametros = request.GET.copy()
@@ -175,7 +175,7 @@ def ingreso_crear(request, pk):
         contexto["parametros"] = parametros.urlencode()
     contexto.update({"numero_paso": contexto["total_pasos"], "nombre_paso": "Datos del cobro"})
     registrar = request.method == "POST" and paso == "registrar"
-    formulario = IngresoForm(request.POST if registrar else None, initial=borrador)
+    formulario = IngresoForm(request.POST if registrar else None, initial=borrador, sin_vinculo=tipo == "general")
     formulario.fields["concepto"].widget = forms.TextInput(attrs={"class": "form-control"})
     formulario.fields["referencia"].widget.attrs["placeholder"] = "8D0Q619L3VV1L8KVN7JZ5R"
     contexto["formulario"] = formulario
@@ -187,6 +187,11 @@ def ingreso_crear(request, pk):
         else:
             messages.success(request, f"El ingreso {movimiento.numero} está registrado.")
             return redirect("caja:movimiento_detalle", pk=movimiento.pk)
+    if origen:
+        finanzas = resumen_financiero(tipo, origen)
+        contexto["finanzas"] = finanzas
+        formulario.fields["monto"].widget.attrs["max"] = format(finanzas["maximo_ingreso"], ".2f")
+        formulario.fields["monto"].help_text = f"Máximo para este cobro: ARS {finanzas['maximo_ingreso']:.2f}."
     return render(request, "caja/ingreso_formulario.html", contexto)
 
 

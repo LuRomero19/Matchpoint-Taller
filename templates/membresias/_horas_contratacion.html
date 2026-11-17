@@ -12,11 +12,9 @@
         <thead><tr><th>Fecha</th><th>Tipo de horas</th><th>Movimiento</th><th>Horas</th><th>Detalle</th></tr></thead>
         <tbody>{% for ajuste in ajustes_horas %}<tr>
             <td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td><td>{{ ajuste.get_tipo_horas_display }}</td>
-            <td>{% if ajuste.reversion_de_id %}Reversión · {% endif %}{{ ajuste.get_operacion_display }}{% if ajuste.reversion %} · Revertido{% endif %}</td><td>{{ ajuste.cantidad }}</td>
+            <td>{{ ajuste.get_operacion_display }}</td><td>{{ ajuste.cantidad }}</td>
             <td><details><summary>Ver detalle</summary>
                 <p>Motivo: {{ ajuste.motivo|linebreaksbr }}</p><p>Registrado por {{ ajuste.registrado_por }}</p>
-                {% if ajuste.reversion_de_id %}<p>Revierte el ajuste #{{ ajuste.reversion_de_id }}.</p>{% endif %}
-                {% if puede_ajustar_horas and not ajuste.reversion_de_id and not ajuste.reversion %}<a class="enlace-texto" href="{% url 'membresias:revertir_ajuste_horas' contratacion.pk ajuste.pk %}">Revertir ajuste</a>{% endif %}
             </details></td>
         </tr>{% endfor %}</tbody>
     </table></div>

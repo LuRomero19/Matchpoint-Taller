@@ -41,7 +41,7 @@ def reserva_comprobante(request, pk):
     return render(request, "reservas/reserva_comprobante.html", {
         "reserva": reserva,
         "turno": reserva.evento.turno,
-        "total": reserva.total,
+        "total": reserva.importe_acordado,
     })
 
 
@@ -83,7 +83,7 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         **contexto_financiero(usuario, "reserva", reserva, parametros),
         "reserva": reserva,
         "turno": reserva.evento.turno,
-        "total": reserva.total,
+        "total": reserva.importe_acordado,
         "invitados": [{"invitado": i, "respuesta_texto": i.get_respuesta_display()} for i in reserva.invitados.select_related("usuario").order_by("usuario__last_name", "usuario__first_name")],
         "puede_gestionar": reserva.evento.estado == Evento.Estado.PROGRAMADO and ahora < inicio_reserva(reserva),
         "puede_anular": puede_anular,

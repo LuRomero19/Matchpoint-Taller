@@ -23,17 +23,25 @@ def contexto_financiero(actor, tipo, origen, parametros):
     pagina = Paginator(movimientos, 25).get_page(parametros.get("pagina_finanzas"))
     filtros = parametros.copy()
     filtros.pop("pagina_finanzas", None)
-    acciones = {"url_cobrar": None, "url_devolver": None}
+    filtros.pop("pagina_importes", None)
+    ajustes = origen.ajustes_importe.select_related("registrado_por")
+    pagina_importes = Paginator(ajustes, 25).get_page(parametros.get("pagina_importes"))
+    acciones = {"url_cobrar": None, "url_devolver": None, "url_excedente": None, "url_ajustar_importe": None}
     if administrador:
+        if resumen["maximo_ingreso"] > 0:
+            acciones["url_ajustar_importe"] = reverse("caja:ajustar_importe", args=[tipo, origen.pk])
         sesion = SesionCaja.objects.filter(estado="abierta", responsable=actor).first()
         if sesion:
             consulta = "?" + urlencode({"tipo": tipo, "origen": origen.pk})
-            if not resumen["operacion_anulada"]:
+            if resumen["maximo_ingreso"] > 0:
                 acciones["url_cobrar"] = reverse("caja:ingreso_crear", args=[sesion.pk]) + consulta
             if resumen["maximo_devolucion"] > 0:
                 acciones["url_devolver"] = reverse("caja:devolucion_crear", args=[sesion.pk]) + consulta
+            if resumen["maximo_ingreso"] > 0:
+                acciones["url_excedente"] = reverse("caja:ingreso_excedente", args=[sesion.pk, tipo, origen.pk])
     return {
         "finanzas": resumen, "pagina_finanzas": pagina, "parametros_finanzas": filtros.urlencode(),
-        "historial_financiero_abierto": "pagina_finanzas" in parametros,
+        "historial_financiero_abierto": "pagina_finanzas" in parametros or "pagina_importes" in parametros,
+        "pagina_importes": pagina_importes, "historial_importes_abierto": "pagina_importes" in parametros,
         "finanzas_administrativas": administrador, **acciones,
     }

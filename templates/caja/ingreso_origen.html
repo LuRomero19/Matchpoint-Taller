@@ -24,7 +24,7 @@
                         <span class="ingreso-registro-persona">{% if tipo == 'reserva' %}{{ registro.organizador }}{% else %}{{ registro.usuario }}{% endif %}</span>
                         <span class="ingreso-registro-detalle">{% if tipo == 'reserva' %}{{ registro.numero }}{% else %}{{ registro.producto.nombre }}{% endif %}</span>
                         <span class="ingreso-registro-fecha">{% if tipo == 'reserva' %}{{ registro.evento.turno.fecha|date:"d/m/Y" }} a las {{ registro.evento.turno.hora_inicio|time:"H:i" }}{% else %}{{ registro.mes_cubierto|date:"F Y"|capfirst }}{% endif %}</span>
-                        <strong class="ingreso-registro-importe">$ {% if tipo == 'reserva' %}{{ registro.total|floatformat:"2g" }}{% else %}{{ registro.precio_aplicado|floatformat:"2g" }}{% endif %}</strong>
+                        <strong class="ingreso-registro-importe">{% if devolucion %}Importe acordado: $ {{ registro.importe_acordado|floatformat:"2g" }}{% else %}Por cubrir: $ {{ registro.pendiente_cobro|floatformat:"2g" }}{% endif %}</strong>
                         {% if devolucion %}<span>{% if tipo == 'reserva' %}{{ registro.evento.get_estado_display }}{% else %}{{ registro.get_estado_display }}{% endif %}</span>{% endif %}
                         {% if tipo == 'reserva' %}<span class="ingreso-registro-lugar">{{ registro.evento.turno.cancha.nombre }}<small>{{ registro.evento.turno.cancha.sede.nombre }}</small></span>{% endif %}
                     </label>

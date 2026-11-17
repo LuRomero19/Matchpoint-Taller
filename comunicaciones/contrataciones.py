@@ -56,7 +56,7 @@ def avisar_ajuste(ajuste):
     return encolar_aviso(
         clave=f"ajuste_horas:{ajuste.pk}", tipo=EnvioEmail.Tipo.AJUSTE_HORAS, destinatario=contrato.usuario.email,
         datos={"vigencia": {"usuario_id": contrato.usuario_id}, "mensaje": {
-            "parrafos": ["Se registró una reversión de horas." if ajuste.reversion_de_id else "Se registró un ajuste de horas."],
+            "parrafos": ["Se registró un ajuste de horas."],
             "datos": [{"etiqueta": "Producto", "valor": contrato.producto.nombre},
                       {"etiqueta": "Horas", "valor": ajuste.get_tipo_horas_display()},
                       {"etiqueta": "Operación", "valor": ajuste.get_operacion_display()},

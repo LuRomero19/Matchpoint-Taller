@@ -201,6 +201,7 @@ def _validar_edicion(actor, administrador, reserva):
 
 def instantanea_reserva(reserva, invitados):
     return _huella({
+        "importe_acordado": reserva.importe_acordado,
         "reserva": [reserva.pk, reserva.evento.estado, reserva.evento.actualizado_en, reserva.membresia_usuario_id, reserva.precio_invitado_aplicado],
         "invitados": [[i.usuario_id, str(i.identidad), i.respuesta, i.actualizado_en, i.membresia_usuario_id, i.condicion_aplicada] for i in invitados],
     })
@@ -223,6 +224,9 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
     total = reserva.precio_por_turno_aplicado if not reserva.es_con_membresia else reserva.precio_invitado_aplicado * sum(
         i.participacion_computable and i.genera_adicional for i in relaciones if i.usuario_id in invitados_ids
     )
+    ajuste = reserva.ajustes_importe.first()
+    if ajuste:
+        total = ajuste.importe_nuevo
     if confirmacion is None:
         cambios = [(str(usuarios[pk]), "agregar", "sin_aplicar") for pk in sorted(nuevos)]
         cambios += [(str(anteriores[pk].usuario), "quitar", anteriores[pk].condicion_aplicada) for pk in sorted(quitados)]
@@ -320,7 +324,8 @@ def actualizar_socios(actor, reserva_id, *, confirmacion=None):
     cambios = [(i, contratos[i.usuario_id]) for i in candidatos
                if i.usuario_id in contratos and horas_disponibles_invitado(contratos[i.usuario_id]) > 0]
     huella = _huella([instantanea_reserva(reserva, relaciones), [(i.usuario_id, c.pk, c.actualizado_en) for i, c in cambios]])
-    total = reserva.total - reserva.precio_invitado_aplicado * len(cambios)
+    ajuste = reserva.ajustes_importe.first()
+    total = ajuste.importe_nuevo if ajuste else reserva.total - reserva.precio_invitado_aplicado * len(cambios)
     if confirmacion is None:
         return {"reserva": reserva, "cambios": [str(i.usuario) for i, _ in cambios], "total": total, "confirmacion": _firmar(actor, "socios", {"reserva": reserva_id}, huella)}
     firmado = _leer(actor, confirmacion, "socios")

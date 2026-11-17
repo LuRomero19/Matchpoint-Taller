@@ -44,6 +44,13 @@ def origen_del_movimiento(movimiento):
     return "general", None
 
 
+def url_del_origen(tipo, origen_id):
+    from django.urls import reverse
+
+    ruta = "reservas:reserva_detalle" if tipo == "reserva" else f"membresias:contratacion_{tipo}_detalle"
+    return reverse(ruta, args=[origen_id])
+
+
 def filtrar_origenes(consulta, tipo, busqueda):
     from django.db.models import Q
     persona = "organizador" if tipo == "reserva" else "usuario"

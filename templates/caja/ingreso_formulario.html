@@ -1,16 +1,18 @@
 {% extends "base.html" %}{% load static %}
 {% block titulo %}Registrar ingreso | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
     <h1>Registrar ingreso</h1>
     {% include "caja/_ingreso_contexto.html" %}
-    <form method="post" action="?tipo={{ tipo }}" data-ingreso-formulario novalidate>
+    {% if origen %}{% include "caja/_resumen_financiero.html" %}{% endif %}
+    <form method="post" action="?tipo={{ tipo }}"{% if not origen or finanzas.maximo_ingreso > 0 %} data-ingreso-formulario{% endif %} novalidate>
         {% csrf_token %}
         {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
         {% for campo in formulario.hidden_fields %}{{ campo }}{% endfor %}
         {% include "caja/_errores_movimiento.html" %}
+        {% if not origen or finanzas.maximo_ingreso > 0 %}
         <h2 class="ingreso-seccion-titulo">Datos del cobro</h2>
         {% for campo in formulario.visible_fields %}
             <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
@@ -24,8 +26,11 @@
                 {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
             </div>
         {% endfor %}
+        {% elif not finanzas.operacion_anulada %}
+            <p role="status">El importe acordado ya está cubierto. No admite nuevos ingresos vinculados.</p>
+        {% endif %}
         <div class="acciones-formulario">
-            <button class="boton boton-primario" name="paso" value="registrar">Registrar ingreso</button>
+            {% if not origen or finanzas.maximo_ingreso > 0 %}<button class="boton boton-primario" name="paso" value="registrar">Registrar ingreso</button>{% endif %}
             {% if origen %}<button class="boton boton-secundario" name="paso" value="volver" formnovalidate>Volver</button>{% else %}<button class="boton boton-secundario" name="paso" value="volver_tipo" formnovalidate>Volver</button>{% endif %}
             <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
         </div>

@@ -38,6 +38,7 @@ class EnvioEmail(models.Model):
         CONTRATACION = "contratacion", "Contratación registrada"
         CONTRATACION_ANULADA = "contratacion_anulada", "Contratación anulada"
         AJUSTE_HORAS = "ajuste_horas", "Ajuste de horas"
+        AJUSTE_IMPORTE = "ajuste_importe", "Ajuste de importe acordado"
         MOVIMIENTO = "movimiento", "Movimiento registrado"
         RECORDATORIO_CLASE = "recordatorio_clase", "Recordatorio de clase"
         RECORDATORIO_RESERVA = "recordatorio_reserva", "Recordatorio de reserva"

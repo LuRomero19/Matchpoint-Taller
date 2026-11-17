@@ -34,19 +34,19 @@ def contrataciones(datos):
             consulta = consulta.filter(usuario=datos["usuario"])
         if producto:
             consulta = consulta.filter(**{f"{tipo}_id": int(producto.split(":")[1])})
-        contratos = list(consulta.select_related("usuario", tipo).order_by("usuario__last_name", "usuario__first_name", "mes_cubierto", "pk"))
+        contratos = list(consulta.select_related("usuario", tipo).prefetch_related("ajustes_importe").order_by("usuario__last_name", "usuario__first_name", "mes_cubierto", "pk"))
         movimientos = cobros_por_origen(campo, [c.pk for c in contratos])
         for contrato in contratos:
             fondos = movimientos.get(contrato.pk, {"cobros": CERO, "devoluciones": CERO})
             neto = fondos["cobros"] - fondos["devoluciones"]
-            diferencia = neto - contrato.precio_aplicado
+            diferencia = neto - contrato.importe_acordado
             situacion = "anulada" if contrato.estado == "anulado" else "faltante" if diferencia < 0 else "excedente" if diferencia > 0 else "cubierto"
             if datos.get("situacion") and datos["situacion"] != situacion:
                 continue
             filas.append({
                 "titular": str(contrato.usuario), "producto": contrato.producto.nombre,
                 "mes": contrato.mes_cubierto, "estado": contrato.get_estado_display(),
-                "importe": contrato.precio_aplicado, "cobros": fondos["cobros"],
+                "importe": contrato.importe_acordado, "cobros": fondos["cobros"],
                 "devoluciones": fondos["devoluciones"], "neto": neto,
                 "diferencia": None if situacion == "anulada" else abs(diferencia),
                 "situacion": SITUACIONES[situacion], "_situacion": situacion,
@@ -133,7 +133,7 @@ def reservas(datos):
         consulta = consulta.filter(membresia_usuario__isnull=datos["modalidad"] == "normal")
     if datos.get("estado"):
         consulta = consulta.filter(evento__estado=datos["estado"])
-    operaciones = list(consulta.select_related("evento__turno__cancha__sede").prefetch_related("invitados").order_by("pk"))
+    operaciones = list(consulta.select_related("evento__turno__cancha__sede").prefetch_related("invitados", "ajustes_importe").order_by("pk"))
     movimientos = cobros_por_origen("reserva_id", [r.pk for r in operaciones])
     grupos = {}
     for reserva in operaciones:
@@ -145,7 +145,7 @@ def reservas(datos):
         fila = grupos[cancha.pk]
         fila[reserva.evento.estado] += 1
         if reserva.evento.estado != "anulado":
-            fila["importe"] += reserva.total
+            fila["importe"] += reserva.importe_acordado
         fondos = movimientos.get(reserva.pk, {"cobros": CERO, "devoluciones": CERO})
         fila["cobros"] += fondos["cobros"]
         fila["devoluciones"] += fondos["devoluciones"]

@@ -8,7 +8,7 @@ from django.utils.dateparse import parse_date
 
 from agenda.servicios import enlace_agenda
 from bloqueos.models import Bloqueo
-from caja.models import MovimientoFondo, SesionCaja
+from caja.models import AjusteImporte, MovimientoFondo, SesionCaja
 from clases.models import (
     Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado, TurnoPlanilla,
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
@@ -55,6 +55,7 @@ TIPOS_REGISTRO = {
     "asistencias": (
         Asistencia, "Asistencia", ("clase", "usuario"), None,
     ),
+    "ajustes_importes": (AjusteImporte, "Ajuste de importe", ("registrado_por",), None),
     "ajustes_horas_membresia": (AjusteHorasMembresia, "Ajuste de horas de membresía", ("membresia_usuario__usuario",), None),
     "membresias": (Membresia, "Membresía de socio", (), "membresias:membresia_detalle"),
     "planes": (Plan, "Plan", (), "membresias:plan_detalle"),

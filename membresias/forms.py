@@ -170,12 +170,6 @@ class AjusteHorasForm(forms.Form):
     motivo = forms.CharField(min_length=5, label="Motivo", help_text="El titular podrá consultar este motivo.",
                              widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
 
-    def __init__(self, *args, reversion=False, **kwargs):
-        super().__init__(*args, **kwargs)
-        if reversion:
-            for campo in ("tipo_horas", "operacion", "cantidad"):
-                self.fields.pop(campo)
-
 
 class RespuestaContinuidadForm(forms.Form):
     respuesta = forms.ChoiceField(

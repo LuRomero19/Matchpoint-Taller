@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
-from .finanzas import CAMPOS_DEVOLUCION, leer_revision_devolucion, revision_devolucion, situacion_financiera
+from .finanzas import CAMPOS_DEVOLUCION, leer_revision_devolucion, resumen_financiero, revision_devolucion
 from .forms import DevolucionForm, SeleccionOrigenMovimientoForm
 from .ingresos import ORIGENES, filtrar_origenes
 from .models import SesionCaja
@@ -73,11 +73,11 @@ def devolucion_crear(request, pk):
                              "origen_seleccionado": str(datos.get("origen", ""))})
             return render(request, "caja/ingreso_origen.html", contexto)
         origen = seleccion.cleaned_data["origen"]
-        situacion = situacion_financiera(tipo, origen.pk)
+        situacion = resumen_financiero(tipo, origen)
         contexto.update({"origen": origen, "situacion": situacion, "categoria_texto": "Devoluciones",
-                         "importe_aplicado": origen.total if tipo == "reserva" else origen.precio_aplicado})
+                         "importe_aplicado": origen.importe_acordado})
     contexto.update({"numero_paso": contexto["total_pasos"] - 1, "nombre_paso": "Datos de la devolución"})
-    formulario = DevolucionForm(datos if paso in ("revisar", "confirmar", "editar") else None, initial=borrador)
+    formulario = DevolucionForm(datos if paso in ("revisar", "confirmar", "editar") else None, initial=borrador, sin_vinculo=tipo == "general")
     contexto["formulario"] = formulario
     if situacion:
         formulario.fields["monto"].widget.attrs["max"] = format(situacion["maximo_devolucion"], ".2f")
@@ -94,7 +94,8 @@ def devolucion_crear(request, pk):
                     return redirect("caja:sesion_detalle", pk=pk)
                 formulario.add_error(None, error.messages)
                 if origen:
-                    situacion = situacion_financiera(tipo, origen.pk)
+                    origen.refresh_from_db()
+                    situacion = resumen_financiero(tipo, origen)
                     contexto["situacion"] = situacion
                     formulario.fields["monto"].widget.attrs["max"] = format(situacion["maximo_devolucion"], ".2f")
             else:

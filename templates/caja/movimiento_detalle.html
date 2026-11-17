@@ -10,6 +10,7 @@
     {% if movimiento.categoria_ingreso %}<div class="perfil-fila"><dt>Categoría</dt><dd>{{ movimiento.get_categoria_ingreso_display }}</dd></div>{% elif movimiento.categoria_egreso %}<div class="perfil-fila"><dt>Categoría</dt><dd>{{ movimiento.get_categoria_egreso_display }}</dd></div>{% endif %}
 {% if movimiento.destinatario %}<div class="perfil-fila"><dt>Destinatario</dt><dd>{{ movimiento.destinatario }}</dd></div>{% endif %}
     <div class="perfil-fila"><dt>Concepto</dt><dd>{{ movimiento.concepto|linebreaksbr }}</dd></div>
+    {% if movimiento.motivo_excedente %}<div class="perfil-fila"><dt>Motivo del excedente</dt><dd>{{ movimiento.motivo_excedente|linebreaksbr }}</dd></div>{% endif %}
     <div class="perfil-fila"><dt>Monto</dt><dd>$ {{ movimiento.monto|floatformat:"2g" }}</dd></div>
     <div class="perfil-fila"><dt>Medio</dt><dd>{{ movimiento.get_medio_pago_display }}</dd></div>
     {% if movimiento.referencia %}<div class="perfil-fila"><dt>Referencia</dt><dd>{{ movimiento.referencia }}</dd></div>{% endif %}
